@@ -24,25 +24,44 @@
           <span v-if="!authStore.loading">Cerrar Sesión</span>
           <span v-else>Cerrando sesión...</span>
         </button>
-        
+                
         <!-- Botones de administración solo para administradores -->
         <div v-if="authStore.user.isAdmin" class="mt-6 pt-4 border-t border-gray-200">
           <h3 class="text-lg font-semibold text-gray-800 mb-3">Panel de Administración</h3>
-          <div class="grid grid-cols-2 gap-2">
-            <button class="px-3 py-2 bg-blue-600 text-white text-sm rounded hover:bg-blue-700">
-              Gestionar Aulas
-            </button>
-            <button class="px-3 py-2 bg-blue-600 text-white text-sm rounded hover:bg-blue-700">
-              Gestionar Cursos
-            </button>
-            <button class="px-3 py-2 bg-blue-600 text-white text-sm rounded hover:bg-blue-700">
-              Gestionar Profesores
-            </button>
-            <button class="px-3 py-2 bg-blue-600 text-white text-sm rounded hover:bg-blue-700">
-              Gestionar Estudiantes
-            </button>
+          <div class="grid grid-cols-2 gap-3">
+            <router-link 
+              to="/admin/classrooms"
+              class="px-4 py-3 bg-blue-600 text-white text-sm rounded hover:bg-blue-700 transition text-center"
+            >
+              📚 Gestionar Aulas
+            </router-link>
+            <router-link 
+              to="/admin/courses"
+              class="px-4 py-3 bg-green-600 text-white text-sm rounded hover:bg-green-700 transition text-center"
+            >
+              🎓 Gestionar Cursos
+            </router-link>
+            <router-link 
+              to="/admin/professors"
+              class="px-4 py-3 bg-purple-600 text-white text-sm rounded hover:bg-purple-700 transition text-center"
+            >
+              👨‍🏫 Gestionar Profesores
+            </router-link>
+            <router-link 
+              to="/admin/students"
+              class="px-4 py-3 bg-orange-600 text-white text-sm rounded hover:bg-orange-700 transition text-center"
+            >
+              👥 Gestionar Estudiantes
+            </router-link>
+            <router-link 
+              to="/admin/secretaries"
+              class="px-4 py-3 bg-pink-600 text-white text-sm rounded hover:bg-pink-700 transition text-center"
+            >
+              💼 Gestionar Secretarias
+            </router-link>
           </div>
         </div>
+
       </div>
       
       <div v-else-if="authStore.loading">
