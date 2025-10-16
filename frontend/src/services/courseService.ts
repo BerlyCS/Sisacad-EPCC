@@ -3,11 +3,13 @@ import { ref } from 'vue'
 const API_BASE_URL = 'http://localhost:8080/api'
 
 export interface Course {
-  id: number
+  courseID: number
   name: string
-  code: string
-  credits: number
-  description: string
+  creditNumber: number
+  groupLetter: string
+  syllabusID: number | null
+  enrolledStudentIDs: number[]
+  teacherIDs: number[]
 }
 
 export const useCourseService = () => {
@@ -22,11 +24,11 @@ export const useCourseService = () => {
       const response = await fetch(`${API_BASE_URL}/courses`, {
         credentials: 'include'
       })
-      
+
       if (!response.ok) {
         throw new Error('Error al cargar los cursos')
       }
-      
+
       courses.value = await response.json()
     } catch (err) {
       error.value = 'No se pudieron cargar los cursos'

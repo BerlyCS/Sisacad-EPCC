@@ -5,13 +5,13 @@
         <h2 class="text-xl font-semibold text-gray-800">Gestión de Cursos</h2>
         <p class="text-gray-600 mt-1">Administra los cursos académicos</p>
       </div>
-      
+
       <div class="p-6">
         <div v-if="loading" class="text-center py-8">
           <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
           <p class="text-gray-600 mt-2">Cargando cursos...</p>
         </div>
-        
+
         <div v-else-if="error" class="bg-red-50 border border-red-200 rounded-md p-4 mb-6">
           <p class="text-red-800">{{ error }}</p>
           <button 
@@ -26,35 +26,29 @@
           <table class="min-w-full divide-y divide-gray-200">
             <thead class="bg-gray-50">
               <tr>
-                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Código
-                </th>
-                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Nombre
-                </th>
-                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Créditos
-                </th>
-                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Descripción
-                </th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">ID</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Nombre</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Créditos</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Grupo</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase"># Estudiantes</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase"># Docentes</th>
               </tr>
             </thead>
             <tbody class="bg-white divide-y divide-gray-200">
-              <tr v-for="course in courses" :key="course.id" class="hover:bg-gray-50">
-                <td class="px-6 py-4 whitespace-nowrap text-sm font-mono text-gray-900">
-                  {{ course.code }}
+              <tr v-for="course in courses" :key="course.courseID" class="hover:bg-gray-50">
+                <td class="px-6 py-4 text-sm font-mono text-gray-900">{{ course.courseID }}</td>
+                <td class="px-6 py-4 text-sm text-gray-900">{{ course.name }}</td>
+                <td class="px-6 py-4 text-sm text-blue-700 font-semibold">
+                  {{ course.creditNumber }} créditos
                 </td>
-                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                  {{ course.name }}
+                <td class="px-6 py-4 text-sm text-purple-700">
+                  Grupo {{ course.groupLetter || '-' }}
                 </td>
-                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                  <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                    {{ course.credits }} créditos
-                  </span>
+                <td class="px-6 py-4 text-sm text-gray-700">
+                  {{ course.enrolledStudentIDs.length }}
                 </td>
-                <td class="px-6 py-4 text-sm text-gray-900">
-                  {{ course.description || 'Sin descripción' }}
+                <td class="px-6 py-4 text-sm text-gray-700">
+                  {{ course.teacherIDs.length }}
                 </td>
               </tr>
             </tbody>
@@ -74,12 +68,14 @@
           <div class="bg-green-50 border border-green-200 rounded-lg p-6">
             <h3 class="text-lg font-semibold text-green-800">Créditos Totales</h3>
             <p class="text-3xl font-bold text-green-600 mt-2">
-              {{ courses.reduce((total, course) => total + (course.credits || 0), 0) }}
+              {{ courses.reduce((total, course) => total + (course.creditNumber || 0), 0) }}
             </p>
           </div>
           <div class="bg-purple-50 border border-purple-200 rounded-lg p-6">
-            <h3 class="text-lg font-semibold text-purple-800">Cursos Activos</h3>
-            <p class="text-3xl font-bold text-purple-600 mt-2">{{ courses.length }}</p>
+            <h3 class="text-lg font-semibold text-purple-800">Total Estudiantes Inscritos</h3>
+            <p class="text-3xl font-bold text-purple-600 mt-2">
+              {{ courses.reduce((total, course) => total + course.enrolledStudentIDs.length, 0) }}
+            </p>
           </div>
         </div>
       </div>
