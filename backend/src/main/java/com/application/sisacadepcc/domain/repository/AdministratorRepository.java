@@ -7,4 +7,5 @@ import java.util.List;
 
 public interface AdministratorRepository {
     List<Administrator> findAll();
+    boolean existsByInstitutionalEmail(String email);
 }

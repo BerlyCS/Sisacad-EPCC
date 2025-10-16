@@ -5,4 +5,5 @@ import java.util.List;
 
 public interface SecretaryRepository {
     List<Secretary> findAll();
+    boolean existsByInstitutionalEmail(String email);
 }

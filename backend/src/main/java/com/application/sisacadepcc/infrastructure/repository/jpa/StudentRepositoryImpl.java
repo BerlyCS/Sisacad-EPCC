@@ -34,4 +34,10 @@ public class StudentRepositoryImpl implements StudentRepository {
                 entity.getCorreoInstitucional()
         );
     }
+
+    @Override
+    public boolean existsByCorreoInstitucional(String email) {
+        return jpaRepository.existsByCorreoInstitucional(email);
+    }
+
 }

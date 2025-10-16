@@ -5,5 +5,5 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface ProfessorJpaRepository extends JpaRepository<ProfessorEntity, Long> {
-    // Hereda findAll()
+    boolean existsByCorreo(String correo);
 }

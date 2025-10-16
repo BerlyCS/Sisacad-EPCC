@@ -33,4 +33,10 @@ public class AdministratorRepositoryImpl implements AdministratorRepository {
                 entity.getInstitutionalEmail()
         );
     }
+
+    @Override
+    public boolean existsByInstitutionalEmail(String email) {
+        return jpaRepository.existsByInstitutionalEmail(email);
+    }
+
 }

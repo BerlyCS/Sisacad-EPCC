@@ -33,4 +33,10 @@ public class ProfessorRepositoryImpl implements ProfessorRepository {
                 entity.getCorreo()
         );
     }
+
+    @Override
+    public boolean existsByCorreo(String email) {
+        return jpaRepository.existsByCorreo(email);
+    }
+
 }

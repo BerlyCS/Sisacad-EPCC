@@ -5,4 +5,5 @@ import java.util.List;
 
 public interface ProfessorRepository {
     List<Professor> findAll();
+    boolean existsByCorreo(String email);
 }
