@@ -21,7 +21,7 @@ public class SecurityConfig {
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(authz -> authz
-                        .requestMatchers("/", "/api/auth/**", "/api/user/**", "/login**", "/oauth2/**", "/error").permitAll()
+                        .requestMatchers("/", "/api/auth/**", "/api/user/**", "/login**", "/oauth2/**", "/logout**", "/error").permitAll()
                         .anyRequest().authenticated()
                 )
                 .oauth2Login(oauth2 -> oauth2
@@ -29,9 +29,11 @@ public class SecurityConfig {
                         .failureUrl("http://localhost:5173/?error=auth_failed")
                 )
                 .logout(logout -> logout
-                        .logoutSuccessUrl("http://localhost:5173/")
+                        .logoutSuccessUrl("http://localhost:5173/?logout=success")
                         .invalidateHttpSession(true)
                         .deleteCookies("JSESSIONID")
+                        .clearAuthentication(true)
+                        .permitAll()
                 );
 
         return http.build();

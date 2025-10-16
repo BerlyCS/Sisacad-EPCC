@@ -34,6 +34,11 @@
         {{ errorMessage }}
       </div>
 
+      <!-- Mensaje de éxito -->
+      <div v-if="successMessage" class="text-green-600 text-sm bg-green-50 p-2 rounded border border-green-200">
+        {{ successMessage }}
+      </div>
+
       <!-- Modal para ingresar email manualmente (fallback) -->
       <div v-if="showEmailModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
         <div class="bg-white p-6 rounded-lg w-96">
@@ -78,30 +83,45 @@ const authStore = useAuthStore()
 
 const loading = ref(false)
 const errorMessage = ref('')
-const showEmailModal = ref(false)
-const manualEmail = ref('')
+const successMessage = ref('')
 
-// Verificar si ya está autenticado al cargar la página
+// Verificar si ya estamos autenticados al cargar la página
 onMounted(async () => {
-  try {
-    const user = await authService.getCurrentUser()
-    if (user.authenticated) {
-      authStore.setUser(user)
-      router.push('/bienvenido')
-    }
-  } catch (error) {
-    console.log('Usuario no autenticado')
+  await authStore.initializeAuth()
+  
+  // Si ya está autenticado, redirigir a bienvenido
+  if (authStore.isAuthenticated) {
+    router.push('/bienvenido')
+    return
+  }
+  
+  // Manejar parámetros de la URL
+  const urlParams = new URLSearchParams(window.location.search)
+  const error = urlParams.get('error')
+  const logout = urlParams.get('logout')
+  
+  if (error === 'auth_failed') {
+    errorMessage.value = 'Error en la autenticación. Por favor, intente nuevamente.'
+  } else if (error === 'not_authenticated') {
+    errorMessage.value = 'Su sesión ha expirado. Por favor, ingrese nuevamente.'
+  }
+  
+  if (logout === 'success') {
+    successMessage.value = 'Sesión cerrada correctamente.'
+  }
+  
+  // Limpiar parámetros de la URL
+  if (error || logout) {
+    const newUrl = window.location.origin + window.location.pathname
+    window.history.replaceState({}, document.title, newUrl)
   }
 })
 
 const initiateGoogleAuth = () => {
-  // Limpiar errores previos
   authStore.clearError()
   errorMessage.value = ''
-
-  // Abrir autenticación de Google directamente
-  // En un entorno real, primero verificaríamos el dominio del email
-  // pero para simplificar, redirigimos directamente a Google OAuth
+  
+  // Redirección directa a OAuth de Google
   window.location.href = 'http://localhost:8080/oauth2/authorization/google'
 }
 
@@ -130,12 +150,26 @@ const verifyManualEmail = async () => {
 }
 
 // Escuchar parámetros de error en la URL
+// Escuchar parámetros en la URL
 onMounted(() => {
   const urlParams = new URLSearchParams(window.location.search)
   const error = urlParams.get('error')
+  const logout = urlParams.get('logout')
   
   if (error === 'auth_failed') {
     errorMessage.value = 'Error en la autenticación. Por favor, intente nuevamente.'
+  } else if (error === 'not_authenticated') {
+    errorMessage.value = 'Su sesión ha expirado. Por favor, ingrese nuevamente.'
+  }
+  
+  if (logout === 'success') {
+    successMessage.value = 'Sesión cerrada correctamente.'
+  }
+  
+  // Limpiar los parámetros de la URL sin recargar la página
+  if (error || logout) {
+    const newUrl = window.location.origin + window.location.pathname
+    window.history.replaceState({}, document.title, newUrl)
   }
 })
 </script>

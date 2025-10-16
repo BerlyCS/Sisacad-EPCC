@@ -18,14 +18,44 @@ export const authService = {
   },
 
   async getCurrentUser() {
-    const response = await fetch(`${API_BASE_URL}/user/me`, {
-      credentials: 'include' // Para incluir cookies de sesión
-    })
+    try {
+      const response = await fetch(`${API_BASE_URL}/user/me`, {
+        credentials: 'include',
+      })
 
-    if (!response.ok) {
-      throw new Error('Error al obtener información del usuario')
+      if (response.status === 401 || response.status === 403) {
+        return { authenticated: false }
+      }
+
+      if (!response.ok) {
+        return { authenticated: false }
+      }
+
+      return await response.json()
+    } catch (error) {
+      console.warn('Error obteniendo usuario:', error)
+      return { authenticated: false }
     }
+  },
 
-    return await response.json()
+  async logout(): Promise<{ message: string }> {
+    try {
+      const response = await fetch(`${API_BASE_URL}/auth/logout`, {
+        method: 'POST',
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+        }
+      })
+
+      if (!response.ok) {
+        throw new Error('Error durante el logout')
+      }
+
+      return await response.json()
+    } catch (error) {
+      console.warn('Error en logout API, usando fallback:', error)
+      throw new Error('Usando fallback de logout')
+    }
   }
 }
