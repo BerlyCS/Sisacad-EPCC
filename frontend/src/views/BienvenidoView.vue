@@ -11,7 +11,11 @@
         <h1 class="text-3xl font-bold text-green-800 mb-2">
           ¡Bienvenido, {{ authStore.user.name }}!
         </h1>
-        <p class="text-gray-600 mb-4">{{ authStore.user.email }}</p>
+        <p class="text-gray-600 mb-2">{{ authStore.user.email }}</p>
+        <p class="text-blue-600 font-semibold mb-4">
+          Rol: {{ authStore.user.role }} 
+          <span v-if="authStore.user.isAdmin" class="text-red-600">(Administrador)</span>
+        </p>
         <button 
           @click="handleLogout"
           :disabled="authStore.loading"
@@ -20,6 +24,25 @@
           <span v-if="!authStore.loading">Cerrar Sesión</span>
           <span v-else>Cerrando sesión...</span>
         </button>
+        
+        <!-- Botones de administración solo para administradores -->
+        <div v-if="authStore.user.isAdmin" class="mt-6 pt-4 border-t border-gray-200">
+          <h3 class="text-lg font-semibold text-gray-800 mb-3">Panel de Administración</h3>
+          <div class="grid grid-cols-2 gap-2">
+            <button class="px-3 py-2 bg-blue-600 text-white text-sm rounded hover:bg-blue-700">
+              Gestionar Aulas
+            </button>
+            <button class="px-3 py-2 bg-blue-600 text-white text-sm rounded hover:bg-blue-700">
+              Gestionar Cursos
+            </button>
+            <button class="px-3 py-2 bg-blue-600 text-white text-sm rounded hover:bg-blue-700">
+              Gestionar Profesores
+            </button>
+            <button class="px-3 py-2 bg-blue-600 text-white text-sm rounded hover:bg-blue-700">
+              Gestionar Estudiantes
+            </button>
+          </div>
+        </div>
       </div>
       
       <div v-else-if="authStore.loading">

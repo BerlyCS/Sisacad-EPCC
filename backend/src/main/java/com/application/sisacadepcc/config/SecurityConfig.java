@@ -21,7 +21,22 @@ public class SecurityConfig {
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(authz -> authz
-                        .requestMatchers("/", "/api/auth/**", "/api/user/**", "/login**", "/oauth2/**", "/logout**", "/error").permitAll()
+                        // Endpoints públicos
+                        .requestMatchers("/", "/api/auth/**", "/login**", "/oauth2/**", "/logout**", "/error").permitAll()
+
+                        // Endpoints de usuario (accesibles para todos autenticados)
+                        .requestMatchers("/api/user/me").authenticated()
+
+                        // Endpoints de administración (solo administradores)
+                        .requestMatchers(
+                                "/api/classrooms/**",
+                                "/api/courses/**",
+                                "/api/professors/**",
+                                "/api/secretaries/**",
+                                "/api/students/**",
+                                "/api/administrators/**"
+                        ).authenticated() // La autorización específica se maneja en los controladores
+
                         .anyRequest().authenticated()
                 )
                 .oauth2Login(oauth2 -> oauth2
