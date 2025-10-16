@@ -22,9 +22,6 @@ public class AdministratorEntity {
     @Column(name = "institutional_email")
     private String institutionalEmail;
 
-    @Column(name = "password")
-    private String password;
-
     public AdministratorEntity() {}
 
     public AdministratorEntity(String dni, String paternalSurname, String maternalSurname,
@@ -34,7 +31,6 @@ public class AdministratorEntity {
         this.maternalSurname = maternalSurname;
         this.name = name;
         this.institutionalEmail = institutionalEmail;
-        this.password = password;
     }
 
     // Getters and Setters
@@ -76,13 +72,5 @@ public class AdministratorEntity {
 
     public void setInstitutionalEmail(String institutionalEmail) {
         this.institutionalEmail = institutionalEmail;
-    }
-
-    public String getPassword() {
-        return password;
-    }
-
-    public void setPassword(String password) {
-        this.password = password;
     }
 }
