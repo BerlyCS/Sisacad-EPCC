@@ -74,6 +74,14 @@ const goToDashboard = () => {
 }
 
 const logout = async () => {
-  await authStore.logout()
+  const success = await authStore.logout()
+  
+  // Si el logout fue exitoso via API, redirigir
+  if (success) {
+    router.push('/?logout=success')
+  }
+  // Si falló, el método logout ya hizo la redirección directa
 }
+
 </script>
+
