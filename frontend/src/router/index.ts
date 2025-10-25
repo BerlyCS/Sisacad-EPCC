@@ -6,6 +6,7 @@ import CourseManagementView from '../views/CourseManagementView.vue'
 import ProfessorManagementView from '../views/ProfessorManagementView.vue'
 import StudentManagementView from '../views/StudentManagementView.vue'
 import SecretaryManagementView from '../views/SecretaryManagementView.vue'
+import { useAuthStore } from '../stores/auth'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -46,6 +47,28 @@ const router = createRouter({
       component: SecretaryManagementView,
     },
   ],
+})
+
+
+router.beforeEach(async (to, from, next) => {
+  const auth = useAuthStore()
+
+  // Si el usuario no ha inicializado la sesión, intenta hacerlo
+  if (!auth.initialized) {
+    await auth.initializeAuth()
+  }
+
+  // Si intenta acceder a rutas admin sin estar autenticado
+  if (to.path.startsWith('/admin') && !auth.isAuthenticated) {
+    return next({ path: '/', query: { auth: 'required' } })
+  }
+
+  // Si intenta ir a login estando autenticado, redirigir a bienvenido
+  if (to.path === '/' && auth.isAuthenticated) {
+    return next('/bienvenido')
+  }
+
+  next()
 })
 
 export default router

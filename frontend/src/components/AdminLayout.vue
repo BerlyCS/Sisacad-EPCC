@@ -78,7 +78,7 @@ const logout = async () => {
   
   // Si el logout fue exitoso via API, redirigir
   if (success) {
-    router.push('/?logout=success')
+    router.replace('/?logout=success')
   }
   // Si falló, el método logout ya hizo la redirección directa
 }

@@ -45,18 +45,23 @@ export const useAuthStore = defineStore('auth', () => {
   const logout = async (): Promise<boolean> => {
     setLoading(true)
     setError('')
-    
+
     try {
       await authService.logout()
+
+      // Limpia toda la sesión local
       user.value = null
       initialized.value = false
+
+      // Borra datos persistentes si existieran
+      localStorage.removeItem('user')
+      sessionStorage.clear()
+
       return true
     } catch (error: any) {
       console.warn('Logout API falló, usando redirección directa:', error)
-      
-      // Fallback seguro: redirección directa al logout de Spring
       window.location.href = 'http://localhost:8080/logout'
-      return false // No continuar con ninguna lógica después de redirección
+      return false
     } finally {
       setLoading(false)
     }
