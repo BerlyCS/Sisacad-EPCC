@@ -1,6 +1,6 @@
 <template>
-  <div class="flex items-center justify-center min-h-screen bg-gray-50 px-4">
-    <div class="w-full max-w-[300px] p-6 bg-white shadow-lg rounded-md text-center space-y-6 text-gray-900">
+  <div class="flex items-center justify-center min-h-screen bg-blueEPCC px-4">
+    <div class="w-full max-w-[400px] p-6 bg-white shadow-lg rounded-md text-center space-y-6 text-gray-900">
 
       <!-- LOGO -->
       <div class="flex items-center justify-center space-x-4">
@@ -12,7 +12,7 @@
       </div>
 
       <!-- TEXTO -->
-      <p class="text-lg font-medium">Identifíquese usando su cuenta en:</p>
+      <p class="text-md font-medium m-4">Identifíquese usando su cuenta en:</p>
 
       <!-- BOTÓN PRINCIPAL - Ahora abre popup de Google -->
       <button
