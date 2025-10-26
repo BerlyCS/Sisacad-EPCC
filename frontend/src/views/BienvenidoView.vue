@@ -1,32 +1,44 @@
 <template>
-  <div class="flex items-center justify-center min-h-screen bg-green-50 text-center">
-    <div class="bg-white p-8 rounded-lg shadow-lg max-w-9/10 w-full">
-      <div v-if="authStore.user && authStore.isAuthenticated">
-        <img 
-          v-if="authStore.user.picture" 
-          :src="authStore.user.picture" 
-          alt="User" 
-          class="w-20 h-20 rounded-full mx-auto mb-4"
-        />
-        <h1 class="text-3xl font-bold text-green-800 mb-2">
+  <div class="min-h-screen bg-zinc-100">
+  <!-- Panel superior -->
+  <header class="bg-white shadow-md py-4 px-8 flex items-center justify-between border-b border-zinc-100">
+    <!-- Lado izquierdo: info del usuario -->
+    <div class="flex items-center space-x-4">
+      <img 
+        v-if="authStore.user.picture" 
+        :src="authStore.user.picture" 
+        alt="User" 
+        class="w-14 h-14 rounded-full object-cover ring-2 ring-gray-300"
+      />
+      <div class="text-left">
+        <h1 class="text-xl font-semibold text-sky-800">
           ¡Bienvenido, {{ authStore.user.name }}!
         </h1>
-        <p class="text-gray-600 mb-2">{{ authStore.user.email }}</p>
-        <p class="text-blue-600 font-semibold mb-4">
-          Rol: {{ authStore.user.role }} 
-          <span v-if="authStore.user.isAdmin" class="text-red-600">(Administrador)</span>
+        <p class="text-gray-600 text-sm">{{ authStore.user.email }}</p>
+        <p class="text-sky-600 font-medium text-sm">
+          Rol: {{ authStore.user.role }}
+          <span v-if="authStore.user.isAdmin" class="text-red-600 font-semibold">(Administrador)</span>
         </p>
-        <button 
-          @click="handleLogout"
-          :disabled="authStore.loading"
-          class="px-6 py-2 bg-red-600 text-white rounded hover:bg-red-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          <span v-if="!authStore.loading">Cerrar Sesión</span>
-          <span v-else>Cerrando sesión...</span>
-        </button>
+      </div>
+    </div>
 
+    <!-- Lado derecho: botón -->
+    <button 
+      @click="handleLogout"
+      :disabled="authStore.loading"
+      class="px-5 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 
+             transition-all duration-300 ease-in-out shadow-sm 
+             disabled:opacity-50 disabled:cursor-not-allowed">
+      <span v-if="!authStore.loading">Cerrar Sesión</span>
+      <span v-else>Cerrando sesión...</span>
+    </button>
+  </header>
+
+  <div class="flex justify-center bg-zinc-200 text-center">
+    <div class="bg-white p-8 rounded-lg shadow-lg max-w-9/10 w-full mt-4">
+      <div v-if="authStore.user && authStore.isAuthenticated"> 
         <!-- Botones de administración solo para administradores -->
-        <div v-if="authStore.user.isAdmin" class="mt-6 pt-4 border-t border-gray-200">
+        <div v-if="authStore.user.isAdmin" class="pt-4 border-gray-200">
           <h3 class="text-lg font-semibold text-gray-800 mb-3">Panel de Administración</h3>
           <div class="grid grid-cols-1 gap-4 lg:grid-cols-4 sm:grid-cols-2 mt-5">
             <PrincipalButton color="teal" to="/admin/classrooms" >
@@ -51,7 +63,7 @@
             </PrincipalButton>
           </div>
         </div>
-
+  
       </div>
       
       <div v-else-if="authStore.loading">
@@ -72,6 +84,8 @@
       </div>
     </div>
   </div>
+</div>
+
 </template>
 
 <script setup>
