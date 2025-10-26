@@ -2,17 +2,26 @@
   <div class="flex items-center justify-center min-h-screen bg-blueEPCC px-4">
     <div class="w-full max-w-[400px] p-6 bg-white shadow-lg rounded-md text-center space-y-6 text-gray-900">
 
-      <!-- LOGO -->
-      <div class="flex items-center justify-center space-x-4">
-        <img
-          src="https://scontent.flim6-4.fna.fbcdn.net/v/t39.30808-6/332319294_2237668383092057_2920168158318927642_n.jpg?_nc_cat=101&ccb=1-7&_nc_sid=6ee11a&_nc_ohc=KyYOuUAnLFAQ7kNvwE-PtBc&_nc_oc=Admul2ULA1QEY371EzaDwnzTdcq1wNt8THbu6EjdrATs7dV9nVC-fZs--duSPa22ilE&_nc_zt=23&_nc_ht=scontent.flim6-4.fna&_nc_gid=7adnapXoIMd7BR-9QXlo5Q&oh=00_AfepJgWIfXfSokI7Y-4yqEcdpVjHXCpaQlprdfz_LfaF-Q&oe=68F62921"
-          alt="Logo EPCC"
-          class="h-12 max-w-[160px] object-contain"
-        />
+      <!-- TÍTULO -->
+      <h2 class="text-3xl font-bold">SISACAD - EPCC</h2>
+
+      <!-- ÍCONO DE USUARIO -->
+      <div class="flex items-center">
+        <UserCircleIcon class="h-25 w-25 text-gray-400 mx-auto" />
       </div>
 
       <!-- TEXTO -->
       <p class="text-md font-medium m-4">Identifíquese usando su cuenta en:</p>
+
+      <!-- Mensaje de error -->
+      <div v-if="errorMessage" class="text-red-600 text-sm bg-red-50 p-2 rounded border border-red-200">
+        {{ errorMessage }}
+      </div>
+
+      <!-- Mensaje de éxito -->
+      <div v-if="successMessage" class="text-green-600 text-sm bg-green-50 p-2 rounded border border-green-200">
+        {{ successMessage }}
+      </div>
 
       <!-- BOTÓN PRINCIPAL - Ahora abre popup de Google -->
       <button
@@ -28,16 +37,6 @@
         <span v-if="!loading">Ingresar con Correo UNSA</span>
         <span v-else>Verificando...</span>
       </button>
-
-      <!-- Mensaje de error -->
-      <div v-if="errorMessage" class="text-red-600 text-sm bg-red-50 p-2 rounded border border-red-200">
-        {{ errorMessage }}
-      </div>
-
-      <!-- Mensaje de éxito -->
-      <div v-if="successMessage" class="text-green-600 text-sm bg-green-50 p-2 rounded border border-green-200">
-        {{ successMessage }}
-      </div>
 
       <!-- Modal para ingresar email manualmente (fallback) -->
       <div v-if="showEmailModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
@@ -77,6 +76,8 @@ import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '../stores/auth'
 import { authService } from '../services/authService'
+
+import { UserCircleIcon } from '@heroicons/vue/16/solid'
 
 const router = useRouter()
 const authStore = useAuthStore()
