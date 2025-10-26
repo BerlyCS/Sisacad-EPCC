@@ -1,6 +1,6 @@
 <template>
   <div class="flex items-center justify-center min-h-screen bg-green-50 text-center">
-    <div class="bg-white p-8 rounded-lg shadow-lg max-w-md w-full">
+    <div class="bg-white p-8 rounded-lg shadow-lg max-w-9/10 w-full">
       <div v-if="authStore.user && authStore.isAuthenticated">
         <img 
           v-if="authStore.user.picture" 
@@ -24,41 +24,31 @@
           <span v-if="!authStore.loading">Cerrar Sesión</span>
           <span v-else>Cerrando sesión...</span>
         </button>
-                
+
         <!-- Botones de administración solo para administradores -->
         <div v-if="authStore.user.isAdmin" class="mt-6 pt-4 border-t border-gray-200">
           <h3 class="text-lg font-semibold text-gray-800 mb-3">Panel de Administración</h3>
-          <div class="grid grid-cols-2 gap-3">
-            <router-link 
-              to="/admin/classrooms"
-              class="px-4 py-3 bg-blue-600 text-white text-sm rounded hover:bg-blue-700 transition text-center"
-            >
-              📚 Gestionar Aulas
-            </router-link>
-            <router-link 
-              to="/admin/courses"
-              class="px-4 py-3 bg-green-600 text-white text-sm rounded hover:bg-green-700 transition text-center"
-            >
-              🎓 Gestionar Cursos
-            </router-link>
-            <router-link 
-              to="/admin/professors"
-              class="px-4 py-3 bg-purple-600 text-white text-sm rounded hover:bg-purple-700 transition text-center"
-            >
-              👨‍🏫 Gestionar Profesores
-            </router-link>
-            <router-link 
-              to="/admin/students"
-              class="px-4 py-3 bg-orange-600 text-white text-sm rounded hover:bg-orange-700 transition text-center"
-            >
-              👥 Gestionar Estudiantes
-            </router-link>
-            <router-link 
-              to="/admin/secretaries"
-              class="px-4 py-3 bg-pink-600 text-white text-sm rounded hover:bg-pink-700 transition text-center"
-            >
-              💼 Gestionar Secretarias
-            </router-link>
+          <div class="grid grid-cols-1 gap-4 lg:grid-cols-4 sm:grid-cols-2 mt-5">
+            <PrincipalButton color="teal" to="/admin/classrooms" >
+              <building-library-icon class="w-15 h-15 mx-auto mt-2 mb-4"/>
+              <h4 class="text-xl">Gestionar Aulas</h4>
+            </PrincipalButton>
+            <PrincipalButton color="orange" to="/admin/courses" >
+              <BookOpenIcon class="w-15 h-15 mx-auto mt-2 mb-4"/>
+              <h4 class="text-xl">Gestionar Cursos</h4>
+            </PrincipalButton>
+            <PrincipalButton color="purple" to="/admin/professors" >
+              <briefcase-icon class="w-15 h-15 mx-auto mt-2 mb-4"/>
+              <h4 class="text-xl">Gestionar Profesores</h4>
+            </PrincipalButton>
+            <PrincipalButton color="pinck" to="/admin/students" >
+              <academic-cap-icon class="w-15 h-15 mx-auto mt-2 mb-4"/>
+              <h4 class="text-xl">Gestionar Estudiantes</h4>
+            </PrincipalButton>
+            <PrincipalButton color="gray" to="/admin/secretaries" >
+              <UserIcon class="w-15 h-15 mx-auto mt-2 mb-4"/>
+              <h4 class="text-xl">Gestionar Secretarias</h4>
+            </PrincipalButton>
           </div>
         </div>
 
@@ -88,6 +78,9 @@
 import { onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '../stores/auth'
+
+import PrincipalButton from '../components/PrincipalButton.vue'
+import { BookOpenIcon, AcademicCapIcon, BriefcaseIcon, BuildingLibraryIcon, UserIcon } from '@heroicons/vue/16/solid'
 
 const router = useRouter()
 const authStore = useAuthStore()

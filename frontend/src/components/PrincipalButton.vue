@@ -2,7 +2,7 @@
   <component 
     :is="to ? RouterLink : 'button'"
     v-bind="to ? { to } : { type: 'button' }"
-    class="p-5 rounded-lg text-white font-bold text-center w-auto m-3 cursor-pointer border-2 border-transparent transition-all duration-300 ease-in-out transform hover:-translate-y-2"
+    class="p-3 rounded-lg text-white font-bold text-center w-auto cursor-pointer border-2 border-transparent transition-all duration-300 ease-in-out transform hover:-translate-y-2"
     :class="variantClasses"
   >
     <slot></slot>
