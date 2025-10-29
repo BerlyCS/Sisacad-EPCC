@@ -43,6 +43,21 @@ public class StudentCourseService {
                 .collect(Collectors.toList());
     }
 
+    public List<Course> getCoursesByStudent(String studentDocumentoIdentidad) {
+        List<StudentCourse> enrollments = studentCourseRepository.findByStudentDocumentoIdentidad(studentDocumentoIdentidad);
+        List<Course> allCourses = courseRepository.findAll();
+
+        // Crear un mapa de cursos por ID para busqueda rapida
+        java.util.Map<Long, Course> courseMap = allCourses.stream()
+                .collect(Collectors.toMap(Course::getCourseID, course -> course));
+
+        // Filtrar cursos en los que el estudiante está matriculado
+        return enrollments.stream()
+                .map(enrollment -> courseMap.get(enrollment.getCourseId()))
+                .filter(course -> course != null)
+                .collect(Collectors.toList());
+    }
+
     @Transactional
     public void enrollStudentInCourse(String studentDocumentoIdentidad, Long courseId) {
         if (!studentCourseRepository.existsByStudentAndCourse(studentDocumentoIdentidad, courseId)) {

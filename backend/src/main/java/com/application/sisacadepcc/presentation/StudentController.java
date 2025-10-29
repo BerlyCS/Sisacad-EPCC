@@ -2,7 +2,9 @@ package com.application.sisacadepcc.presentation;
 
 import com.application.sisacadepcc.config.security.RequiresAdministratorAccess;
 import com.application.sisacadepcc.domain.model.Student;
+import com.application.sisacadepcc.domain.model.Course;
 import com.application.sisacadepcc.service.StudentService;
+import com.application.sisacadepcc.service.StudentCourseService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -13,15 +15,24 @@ import java.util.List;
 public class StudentController {
 
     private final StudentService service;
+    private final StudentCourseService studentCourseService;
 
-    public StudentController(StudentService service) {
+    public StudentController(StudentService service, StudentCourseService studentCourseService) {
         this.service = service;
+        this.studentCourseService = studentCourseService;
     }
 
     @GetMapping
     @RequiresAdministratorAccess
     public ResponseEntity<List<Student>> getAllStudents() {
         return ResponseEntity.ok(service.getAllStudents());
+    }
+
+    @GetMapping("/{documentoIdentidad}/courses")
+    @RequiresAdministratorAccess
+    public ResponseEntity<List<Course>> getCoursesByStudent(@PathVariable String documentoIdentidad) {
+        List<Course> courses = studentCourseService.getCoursesByStudent(documentoIdentidad);
+        return ResponseEntity.ok(courses);
     }
 
     @PostMapping
