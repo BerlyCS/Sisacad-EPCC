@@ -67,8 +67,7 @@ public class ExcelScheduleService {
 
     public List<String> getAvailableClassrooms() {
         return Arrays.asList(
-                "AULA 101", "AULA 201", "AULA 202", "AULA 203", "AULA 301",
-                "LAB 1", "LAB 2", "LAB 3", "LAB 01", "LAB 02", "LAB 04"
+                "AULA 101", "AULA 201", "AULA 202", "AULA 203", "AULA 301", "LAB 01", "LAB 02", "LAB 04"
         );
     }
 
@@ -194,7 +193,7 @@ public class ExcelScheduleService {
                 String courseInfo = getCellValue(cell).trim();
                 if (!courseInfo.isEmpty() && !courseInfo.equals("-")) {
                     // Extraer nombre del curso (limpiar el texto)
-                    String courseName = extractCourseName(courseInfo);
+                    String courseName = courseInfo;
 
                     OccupiedTimeSlot slot = new OccupiedTimeSlot(
                             classroomName, dayOfWeek, startTime, endTime, courseName
@@ -225,22 +224,7 @@ public class ExcelScheduleService {
         }
         return cellValue.trim();
     }
-
-    private String extractCourseName(String courseInfo) {
-        // Limpiar y extraer el nombre del curso
-        // Remover información de grupo, tipo de clase, etc.
-        String cleaned = courseInfo
-                .replaceAll("\\([A-Z]\\)", "") // Remover (A), (B), etc.
-                .replaceAll("TEORIA", "")
-                .replaceAll("PRACTICA", "")
-                .replaceAll("LABORATORIO", "")
-                .replaceAll("LAB[0-9]*", "")
-                .replaceAll("\\s+", " ")
-                .trim();
-
-        return cleaned.isEmpty() ? courseInfo : cleaned;
-    }
-
+    
     private String normalizeClassroomName(String classroomName) {
         // Normalizar nombres de aulas/labs
         String normalized = classroomName.toUpperCase()
