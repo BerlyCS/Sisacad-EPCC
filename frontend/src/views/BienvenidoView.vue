@@ -41,6 +41,7 @@
         <div v-if="authStore.user.isAdmin" class="pt-4 border-gray-200">
           <h3 class="text-lg font-semibold text-gray-800 mb-3">Panel de Administración</h3>
           <div class="grid grid-cols-1 gap-4 lg:grid-cols-4 sm:grid-cols-2 mt-5">
+            <!-- Botones existentes de administración -->
             <PrincipalButton color="teal" to="/admin/classrooms" >
               <building-library-icon class="w-15 h-15 mx-auto mt-2 mb-4"/>
               <h4 class="text-xl">Gestionar Aulas</h4>
@@ -53,7 +54,7 @@
               <briefcase-icon class="w-15 h-15 mx-auto mt-2 mb-4"/>
               <h4 class="text-xl">Gestionar Profesores</h4>
             </PrincipalButton>
-            <PrincipalButton color="pinck" to="/admin/students" >
+            <PrincipalButton color="pink" to="/admin/students" >
               <academic-cap-icon class="w-15 h-15 mx-auto mt-2 mb-4"/>
               <h4 class="text-xl">Gestionar Estudiantes</h4>
             </PrincipalButton>
@@ -61,9 +62,31 @@
               <UserIcon class="w-15 h-15 mx-auto mt-2 mb-4"/>
               <h4 class="text-xl">Gestionar Secretarias</h4>
             </PrincipalButton>
+            
+            <!-- NUEVOS BOTONES PARA ADMINISTRADORES -->
+            <PrincipalButton color="blue" to="/classrooms" >
+              <CalendarIcon class="w-15 h-15 mx-auto mt-2 mb-4"/>
+              <h4 class="text-xl">Reservar Aula</h4>
+            </PrincipalButton>
+            
+            <PrincipalButton color="green" to="/reservation-management" >
+              <ClipboardDocumentListIcon class="w-15 h-15 mx-auto mt-2 mb-4"/>
+              <h4 class="text-xl">Gestionar Reservas</h4>
+            </PrincipalButton>
           </div>
         </div>
-  
+
+        <!-- Panel para profesores (no administradores) -->
+        <div v-else-if="authStore.user.role === 'PROFESSOR'" class="pt-4 border-gray-200">
+          <h3 class="text-lg font-semibold text-gray-800 mb-3">Panel del Profesor</h3>
+          <div class="grid grid-cols-1 gap-4 lg:grid-cols-3 sm:grid-cols-2 mt-5">
+            <!-- Solo el botón de Reservar Aula para profesores -->
+            <PrincipalButton color="blue" to="/classrooms" >
+              <CalendarIcon class="w-15 h-15 mx-auto mt-2 mb-4"/>
+              <h4 class="text-xl">Reservar Aula</h4>
+            </PrincipalButton>
+          </div>
+        </div>
       </div>
       
       <div v-else-if="authStore.loading">
@@ -94,7 +117,7 @@ import { useRouter } from 'vue-router'
 import { useAuthStore } from '../stores/auth'
 
 import PrincipalButton from '../components/PrincipalButton.vue'
-import { BookOpenIcon, AcademicCapIcon, BriefcaseIcon, BuildingLibraryIcon, UserIcon } from '@heroicons/vue/16/solid'
+import { BookOpenIcon, AcademicCapIcon, BriefcaseIcon, BuildingLibraryIcon, UserIcon, CalendarIcon, ClipboardDocumentListIcon } from '@heroicons/vue/16/solid'
 
 const router = useRouter()
 const authStore = useAuthStore()
