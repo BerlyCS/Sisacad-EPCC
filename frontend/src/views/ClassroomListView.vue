@@ -1,43 +1,47 @@
 <template>
   <AdminLayout>
-    <div class="classroom-list-container">
-      <div class="header">
-        <h1>Reservar Aula</h1>
-        <p>Seleccione un aula o laboratorio para ver su disponibilidad</p>
+    <div class="p-5">
+      <div class="text-center mb-10">
+        <h1 class="mb-2 text-gray-600 font-medium text-3xl">Reservar Aula</h1>
+        <p class="text-gray-700">Seleccione un aula o laboratorio para ver su disponibilidad</p>
       </div>
 
-      <div class="classroom-grid">
+      <div class="grid grid-cols-1 gap-5 lg:grid-cols-3 sm:grid-cols-2 mt-[30px]">
         <div 
           v-for="classroom in classrooms" 
           :key="classroom"
-          class="classroom-card"
+          class="flex items-center p-5 bg-white rounded-xl shadow-md cursor-pointer hover:shadow-lg transition-all duration-300 border-2 border-transparent hover:border-cyan-700 classroom-card"
           @click="selectClassroom(classroom)"
         >
-          <div class="classroom-icon">
-            <i class="fas" :class="getClassroomIcon(classroom)"></i>
+
+          <div v-if="classroom.includes('LAB')">
+            <BeakerIcon class="text-cyan-600 w-11 h-11 flex items-center justify-center mr-4" />
           </div>
-          <div class="classroom-info">
-            <h3>{{ classroom }}</h3>
-            <span class="availability-badge" :class="getAvailabilityClass(classroom)">
+          <div v-else class="other-badge">
+            <BuildingOfficeIcon class="text-cyan-600 w-11 h-11 flex items-center justify-center mr-4"/>
+          </div>
+
+          <div class="flex-1">
+            <h3 class="text-gray-600 mb-2 text-md">{{ classroom }}</h3>
+            <span class="bg-[#d4edda] px-3 py-1 rounded-2xl font-medium text-[#155724]" :class="getAvailabilityClass(classroom)">
               {{ getAvailabilityText(classroom) }}
             </span>
           </div>
-          <div class="classroom-arrow">
-            <i class="fas fa-chevron-right"></i>
-          </div>
+          
+          <ChevronRightIcon class="w-10 h-10 mx-auto mt-2 mb-4 text-gray-400"/>
         </div>
       </div>
 
       <!-- Loading State -->
-      <div v-if="loading" class="loading">
-        <i class="fas fa-spinner fa-spin"></i>
+      <div v-if="loading" class="text-center p-10 text-blue-500 text-md">
         Cargando aulas...
       </div>
 
       <!-- Error State -->
-      <div v-if="error" class="error-message">
-        <i class="fas fa-exclamation-triangle"></i>
-        {{ error }}
+      <div v-if="error" class="text-center p-5 bg-[#f8d7da] text-[#721c24] rounded-lg mt-5">
+        <ExclamationTriangleIcon class="w-10 h-10 inline-block mb-3"/>
+        <p>{{ error }}</p>
+        
       </div>
     </div>
   </AdminLayout>
@@ -48,17 +52,12 @@ import { ref, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import AdminLayout from '@/components/AdminLayout.vue';
 import { reservationService } from '@/services/reservationService';
+import { BeakerIcon, BuildingOfficeIcon, ChevronRightIcon, ExclamationTriangleIcon } from '@heroicons/vue/16/solid';
 
 const router = useRouter();
 const classrooms = ref<string[]>([]);
 const loading = ref(false);
 const error = ref('');
-
-const getClassroomIcon = (classroom: string) => {
-  if (classroom.includes('LAB')) return 'fa-flask';
-  if (classroom.includes('AULA')) return 'fa-chalkboard';
-  return 'fa-building';
-};
 
 const getAvailabilityClass = (classroom: string) => {
   // Por ahora, todas se muestran como disponibles
@@ -93,70 +92,6 @@ onMounted(() => {
 </script>
 
 <style scoped>
-.classroom-list-container {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 20px;
-}
-
-.header {
-  text-align: center;
-  margin-bottom: 40px;
-}
-
-.header h1 {
-  color: #2c3e50;
-  margin-bottom: 10px;
-}
-
-.header p {
-  color: #7f8c8d;
-  font-size: 1.1em;
-}
-
-.classroom-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-  gap: 20px;
-  margin-top: 30px;
-}
-
-.classroom-card {
-  display: flex;
-  align-items: center;
-  padding: 20px;
-  background: white;
-  border-radius: 12px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-  cursor: pointer;
-  transition: all 0.3s ease;
-  border: 2px solid transparent;
-}
-
-.classroom-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
-  border-color: #3498db;
-}
-
-.classroom-icon {
-  font-size: 2em;
-  color: #3498db;
-  margin-right: 15px;
-  width: 60px;
-  text-align: center;
-}
-
-.classroom-info {
-  flex: 1;
-}
-
-.classroom-info h3 {
-  margin: 0 0 8px 0;
-  color: #2c3e50;
-  font-size: 1.2em;
-}
-
 .availability-badge {
   padding: 4px 12px;
   border-radius: 20px;
@@ -177,44 +112,5 @@ onMounted(() => {
 .availability-badge.partial {
   background: #fff3cd;
   color: #856404;
-}
-
-.classroom-arrow {
-  color: #bdc3c7;
-  font-size: 1.2em;
-}
-
-.loading {
-  text-align: center;
-  padding: 40px;
-  color: #3498db;
-  font-size: 1.1em;
-}
-
-.loading i {
-  margin-right: 10px;
-}
-
-.error-message {
-  text-align: center;
-  padding: 20px;
-  background: #f8d7da;
-  color: #721c24;
-  border-radius: 8px;
-  margin: 20px 0;
-}
-
-.error-message i {
-  margin-right: 10px;
-}
-
-@media (max-width: 768px) {
-  .classroom-grid {
-    grid-template-columns: 1fr;
-  }
-  
-  .classroom-list-container {
-    padding: 10px;
-  }
 }
 </style>
