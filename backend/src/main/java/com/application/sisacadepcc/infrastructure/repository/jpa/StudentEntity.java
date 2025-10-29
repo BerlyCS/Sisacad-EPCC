@@ -23,16 +23,20 @@ public class StudentEntity {
     @Column(name = "correo_institucional")
     private String correoInstitucional;
 
+    @Column(name = "anio")
+    private Integer anio; // Cambiado de año a anio
+
     public StudentEntity() {}
 
     public StudentEntity(String documentoIdentidad, String cui, String apellidoPaterno,
-                         String apellidoMaterno, String nombres, String correoInstitucional) {
+                         String apellidoMaterno, String nombres, String correoInstitucional, Integer anio) {
         this.documentoIdentidad = documentoIdentidad;
         this.cui = cui;
         this.apellidoPaterno = apellidoPaterno;
         this.apellidoMaterno = apellidoMaterno;
         this.nombres = nombres;
         this.correoInstitucional = correoInstitucional;
+        this.anio = anio;
     }
 
     // Getters y setters
@@ -53,4 +57,7 @@ public class StudentEntity {
 
     public String getCorreoInstitucional() { return correoInstitucional; }
     public void setCorreoInstitucional(String correoInstitucional) { this.correoInstitucional = correoInstitucional; }
+
+    public Integer getAnio() { return anio; }
+    public void setAnio(Integer anio) { this.anio = anio; }
 }

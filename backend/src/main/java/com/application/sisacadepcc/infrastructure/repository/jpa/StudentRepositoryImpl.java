@@ -5,6 +5,7 @@ import com.application.sisacadepcc.domain.repository.StudentRepository;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Repository
@@ -24,15 +25,18 @@ public class StudentRepositoryImpl implements StudentRepository {
                 .collect(Collectors.toList());
     }
 
-    private Student mapToDomain(StudentEntity entity) {
-        return new Student(
-                entity.getDocumentoIdentidad(),
-                entity.getCui(),
-                entity.getApellidoPaterno(),
-                entity.getApellidoMaterno(),
-                entity.getNombres(),
-                entity.getCorreoInstitucional()
-        );
+    @Override
+    public Optional<Student> findByDocumentoIdentidad(String documentoIdentidad) {
+        return jpaRepository.findById(documentoIdentidad)
+                .map(this::mapToDomain);
+    }
+
+    @Override
+    public List<Student> findByAnio(Integer anio) {
+        return jpaRepository.findByAnio(anio)
+                .stream()
+                .map(this::mapToDomain)
+                .collect(Collectors.toList());
     }
 
     @Override
@@ -40,4 +44,15 @@ public class StudentRepositoryImpl implements StudentRepository {
         return jpaRepository.existsByCorreoInstitucional(email);
     }
 
+    private Student mapToDomain(StudentEntity entity) {
+        return new Student(
+                entity.getDocumentoIdentidad(),
+                entity.getCui(),
+                entity.getApellidoPaterno(),
+                entity.getApellidoMaterno(),
+                entity.getNombres(),
+                entity.getCorreoInstitucional(),
+                entity.getAnio()  // Agregar el campo anio
+        );
+    }
 }

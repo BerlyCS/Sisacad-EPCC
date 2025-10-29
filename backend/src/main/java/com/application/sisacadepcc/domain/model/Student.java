@@ -7,17 +7,19 @@ public class Student {
     private String apellidoMaterno;
     private String nombres;
     private String correoInstitucional;
+    private Integer anio; // Cambiado de año a anio
 
     public Student() {}
 
     public Student(String documentoIdentidad, String cui, String apellidoPaterno,
-                   String apellidoMaterno, String nombres, String correoInstitucional) {
+                   String apellidoMaterno, String nombres, String correoInstitucional, Integer anio) {
         this.documentoIdentidad = documentoIdentidad;
         this.cui = cui;
         this.apellidoPaterno = apellidoPaterno;
         this.apellidoMaterno = apellidoMaterno;
         this.nombres = nombres;
         this.correoInstitucional = correoInstitucional;
+        this.anio = anio;
     }
 
     // Getters y setters
@@ -38,4 +40,7 @@ public class Student {
 
     public String getCorreoInstitucional() { return correoInstitucional; }
     public void setCorreoInstitucional(String correoInstitucional) { this.correoInstitucional = correoInstitucional; }
+
+    public Integer getAnio() { return anio; }
+    public void setAnio(Integer anio) { this.anio = anio; }
 }
