@@ -3,8 +3,6 @@ package com.application.sisacadepcc.domain.model;
 import com.application.sisacadepcc.domain.model.valueobject.Place;
 import com.application.sisacadepcc.domain.model.valueobject.OccupiedSchedule;
 
-import java.sql.Time;
-import java.util.Date;
 import java.util.List;
 
 public class Classroom {
@@ -28,9 +26,15 @@ public class Classroom {
         occupiedSchedules.add(newSchedule);
     }
 
-    public boolean isAvailable(Date date, Time start, Time end) {
+    // Método simplificado - usa strings como el resto del proyecto
+    public boolean isAvailable(String dayOfWeek, String startTime, String endTime) {
         return occupiedSchedules.stream()
-                .noneMatch(s -> s.getDate().equals(date)
-                        && (start.before(s.getEndTime()) && end.after(s.getStartTime())));
+                .noneMatch(schedule -> schedule.occupiesTimeSlot(dayOfWeek, startTime, endTime));
+    }
+
+    // Método para obtener el nombre del aula - CORREGIDO
+    public String getName() {
+        // Si Place no tiene getName(), usa un valor por defecto
+        return "Aula " + classroomID;
     }
 }

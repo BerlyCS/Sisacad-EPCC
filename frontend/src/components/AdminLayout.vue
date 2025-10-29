@@ -30,14 +30,29 @@
     <nav class="bg-white shadow">
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="flex space-x-8 py-3">
+          <!-- Enlaces de navegación -->
           <router-link 
             v-for="item in navigation" 
             :key="item.name"
             :to="item.to"
-            class="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium transition"
+            class="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium transition flex items-center space-x-2"
             :class="{ 'bg-blue-100 text-blue-700': $route.path === item.to }"
           >
-            | {{ item.name }} |
+            <template v-if="item.icon">
+              <i :class="item.icon"></i>
+            </template>
+            <span>| {{ item.name }} |</span>
+          </router-link>
+
+          <!-- 🔹 Enlace adicional solo para ADMIN -->
+          <router-link 
+            v-if="userRole === 'ADMIN'" 
+            to="/reservation-management" 
+            class="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium transition flex items-center space-x-2"
+            :class="{ 'bg-blue-100 text-blue-700': $route.path === '/reservation-management' }"
+          >
+            <i class="fas fa-tasks"></i>
+            <span>| Gestionar Reservas |</span>
           </router-link>
         </div>
       </div>
@@ -60,6 +75,7 @@ const router = useRouter()
 const authStore = useAuthStore()
 
 const user = authStore.user
+const userRole = user?.role || '' // 👈 obtenemos el rol del usuario
 
 const navigation = [
   { name: 'Aulas', to: '/admin/classrooms' },
@@ -67,6 +83,7 @@ const navigation = [
   { name: 'Profesores', to: '/admin/professors' },
   { name: 'Estudiantes', to: '/admin/students' },
   { name: 'Secretarias', to: '/admin/secretaries' },
+  { name: 'Reservar Aula', to: '/classrooms', icon: 'fas fa-calendar-alt' }
 ]
 
 const goToDashboard = () => {
@@ -76,12 +93,8 @@ const goToDashboard = () => {
 const logout = async () => {
   const success = await authStore.logout()
   
-  // Si el logout fue exitoso via API, redirigir
   if (success) {
     router.replace('/?logout=success')
   }
-  // Si falló, el método logout ya hizo la redirección directa
 }
-
 </script>
-

@@ -46,6 +46,24 @@ const router = createRouter({
       name: 'secretaries',
       component: SecretaryManagementView,
     },
+    {
+      path: '/classrooms',
+      name: 'ClassroomList',
+      component: () => import('@/views/ClassroomListView.vue'),
+      meta: { requiresAuth: true }
+    },
+    {
+      path: '/classroom-schedule/:classroomName',
+      name: 'ClassroomSchedule',
+      component: () => import('@/views/ClassroomScheduleView.vue'),
+      meta: { requiresAuth: true }
+    },
+    {
+      path: '/reservation-management',
+      name: 'ReservationManagement',
+      component: () => import('@/views/ReservationManagementView.vue'),
+      meta: { requiresAuth: true }
+    },
   ],
 })
 
