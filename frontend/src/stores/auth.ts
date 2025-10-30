@@ -71,12 +71,48 @@ export const useAuthStore = defineStore('auth', () => {
     return user.value !== null && user.value.authenticated
   })
 
+  // Computed properties para acceso fácil
+  const userRole = computed(() => {
+    return user.value?.role || ''
+  })
+
+  const userName = computed(() => {
+    return user.value?.name || ''
+  })
+
+  const userEmail = computed(() => {
+    return user.value?.email || ''
+  })
+
+  const userDocumentoIdentidad = computed(() => {
+    return user.value?.documentoIdentidad || ''
+  })
+
+  const isAdmin = computed(() => {
+    return user.value?.isAdmin || user.value?.role === 'ADMIN'
+  })
+
+  const isStudent = computed(() => {
+    return user.value?.role === 'STUDENT'
+  })
+
+  const isProfessor = computed(() => {
+    return user.value?.role === 'PROFESSOR'
+  })
+
   return {
     user,
     loading,
     error,
     isAuthenticated,
     initialized,
+    userRole,
+    userName,
+    userEmail,
+    userDocumentoIdentidad,
+    isAdmin,
+    isStudent,
+    isProfessor,
     setUser,
     setLoading,
     setError,
