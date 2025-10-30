@@ -79,7 +79,7 @@
 
 <script setup>
 import { onMounted } from 'vue'
-import AdminLayout from '../components/AdminLayout.vue'
+import AdminLayout from '../components/TopBar.vue'
 import { useSecretaryService } from '../services/secretaryService'
 
 const { secretaries, loading, error, fetchSecretaries } = useSecretaryService()

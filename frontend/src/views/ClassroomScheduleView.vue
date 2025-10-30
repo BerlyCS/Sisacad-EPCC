@@ -160,7 +160,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
-import AdminLayout from '../components/AdminLayout.vue';
+import AdminLayout from '../components/TopBar.vue';
 import { reservationService, type Reservation } from '@/services/reservationService';
 import { ArrowLeftIcon, XMarkIcon, ExclamationTriangleIcon } from '@heroicons/vue/16/solid';
 

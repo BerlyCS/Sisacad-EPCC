@@ -85,7 +85,7 @@
 
 <script setup>
 import { onMounted } from 'vue'
-import AdminLayout from '../components/AdminLayout.vue'
+import AdminLayout from '../components/TopBar.vue'
 import { useStudentService } from '../services/studentService'
 
 const { students, loading, error, fetchStudents } = useStudentService()
