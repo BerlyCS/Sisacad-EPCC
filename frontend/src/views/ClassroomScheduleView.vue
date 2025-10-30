@@ -1,56 +1,56 @@
 <template>
   <AdminLayout>
-    <div class="schedule-container">
+    <div class="p-5">
       <!-- Header -->
-      <div class="header">
-        <button class="back-button" @click="$router.push('/classrooms')">
-          <i class="fas fa-arrow-left"></i>
+      <div class="flex justify-between items-start mb-8 flex-wrap gap-6">
+        <button class="flex items-center gap-2 bg-gray-400 hover:bg-gray-500 transition-all duration-200 px-4 py-2 text-white rounded-xl cursor-pointer text-md" @click="$router.push('/classrooms')">
+          <ArrowLeftIcon class="w-5 h-5"/>
           Volver
         </button>
-        <div class="title-section">
-          <h1>{{ classroomName }}</h1>
-          <p>Horario semanal - Seleccione un espacio disponible para reservar</p>
+        <div>
+          <h1 class="text-gray-700 m-0 text-2xl">{{ classroomName }}</h1>
+          <p class="text-gray-600 mt-1 text-md">Horario semanal - Seleccione un espacio disponible para reservar</p>
         </div>
-        <div class="legend">
-          <div class="legend-item">
-            <div class="color-box occupied"></div>
+        <div class="flex lg:flex-col lg:gap-2 gap-5">
+          <div class="flex items-center gap-2 text-sm">
+            <div class="w-5 h-5 rounded-md border-1 border-gray-300 bg-red-500"></div>
             <span>Ocupado (Horario fijo)</span>
           </div>
-          <div class="legend-item">
-            <div class="color-box available"></div>
+          <div class="flex items-center gap-2 text-sm">
+            <div class="w-5 h-5 rounded-md border-1 border-gray-300 bg-green-500"></div>
             <span>Disponible</span>
           </div>
-          <div class="legend-item">
-            <div class="color-box reserved"></div>
+          <div class="flex items-center gap-2 text-sm">
+            <div class="w-5 h-5 rounded-md border-1 border-gray-300 bg-yellow-500"></div>
             <span>Reservado</span>
           </div>
-          <div class="legend-item">
-            <div class="color-box pending"></div>
+          <div class="flex items-center gap-2 text-sm">
+            <div class="w-5 h-5 rounded-md border-1 border-gray-300 bg-white"></div>
             <span>Pendiente de aprobación</span>
           </div>
         </div>
       </div>
 
       <!-- Schedule Table -->
-      <div class="schedule-table-container">
-        <div class="time-slots-column">
-          <div class="time-header">Hora</div>
+      <div class="flex bg-white rounded-2xl shadow-lg overflow-hidden">
+        <div class="w-30 flex-shrink-0 bg-gray-100 border-r-2 border-gray-200">
+          <div class="p-5 bg-[#3498db] text-white font-bold text-center h-15">Hora</div>
           <div 
             v-for="timeSlot in timeSlots" 
             :key="timeSlot"
-            class="time-slot"
+            class="px-4 py-3 border-b border-gray-200 text-center text-sm font-medium text-gray-700 h-15 flex items-center justify-center"
           >
             {{ timeSlot }}
           </div>
         </div>
 
-        <div class="days-container">
+        <div class="flex">
           <div 
             v-for="day in days" 
             :key="day"
-            class="day-column"
+            class="flex-1 min-w-0"
           >
-            <div class="day-header">{{ day }}</div>
+            <div class="p-5 bg-[#3498db] text-white font-bold text-center h-15">{{ day }}</div>
             <div
               v-for="timeSlot in timeSlots"
               :key="`${day}-${timeSlot}`"
@@ -90,7 +90,7 @@
           <div class="modal-header">
             <h3>Reservar Aula</h3>
             <button class="close-button" @click="closeModal">
-              <i class="fas fa-times"></i>
+              <XMarkIcon class="w-5 h-5"/>
             </button>
           </div>
           
@@ -143,25 +143,26 @@
       </div>
 
       <!-- Loading State -->
-      <div v-if="loading" class="loading">
+      <div v-if="loading" class="text-center p-10 text-blue-500 text-md">
         <i class="fas fa-spinner fa-spin"></i>
         Cargando horario...
       </div>
 
       <!-- Error State -->
-      <div v-if="error" class="error-message">
-        <i class="fas fa-exclamation-triangle"></i>
-        {{ error }}
+      <div v-if="error" class="text-center p-5 bg-[#f8d7da] text-[#721c24] rounded-lg mt-5">
+        <ExclamationTriangleIcon class="w-10 h-10 inline-block mb-3"/>
+        <p>{{ error }}</p>
       </div>
     </div>
-  </AdminLayout>
+  </AdminLayout>  
 </template>
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
-import AdminLayout from '@/components/AdminLayout.vue';
+import AdminLayout from '../components/AdminLayout.vue';
 import { reservationService, type Reservation } from '@/services/reservationService';
+import { ArrowLeftIcon, XMarkIcon, ExclamationTriangleIcon } from '@heroicons/vue/16/solid';
 
 const route = useRoute();
 const router = useRouter();
@@ -434,63 +435,6 @@ onMounted(() => {
 </script>
 
 <style scoped>
-.schedule-container {
-  max-width: 1400px;
-  margin: 0 auto;
-  padding: 20px;
-}
-
-.header {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  margin-bottom: 30px;
-  flex-wrap: wrap;
-  gap: 20px;
-}
-
-.back-button {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 10px 16px;
-  background: #6c757d;
-  color: white;
-  border: none;
-  border-radius: 6px;
-  cursor: pointer;
-  text-decoration: none;
-  font-size: 0.9em;
-}
-
-.back-button:hover {
-  background: #5a6268;
-}
-
-.title-section h1 {
-  color: #2c3e50;
-  margin: 0;
-  font-size: 2em;
-}
-
-.title-section p {
-  color: #7f8c8d;
-  margin: 5px 0 0 0;
-}
-
-.legend {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.legend-item {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 0.9em;
-}
-
 .color-box {
   width: 20px;
   height: 20px;
@@ -508,67 +452,6 @@ onMounted(() => {
 
 .color-box.reserved {
   background: #f39c12;
-}
-
-.schedule-table-container {
-  display: flex;
-  background: white;
-  border-radius: 12px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-  overflow: hidden;
-}
-
-.time-slots-column {
-  width: 120px;
-  flex-shrink: 0;
-  background: #f8f9fa;
-  border-right: 2px solid #e9ecef;
-}
-
-.time-header {
-  padding: 20px;
-  background: #3498db;
-  color: white;
-  font-weight: bold;
-  text-align: center;
-  height: 60px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.time-slot {
-  padding: 15px 10px;
-  text-align: center;
-  border-bottom: 1px solid #e9ecef;
-  font-size: 0.9em;
-  font-weight: 500;
-  height: 60px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.days-container {
-  display: flex;
-  flex: 1;
-}
-
-.day-column {
-  flex: 1;
-  min-width: 0;
-}
-
-.day-header {
-  padding: 20px;
-  background: #3498db;
-  color: white;
-  font-weight: bold;
-  text-align: center;
-  height: 60px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
 }
 
 .schedule-cell {
@@ -885,173 +768,11 @@ onMounted(() => {
   box-shadow: 0 4px 12px rgba(108, 117, 125, 0.3);
 }
 
-.loading, .error-message {
-  text-align: center;
-  padding: 40px;
-  font-size: 1.1em;
-}
-
-.loading {
-  color: #3498db;
-}
-
 .error-message {
   background: #f8d7da;
   color: #721c24;
   border-radius: 8px;
   margin: 20px 0;
   border-left: 4px solid #e74c3c;
-}
-
-/* RESPONSIVE DESIGN */
-@media (max-width: 768px) {
-  .schedule-container {
-    padding: 10px;
-  }
-  
-  .header {
-    flex-direction: column;
-    align-items: stretch;
-    gap: 15px;
-  }
-  
-  .title-section h1 {
-    font-size: 1.5em;
-  }
-  
-  .schedule-table-container {
-    flex-direction: column;
-    overflow-x: auto;
-    border-radius: 8px;
-  }
-  
-  .time-slots-column {
-    width: 100%;
-    display: flex;
-  }
-  
-  .time-header {
-    width: 120px;
-    flex-shrink: 0;
-    font-size: 0.9em;
-    padding: 15px 10px;
-  }
-  
-  .time-slot {
-    width: 120px;
-    flex-shrink: 0;
-    font-size: 0.8em;
-    padding: 10px 5px;
-  }
-  
-  .days-container {
-    overflow-x: auto;
-  }
-  
-  .day-column {
-    min-width: 150px;
-  }
-  
-  .day-header {
-    font-size: 0.9em;
-    padding: 15px 10px;
-  }
-  
-  .schedule-cell {
-    height: 55px;
-  }
-  
-  .course-name {
-    font-size: 0.7em;
-    -webkit-line-clamp: 2;
-  }
-  
-  .form-actions {
-    flex-direction: column;
-  }
-  
-  .btn-primary, .btn-secondary {
-    justify-content: center;
-  }
-  
-  .modal-content {
-    margin: 10px;
-    max-height: 95vh;
-  }
-}
-
-@media (max-width: 480px) {
-  .legend {
-    flex-direction: row;
-    flex-wrap: wrap;
-    justify-content: center;
-  }
-  
-  .legend-item {
-    font-size: 0.8em;
-  }
-  
-  .time-slot {
-    height: 50px;
-    font-size: 0.75em;
-  }
-  
-  .schedule-cell {
-    height: 50px;
-  }
-  
-  .course-name {
-    font-size: 0.65em;
-    -webkit-line-clamp: 2;
-  }
-
-  /* Estilo para reservas pendientes */
-  .schedule-cell.pending {
-    background: linear-gradient(135deg, #fff3cd, #ffeaa7);
-    border: 2px solid #ffc107;
-    cursor: not-allowed;
-  }
-
-  .schedule-cell.pending .cell-content {
-    background: rgba(255, 193, 7, 0.1);
-    border-radius: 4px;
-    height: 100%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 8px 4px;
-  }
-
-  .schedule-cell.pending:hover {
-    background: linear-gradient(135deg, #ffeaa7, #ffdf7e);
-    transform: translateY(-1px);
-  }
-
-  /* Actualizar la leyenda */
-  .legend-item:nth-child(4) {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    font-size: 0.9em;
-  }
-
-  .color-box.pending {
-    background: #ffc107;
-  }
-
-  /* Mejorar el tooltip para mostrar tipo de ocupación */
-  .tooltip .type-indicator {
-    font-size: 0.8em;
-    opacity: 0.8;
-    margin-top: 4px;
-  }
-
-  .tooltip .type-curso-fijo {
-    color: #e74c3c;
-  }
-
-  .tooltip .type-reserva {
-    color: #f39c12;
-  }
 }
 </style>
