@@ -22,7 +22,10 @@ public class SecurityConfig {
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(authz -> authz
                         // Endpoints públicos
-                        .requestMatchers("/", "/api/auth/**", "/login**", "/oauth2/**", "/logout**", "/error").permitAll()
+                        .requestMatchers("/", "/api/auth/*", "/login", "/oauth2/", "/logout*", "/error").permitAll()
+
+                        // Endpoint específico para que estudiantes vean sus cursos
+                        .requestMatchers("/api/students/my-courses").authenticated()
 
                         // Endpoints de usuario (accesibles para todos autenticados)
                         .requestMatchers("/api/user/me").authenticated()
@@ -33,7 +36,7 @@ public class SecurityConfig {
                                 "/api/courses/**",
                                 "/api/professors/**",
                                 "/api/secretaries/**",
-                                "/api/students/**",
+                                "/api/students/**", // Esto incluye todos los endpoints de students excepto my-courses
                                 "/api/administrators/**"
                         ).authenticated() // La autorización específica se maneja en los controladores
 
