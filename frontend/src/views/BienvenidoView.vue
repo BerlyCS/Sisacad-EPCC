@@ -135,6 +135,7 @@
                     <p><span class="font-medium">Créditos:</span> {{ course.creditNumber }}</p>
                     <p><span class="font-medium">Grupo:</span> {{ course.groupLetter }}</p>
                     <p><span class="font-medium">Año:</span> {{ course.anio }}</p>
+                    <p><span class="font-medium"></span> {{ course.courseTypeLabel }}</p>
                   </div>
                 </div>
               </div>

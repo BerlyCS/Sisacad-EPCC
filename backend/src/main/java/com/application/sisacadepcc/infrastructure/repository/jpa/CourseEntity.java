@@ -1,6 +1,8 @@
 package com.application.sisacadepcc.infrastructure.repository.jpa;
 
+import com.application.sisacadepcc.domain.model.valueobject.CourseType;
 import jakarta.persistence.*;
+
 import java.util.List;
 
 @Entity
@@ -25,7 +27,14 @@ public class CourseEntity {
     private Long syllabusId;
 
     @Column(name = "anio")
-    private Integer anio; // Cambiado de año a anio
+    private Integer anio;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "course_type")
+    private CourseType courseType;
+
+    @Column(name = "lab_prerequisite_course_id")
+    private Long labPrerequisiteCourseId;
 
     @ElementCollection
     @CollectionTable(
@@ -43,18 +52,8 @@ public class CourseEntity {
     @Column(name = "teacher_id")
     private List<Long> teacherIDs;
 
-    public CourseEntity() {}
-
-    public CourseEntity(Long courseId, String name, int creditNumber, char groupLetter, Long syllabusId,
-                        Integer anio, List<Long> enrolledStudentIDs, List<Long> teacherIDs) {
-        this.courseId = courseId;
-        this.name = name;
-        this.creditNumber = creditNumber;
-        this.groupLetter = groupLetter;
-        this.syllabusId = syllabusId;
-        this.anio = anio;
-        this.enrolledStudentIDs = enrolledStudentIDs;
-        this.teacherIDs = teacherIDs;
+    public CourseEntity() {
+        // Required by JPA
     }
 
     // Getters y setters
@@ -75,6 +74,14 @@ public class CourseEntity {
 
     public Integer getAnio() { return anio; }
     public void setAnio(Integer anio) { this.anio = anio; }
+
+        public CourseType getCourseType() { return courseType; }
+        public void setCourseType(CourseType courseType) { this.courseType = courseType; }
+
+        public Long getLabPrerequisiteCourseId() { return labPrerequisiteCourseId; }
+        public void setLabPrerequisiteCourseId(Long labPrerequisiteCourseId) {
+                this.labPrerequisiteCourseId = labPrerequisiteCourseId;
+        }
 
     public List<Long> getEnrolledStudentIDs() { return enrolledStudentIDs; }
     public void setEnrolledStudentIDs(List<Long> enrolledStudentIDs) { this.enrolledStudentIDs = enrolledStudentIDs; }

@@ -6,7 +6,6 @@ import org.springframework.stereotype.Repository;
 
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 @Repository
 public class CourseRepositoryImpl implements CourseRepository {
@@ -19,10 +18,10 @@ public class CourseRepositoryImpl implements CourseRepository {
 
     @Override
     public List<Course> findAll() {
-        return jpaRepository.findAll()
-                .stream()
-                .map(this::mapToDomain)
-                .collect(Collectors.toList());
+    return jpaRepository.findAll()
+        .stream()
+        .map(this::mapToDomain)
+        .toList();
     }
 
     @Override
@@ -33,22 +32,24 @@ public class CourseRepositoryImpl implements CourseRepository {
 
     @Override
     public List<Course> findByAnio(Integer anio) {
-        return jpaRepository.findByAnio(anio)
-                .stream()
-                .map(this::mapToDomain)
-                .collect(Collectors.toList());
+    return jpaRepository.findByAnio(anio)
+        .stream()
+        .map(this::mapToDomain)
+        .toList();
     }
 
     private Course mapToDomain(CourseEntity entity) {
-        return new Course(
-                entity.getCourseId(),
-                entity.getName(),
-                entity.getCreditNumber(),
-                entity.getGroupLetter(),
-                entity.getSyllabusId(),
-                entity.getAnio(),  // Agregar el campo anio
-                entity.getEnrolledStudentIDs(),
-                entity.getTeacherIDs()
-        );
+    Course course = new Course();
+    course.setCourseID(entity.getCourseId());
+    course.setName(entity.getName());
+    course.setCreditNumber(entity.getCreditNumber());
+    course.setGroupLetter(entity.getGroupLetter());
+    course.setSyllabusID(entity.getSyllabusId());
+    course.setAnio(entity.getAnio());
+    course.setCourseType(entity.getCourseType());
+    course.setLabPrerequisiteCourseId(entity.getLabPrerequisiteCourseId());
+    course.setEnrolledStudentIDs(entity.getEnrolledStudentIDs());
+    course.setTeacherIDs(entity.getTeacherIDs());
+    return course;
     }
 }

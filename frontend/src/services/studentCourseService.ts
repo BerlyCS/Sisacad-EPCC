@@ -2,15 +2,28 @@ import { ref } from 'vue'
 
 const API_BASE_URL = 'http://localhost:8080/api'
 
-export interface Course {
+type CourseType = 'THEORY' | 'LAB'
+
+const COURSE_TYPE_LABEL: Record<CourseType, string> = {
+  THEORY: 'Teoría',
+  LAB: 'Laboratorio'
+}
+
+interface ApiCourse {
   courseID: number
   name: string
   creditNumber: number
   groupLetter: string
   syllabusID: number
   anio: number
+  courseType: CourseType
+  labPrerequisiteCourseId: number | null
   enrolledStudentIDs: number[]
   teacherIDs: number[]
+}
+
+export interface Course extends ApiCourse {
+  courseTypeLabel: string
 }
 
 export const useStudentCourseService = () => {
@@ -36,9 +49,12 @@ export const useStudentCourseService = () => {
         throw new Error(`Error ${response.status}: ${errorText}`)
       }
       
-      const data = await response.json()
+      const data: ApiCourse[] = await response.json()
       console.log('Frontend: Cursos recibidos:', data)
-      courses.value = data
+      courses.value = data.map(course => ({
+        ...course,
+        courseTypeLabel: COURSE_TYPE_LABEL[course.courseType]
+      }))
       
     } catch (err) {
       error.value = 'No se pudieron cargar los cursos'

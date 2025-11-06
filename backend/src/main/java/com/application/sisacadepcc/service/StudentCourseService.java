@@ -3,14 +3,15 @@ package com.application.sisacadepcc.service;
 import com.application.sisacadepcc.domain.model.Student;
 import com.application.sisacadepcc.domain.model.Course;
 import com.application.sisacadepcc.domain.model.StudentCourse;
+import com.application.sisacadepcc.domain.model.valueobject.CourseType;
+import com.application.sisacadepcc.domain.repository.CourseRepository;
 import com.application.sisacadepcc.domain.repository.StudentCourseRepository;
 import com.application.sisacadepcc.domain.repository.StudentRepository;
-import com.application.sisacadepcc.domain.repository.CourseRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 @Service
@@ -37,10 +38,10 @@ public class StudentCourseService {
                 .collect(Collectors.toMap(Student::getDocumentoIdentidad, student -> student));
 
         // Filtrar estudiantes matriculados en el curso
-        return enrollments.stream()
-                .map(enrollment -> studentMap.get(enrollment.getStudentDocumentoIdentidad()))
-                .filter(student -> student != null)
-                .collect(Collectors.toList());
+    return enrollments.stream()
+        .map(enrollment -> studentMap.get(enrollment.getStudentDocumentoIdentidad()))
+        .filter(Objects::nonNull)
+        .toList();
     }
 
     public List<Course> getCoursesByStudent(String studentDocumentoIdentidad) {
@@ -52,14 +53,29 @@ public class StudentCourseService {
                 .collect(Collectors.toMap(Course::getCourseID, course -> course));
 
         // Filtrar cursos en los que el estudiante está matriculado
-        return enrollments.stream()
-                .map(enrollment -> courseMap.get(enrollment.getCourseId()))
-                .filter(course -> course != null)
-                .collect(Collectors.toList());
+    return enrollments.stream()
+        .map(enrollment -> courseMap.get(enrollment.getCourseId()))
+        .filter(Objects::nonNull)
+        .toList();
     }
 
     @Transactional
     public void enrollStudentInCourse(String studentDocumentoIdentidad, Long courseId) {
+        Course course = courseRepository.findById(courseId)
+                .orElseThrow(() -> new IllegalArgumentException("Curso no encontrado: " + courseId));
+
+        if (CourseType.LAB.equals(course.getCourseType())) {
+            Long theoryCourseId = course.getLabPrerequisiteCourseId();
+            if (theoryCourseId == null) {
+                throw new IllegalStateException("El laboratorio no tiene curso teórico configurado");
+            }
+            boolean hasTheoryEnrollment = studentCourseRepository
+                    .existsByStudentAndCourse(studentDocumentoIdentidad, theoryCourseId);
+            if (!hasTheoryEnrollment) {
+                throw new IllegalArgumentException("El estudiante no está matriculado en el curso teórico requerido");
+            }
+        }
+
         if (!studentCourseRepository.existsByStudentAndCourse(studentDocumentoIdentidad, courseId)) {
             StudentCourse enrollment = new StudentCourse(null, studentDocumentoIdentidad, courseId);
             studentCourseRepository.save(enrollment);

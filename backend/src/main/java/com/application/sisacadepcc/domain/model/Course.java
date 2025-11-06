@@ -1,7 +1,9 @@
 package com.application.sisacadepcc.domain.model;
 
-import java.util.List;
+import com.application.sisacadepcc.domain.model.valueobject.CourseType;
+
 import java.util.ArrayList;
+import java.util.List;
 
 public class Course {
 
@@ -11,6 +13,8 @@ public class Course {
     private char groupLetter;
     private Long syllabusID;
     private Integer anio;
+    private CourseType courseType;
+    private Long labPrerequisiteCourseId;
     private List<Long> enrolledStudentIDs;
     private List<Long> teacherIDs;
 
@@ -18,21 +22,10 @@ public class Course {
     public Course() {
         this.enrolledStudentIDs = new ArrayList<>();
         this.teacherIDs = new ArrayList<>();
+        this.courseType = CourseType.THEORY;
     }
 
     // Constructor con parámetros
-    public Course(Long courseID, String name, int creditNumber, char groupLetter, Long syllabusID,
-                  Integer anio, List<Long> enrolledStudentIDs, List<Long> teacherIDs) {
-        this.courseID = courseID;
-        this.name = name;
-        this.creditNumber = creditNumber;
-        this.groupLetter = groupLetter;
-        this.syllabusID = syllabusID;
-        this.anio = anio;
-        this.enrolledStudentIDs = enrolledStudentIDs != null ? enrolledStudentIDs : new ArrayList<>();
-        this.teacherIDs = teacherIDs != null ? teacherIDs : new ArrayList<>();
-    }
-
     // Getters y setters (necesitas agregar setters)
     public Long getCourseID() { return courseID; }
     public void setCourseID(Long courseID) { this.courseID = courseID; }
@@ -51,6 +44,16 @@ public class Course {
 
     public Integer getAnio() { return anio; }
     public void setAnio(Integer anio) { this.anio = anio; }
+
+    public CourseType getCourseType() { return courseType; }
+    public void setCourseType(CourseType courseType) {
+        this.courseType = courseType != null ? courseType : CourseType.THEORY;
+    }
+
+    public Long getLabPrerequisiteCourseId() { return labPrerequisiteCourseId; }
+    public void setLabPrerequisiteCourseId(Long labPrerequisiteCourseId) {
+        this.labPrerequisiteCourseId = labPrerequisiteCourseId;
+    }
 
     public List<Long> getEnrolledStudentIDs() { return enrolledStudentIDs; }
     public void setEnrolledStudentIDs(List<Long> enrolledStudentIDs) { this.enrolledStudentIDs = enrolledStudentIDs; }

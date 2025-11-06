@@ -30,7 +30,11 @@ public class StudentCourseController {
     public ResponseEntity<String> enrollStudentInCourse(
             @PathVariable String studentDocumentoIdentidad,
             @PathVariable Long courseId) {
-        studentCourseService.enrollStudentInCourse(studentDocumentoIdentidad, courseId);
-        return ResponseEntity.ok("Estudiante matriculado exitosamente");
+        try {
+            studentCourseService.enrollStudentInCourse(studentDocumentoIdentidad, courseId);
+            return ResponseEntity.ok("Estudiante matriculado exitosamente");
+        } catch (IllegalArgumentException | IllegalStateException ex) {
+            return ResponseEntity.badRequest().body(ex.getMessage());
+        }
     }
 }
