@@ -3,6 +3,7 @@ package com.application.sisacadepcc.presentation;
 import com.application.sisacadepcc.config.security.RequiresAdministratorAccess;
 import com.application.sisacadepcc.domain.model.Student;
 import com.application.sisacadepcc.domain.model.Course;
+import com.application.sisacadepcc.presentation.dto.StudentScheduleEntry;
 import com.application.sisacadepcc.service.StudentService;
 import com.application.sisacadepcc.service.StudentCourseService;
 import com.application.sisacadepcc.domain.repository.StudentRepository;
@@ -65,6 +66,32 @@ public class StudentController {
             String studentDocumentoIdentidad = student.get().getDocumentoIdentidad();
             List<Course> courses = studentCourseService.getCoursesByStudent(studentDocumentoIdentidad);
             return ResponseEntity.ok(courses);
+
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().build();
+        }
+    }
+
+    @GetMapping("/my-schedule")
+    public ResponseEntity<List<StudentScheduleEntry>> getMySchedule(@AuthenticationPrincipal OAuth2User principal) {
+        try {
+            if (principal == null) {
+                return ResponseEntity.badRequest().build();
+            }
+
+            String email = principal.getAttribute("email");
+            if (email == null) {
+                return ResponseEntity.badRequest().build();
+            }
+
+            Optional<Student> student = studentRepository.findByCorreoInstitucional(email);
+            if (student.isEmpty()) {
+                return ResponseEntity.notFound().build();
+            }
+
+            String studentDocumentoIdentidad = student.get().getDocumentoIdentidad();
+            List<StudentScheduleEntry> schedule = studentCourseService.getScheduleForStudent(studentDocumentoIdentidad);
+            return ResponseEntity.ok(schedule);
 
         } catch (Exception e) {
             return ResponseEntity.internalServerError().build();

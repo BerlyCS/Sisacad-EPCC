@@ -7,6 +7,7 @@ import org.springframework.stereotype.Service;
 
 import java.io.InputStream;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 public class ExcelScheduleService {
@@ -135,8 +136,7 @@ public class ExcelScheduleService {
     }
 
     private void processClassroomSheet(Sheet sheet, String sheetName) {
-        String currentClassroom = null;
-        String currentGroup = null;
+    String currentClassroom = null;
 
         for (Row row : sheet) {
             // Buscar filas que definen el aula
@@ -150,12 +150,6 @@ public class ExcelScheduleService {
                     System.out.println("Found classroom: " + currentClassroom + " in sheet " + sheetName);
                 }
 
-                // Detectar grupo
-                if (cellValue.contains("PRIMER AÑO") || cellValue.contains("SEGUNDO AÑO") ||
-                        cellValue.contains("TERCER AÑO") || cellValue.contains("CUARTO AÑO") ||
-                        cellValue.contains("QUINTO AÑO")) {
-                    currentGroup = cellValue;
-                }
             }
 
             // Procesar horarios si tenemos un aula definida
@@ -235,6 +229,37 @@ public class ExcelScheduleService {
                 .trim();
 
         return normalized;
+    }
+
+    public List<OccupiedTimeSlot> findByCourseName(String courseName) {
+        if (courseName == null || courseName.isBlank()) {
+            return List.of();
+        }
+
+        String normalizedCourseName = normalizeCourseName(courseName);
+
+        return scheduleData.values().stream()
+                .flatMap(List::stream)
+                .filter(slot -> {
+                    String slotName = normalizeCourseName(slot.getCourseName());
+                    return slotName.contains(normalizedCourseName);
+                })
+                .collect(Collectors.toList());
+    }
+
+    private String normalizeCourseName(String value) {
+        if (value == null) {
+            return "";
+        }
+        return value
+                .toUpperCase()
+                .replace("Á", "A")
+                .replace("É", "E")
+                .replace("Í", "I")
+                .replace("Ó", "O")
+                .replace("Ú", "U")
+                .replaceAll("[^A-Z0-9]", "")
+                .trim();
     }
 
     private String getCellValue(Cell cell) {

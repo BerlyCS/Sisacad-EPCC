@@ -126,12 +126,12 @@
               <div v-else-if="studentCourses.length > 0" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 <div 
                   v-for="course in studentCourses" 
-                  :key="course.courseID"
+                  :key="course.courseCode"
                   class="bg-white p-4 rounded-lg shadow border border-gray-200 hover:shadow-md transition"
                 >
                   <h5 class="font-semibold text-gray-800 text-lg">{{ course.name }}</h5>
                   <div class="mt-2 text-sm text-gray-600 space-y-1">
-                    <p><span class="font-medium">Código:</span> {{ course.courseID }}</p>
+                    <p><span class="font-medium">Código:</span> {{ course.courseCode }}</p>
                     <p><span class="font-medium">Créditos:</span> {{ course.creditNumber }}</p>
                     <p><span class="font-medium">Grupo:</span> {{ course.groupLetter }}</p>
                     <p><span class="font-medium">Año:</span> {{ course.anio }}</p>
@@ -144,6 +144,39 @@
               <div v-else class="text-center py-6">
                 <p class="text-gray-500">No estás matriculado en ningún curso.</p>
                 <p class="text-sm text-gray-400 mt-1">Contacta con administración para matricularte.</p>
+              </div>
+            </div>
+
+            <!-- Horario semanal -->
+            <div class="mt-6 p-6 bg-indigo-50 rounded-lg border border-indigo-200">
+              <div class="flex items-center justify-between mb-4">
+                <h4 class="text-lg font-semibold text-indigo-800">Mi Horario Semanal</h4>
+                <button
+                  @click="loadMySchedule"
+                  :disabled="scheduleLoading"
+                  class="px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700 transition disabled:opacity-50"
+                >
+                  <span v-if="!scheduleLoading">Actualizar</span>
+                  <span v-else>Cargando...</span>
+                </button>
+              </div>
+
+              <div v-if="scheduleLoading" class="text-center py-4">
+                <p class="text-indigo-600">Cargando horario...</p>
+              </div>
+
+              <div v-else-if="scheduleError" class="text-center py-4">
+                <p class="text-red-600">{{ scheduleError }}</p>
+                <button
+                  @click="loadMySchedule"
+                  class="mt-2 px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 transition"
+                >
+                  Reintentar
+                </button>
+              </div>
+
+              <div v-else>
+                <StudentScheduleTable :entries="studentSchedule" />
               </div>
             </div>
           </div>
@@ -175,8 +208,10 @@ import { onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '../stores/auth'
 import { useStudentCourseService } from '../services/studentCourseService'
+import { useStudentScheduleService } from '../services/studentScheduleService'
 
 import PrincipalButton from '../components/PrincipalButton.vue'
+import StudentScheduleTable from '../components/StudentScheduleTable.vue'
 import { BookOpenIcon, AcademicCapIcon, BriefcaseIcon, BuildingLibraryIcon, UserIcon, CalendarIcon, ClipboardDocumentListIcon } from '@heroicons/vue/16/solid'
 
 const router = useRouter()
@@ -184,6 +219,7 @@ const authStore = useAuthStore()
 
 // Servicio para cursos del estudiante - IMPORTANTE: usar la destructuración correcta
 const { courses: studentCourses, loading: coursesLoading, error: coursesError, fetchMyCourses } = useStudentCourseService()
+const { schedule: studentSchedule, loading: scheduleLoading, error: scheduleError, fetchMySchedule } = useStudentScheduleService()
 
 onMounted(async () => {
   // Inicializar el estado de autenticación
@@ -192,6 +228,7 @@ onMounted(async () => {
   // Si es estudiante, cargar sus cursos automáticamente
   if (authStore.isAuthenticated && authStore.user.role === 'STUDENT') {
     await loadMyCourses()
+    await loadMySchedule()
   }
   
   // Si no está autenticado, redirigir al login después de un breve delay
@@ -208,6 +245,14 @@ const loadMyCourses = async () => {
     await fetchMyCourses() // Ahora está definido porque viene del servicio
   } catch (error) {
     console.error('Error cargando cursos:', error)
+  }
+}
+
+const loadMySchedule = async () => {
+  try {
+    await fetchMySchedule()
+  } catch (error) {
+    console.error('Error cargando horario:', error)
   }
 }
 

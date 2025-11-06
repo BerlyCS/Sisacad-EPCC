@@ -40,7 +40,8 @@ public class CourseRepositoryImpl implements CourseRepository {
 
     private Course mapToDomain(CourseEntity entity) {
     Course course = new Course();
-    course.setCourseID(entity.getCourseId());
+    course.setCourseId(entity.getCourseId());
+    course.setCourseCode(entity.getCourseId());
     course.setName(entity.getName());
     course.setCreditNumber(entity.getCreditNumber());
     course.setGroupLetter(entity.getGroupLetter());

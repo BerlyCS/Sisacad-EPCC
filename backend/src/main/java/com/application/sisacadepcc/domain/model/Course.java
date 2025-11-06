@@ -7,7 +7,8 @@ import java.util.List;
 
 public class Course {
 
-    private Long courseID;
+    private Long courseId;
+    private Long courseCode;
     private String name;
     private int creditNumber;
     private char groupLetter;
@@ -27,8 +28,16 @@ public class Course {
 
     // Constructor con parámetros
     // Getters y setters (necesitas agregar setters)
-    public Long getCourseID() { return courseID; }
-    public void setCourseID(Long courseID) { this.courseID = courseID; }
+    public Long getCourseId() { return courseId; }
+    public void setCourseId(Long courseId) {
+        this.courseId = courseId;
+        if (this.courseCode == null) {
+            this.courseCode = courseId;
+        }
+    }
+
+    public Long getCourseCode() { return courseCode; }
+    public void setCourseCode(Long courseCode) { this.courseCode = courseCode; }
 
     public String getName() { return name; }
     public void setName(String name) { this.name = name; }

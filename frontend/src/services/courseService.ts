@@ -9,8 +9,9 @@ const COURSE_TYPE_LABEL: Record<CourseType, string> = {
   LAB: 'Laboratorio'
 }
 
-interface ApiCourse {
-  courseID: number
+export interface Course {
+  courseId: number
+  courseCode: number
   name: string
   creditNumber: number
   groupLetter: string
@@ -19,9 +20,6 @@ interface ApiCourse {
   labPrerequisiteCourseId: number | null
   enrolledStudentIDs: number[]
   teacherIDs: number[]
-}
-
-export interface Course extends ApiCourse {
   courseTypeLabel: string
 }
 
@@ -42,10 +40,19 @@ export const useCourseService = () => {
         throw new Error('Error al cargar los cursos')
       }
 
-      const data: ApiCourse[] = await response.json()
+      const data: any[] = await response.json()
       courses.value = data.map(course => ({
-        ...course,
-        courseTypeLabel: COURSE_TYPE_LABEL[course.courseType]
+        courseId: course.courseId ?? course.courseID,
+        courseCode: course.courseCode ?? course.courseID,
+        name: course.name,
+        creditNumber: course.creditNumber,
+        groupLetter: course.groupLetter,
+        syllabusID: course.syllabusID,
+        courseType: course.courseType,
+        labPrerequisiteCourseId: course.labPrerequisiteCourseId,
+        enrolledStudentIDs: course.enrolledStudentIDs,
+        teacherIDs: course.teacherIDs,
+  courseTypeLabel: COURSE_TYPE_LABEL[course.courseType as CourseType]
       }))
     } catch (err) {
       error.value = 'No se pudieron cargar los cursos'
