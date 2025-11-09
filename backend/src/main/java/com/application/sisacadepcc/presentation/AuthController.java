@@ -1,5 +1,6 @@
 package com.application.sisacadepcc.presentation;
 
+import com.application.sisacadepcc.service.DemoUserService;
 import com.application.sisacadepcc.service.EmailVerificationService;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
@@ -7,11 +8,18 @@ import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
+import org.springframework.security.oauth2.core.user.DefaultOAuth2User;
 import org.springframework.security.web.authentication.logout.SecurityContextLogoutHandler;
+import org.springframework.security.web.context.HttpSessionSecurityContextRepository;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/auth")
@@ -19,9 +27,11 @@ import java.util.Map;
 public class AuthController {
 
     private final EmailVerificationService emailVerificationService;
+    private final DemoUserService demoUserService;
 
-    public AuthController(EmailVerificationService emailVerificationService) {
+    public AuthController(EmailVerificationService emailVerificationService, DemoUserService demoUserService) {
         this.emailVerificationService = emailVerificationService;
+        this.demoUserService = demoUserService;
     }
 
     @PostMapping("/verify-email")
@@ -82,5 +92,56 @@ public class AuthController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(Map.of("error", "Error durante el logout"));
         }
+    }
+
+    @PostMapping("/demo-login")
+    public ResponseEntity<Map<String, Object>> demoLogin(@RequestBody Map<String, String> request, HttpServletRequest servletRequest) {
+        if (!demoUserService.isDemoLoginEnabled()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(Map.of("error", "Demo login no está habilitado"));
+        }
+
+        String role = Optional.ofNullable(request.get("role"))
+                .map(String::trim)
+                .map(String::toUpperCase)
+                .orElse("");
+
+        Optional<DemoUserService.DemoUserProfile> profileOptional = demoUserService.findProfileByRole(role);
+        if (profileOptional.isEmpty()) {
+            return ResponseEntity.badRequest()
+                    .body(Map.of("error", "Rol de demo no soportado"));
+        }
+
+        DemoUserService.DemoUserProfile profile = profileOptional.get();
+
+        Map<String, Object> attributes = new HashMap<>();
+        attributes.put("email", profile.email());
+        attributes.put("name", profile.displayName());
+        attributes.put("picture", profile.pictureUrl());
+
+        List<SimpleGrantedAuthority> authorities = List.of(new SimpleGrantedAuthority("ROLE_USER"));
+        DefaultOAuth2User principal = new DefaultOAuth2User(authorities, attributes, "email");
+        OAuth2AuthenticationToken authentication = new OAuth2AuthenticationToken(principal, authorities, "demo");
+
+        var context = SecurityContextHolder.createEmptyContext();
+        context.setAuthentication(authentication);
+        SecurityContextHolder.setContext(context);
+
+        HttpSession session = servletRequest.getSession(true);
+        session.setAttribute(HttpSessionSecurityContextRepository.SPRING_SECURITY_CONTEXT_KEY, context);
+
+        Map<String, Object> responseBody = new HashMap<>();
+        responseBody.put("authenticated", true);
+        responseBody.put("name", profile.displayName());
+        responseBody.put("email", profile.email());
+        responseBody.put("role", profile.role());
+        responseBody.put("isAdmin", "ADMIN".equals(profile.role()));
+        responseBody.put("picture", profile.pictureUrl());
+
+        if (profile.documentoIdentidad() != null) {
+            responseBody.put("documentoIdentidad", profile.documentoIdentidad());
+        }
+
+        return ResponseEntity.ok(responseBody);
     }
 }

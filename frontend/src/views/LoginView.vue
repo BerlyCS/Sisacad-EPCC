@@ -38,6 +38,24 @@
         <span v-else>Verificando...</span>
       </button>
 
+      <!-- DEMO LOGIN (deshabilitar con VITE_ENABLE_DEMO_LOGIN=false) -->
+      <div v-if="demoLoginEnabled" class="space-y-3 pt-4 border-t border-gray-200">
+        <p class="text-sm text-gray-500">
+          Accesos de demostración (solo para pruebas internas)
+        </p>
+        <div class="grid grid-cols-1 gap-2">
+          <button
+            v-for="profile in demoProfiles"
+            :key="profile.key"
+            @click="handleDemoLogin(profile)"
+            :disabled="loading"
+            class="w-full px-4 py-2 border border-gray-300 rounded hover:bg-gray-100 transition text-sm disabled:opacity-60 disabled:cursor-not-allowed"
+          >
+            {{ profile.label }}
+          </button>
+        </div>
+      </div>
+
       <!-- Modal para ingresar email manualmente (fallback) -->
       <div v-if="showEmailModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
         <div class="bg-white p-6 rounded-lg w-96">
@@ -85,6 +103,16 @@ const authStore = useAuthStore()
 const loading = ref(false)
 const errorMessage = ref('')
 const successMessage = ref('')
+const showEmailModal = ref(false)
+const manualEmail = ref('')
+
+const demoLoginEnabled = import.meta.env.VITE_ENABLE_DEMO_LOGIN !== 'false'
+const demoProfiles = [
+  { key: 'student', label: 'Ingresar como Estudiante', role: 'STUDENT' },
+  { key: 'professor', label: 'Ingresar como Profesor', role: 'PROFESSOR' },
+  { key: 'admin', label: 'Ingresar como Administrador', role: 'ADMIN' },
+  { key: 'secretary', label: 'Ingresar como Secretaria', role: 'SECRETARY' }
+]
 
 // Verificar si ya estamos autenticados al cargar la página
 onMounted(async () => {
@@ -147,6 +175,28 @@ const verifyManualEmail = async () => {
   } finally {
     loading.value = false
     showEmailModal.value = false
+  }
+}
+
+const handleDemoLogin = async (profile) => {
+  loading.value = true
+  errorMessage.value = ''
+  successMessage.value = ''
+
+  try {
+    const result = await authStore.loginAsDemo(profile.role)
+    if (result?.authenticated) {
+      successMessage.value = `Sesión demo iniciada como ${profile.label.toLowerCase()}.`
+      router.push('/bienvenido')
+      return
+    }
+
+    errorMessage.value = 'No se pudo iniciar sesión de demostración.'
+  } catch (error) {
+    console.error('Error en demo login:', error)
+    errorMessage.value = error instanceof Error ? error.message : 'No se pudo iniciar sesión de demostración.'
+  } finally {
+    loading.value = false
   }
 }
 

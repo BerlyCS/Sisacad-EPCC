@@ -16,6 +16,10 @@ export const useAuthStore = defineStore('auth', () => {
     loading.value = isLoading
   }
 
+  const setInitialized = (value: boolean) => {
+    initialized.value = value
+  }
+
   const setError = (errorMessage: string) => {
     error.value = errorMessage
   }
@@ -62,6 +66,26 @@ export const useAuthStore = defineStore('auth', () => {
       console.warn('Logout API falló, usando redirección directa:', error)
       window.location.href = 'http://localhost:8080/logout'
       return false
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const loginAsDemo = async (role: string) => {
+    setLoading(true)
+    clearError()
+
+    try {
+      const response = await authService.demoLogin(role)
+      if (response?.authenticated) {
+        user.value = response
+        initialized.value = true
+      }
+      return response
+    } catch (error: any) {
+      const message = error?.message || 'No se pudo iniciar sesión de demostración'
+      setError(message)
+      throw new Error(message)
     } finally {
       setLoading(false)
     }
@@ -115,9 +139,11 @@ export const useAuthStore = defineStore('auth', () => {
     isProfessor,
     setUser,
     setLoading,
+    setInitialized,
     setError,
     clearError,
     initializeAuth,
-    logout
+    logout,
+    loginAsDemo
   }
 })

@@ -57,5 +57,24 @@ export const authService = {
       console.warn('Error en logout API, usando fallback:', error)
       throw new Error('Usando fallback de logout')
     }
+  },
+
+  async demoLogin(role: string) {
+    const response = await fetch(`${API_BASE_URL}/auth/demo-login`, {
+      method: 'POST',
+      credentials: 'include',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ role })
+    })
+
+    if (!response.ok) {
+      const errorBody = await response.json().catch(() => ({}))
+      const message = errorBody.error || 'No se pudo iniciar sesión de demostración'
+      throw new Error(message)
+    }
+
+    return await response.json()
   }
 }
