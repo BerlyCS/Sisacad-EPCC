@@ -16,11 +16,11 @@ export const useStudentService = () => {
   const loading = ref(false)
   const error = ref('')
 
-  const fetchStudents = async () => {
+  const fetchStudentsSorted = async (sortBy: string = 'dni', direction: string = 'asc') => {
     loading.value = true
     error.value = ''
     try {
-      const response = await fetch(`${API_BASE_URL}/students`, {
+      const response = await fetch(`${API_BASE_URL}/students/list?sortBy=${sortBy}&direction=${direction}`, {
         credentials: 'include'
       })
       
@@ -41,6 +41,6 @@ export const useStudentService = () => {
     students,
     loading,
     error,
-    fetchStudents
+    fetchStudentsSorted
   }
 }

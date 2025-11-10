@@ -7,6 +7,26 @@
       </div>
       
       <div class="p-6">
+        <!-- Controles de ordenamiento (usados por admin y secretaria) -->
+        <div class="mb-4 flex flex-wrap gap-4 items-end">
+          <div>
+            <label class="block text-sm font-medium text-gray-700">Ordenar por</label>
+            <select v-model="sortBy" @change="fetchSorted" class="mt-1 block w-48 pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md">
+              <option value="dni">DNI</option>
+              <option value="cui">CUI</option>
+              <option value="name">Nombre</option>
+              <option value="apellidos">Apellidos</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700">Dirección</label>
+            <select v-model="direction" @change="fetchSorted" class="mt-1 block w-48 pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md">
+              <option value="asc">Ascendente</option>
+              <option value="desc">Descendente</option>
+            </select>
+          </div>
+          <button @click="fetchSorted" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition">Aplicar</button>
+        </div>
         <div v-if="loading" class="text-center py-8">
           <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
           <p class="text-gray-600 mt-2">Cargando estudiantes...</p>
@@ -15,7 +35,7 @@
         <div v-else-if="error" class="bg-red-50 border border-red-200 rounded-md p-4 mb-6">
           <p class="text-red-800">{{ error }}</p>
           <button 
-            @click="fetchStudents"
+            @click="fetchSorted"
             class="mt-2 px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 transition"
           >
             Reintentar
@@ -84,13 +104,19 @@
 </template>
 
 <script setup>
-import { onMounted } from 'vue'
+import { ref, onMounted } from 'vue'
 import AdminLayout from '../components/TopBar.vue'
 import { useStudentService } from '../services/studentService'
 
-const { students, loading, error, fetchStudents } = useStudentService()
+const sortBy = ref('dni')
+const direction = ref('asc')
+const { students, loading, error, fetchStudentsSorted } = useStudentService()
+
+const fetchSorted = () => {
+  fetchStudentsSorted(sortBy.value, direction.value)
+}
 
 onMounted(() => {
-  fetchStudents()
+  fetchSorted()
 })
 </script>

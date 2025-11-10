@@ -5,7 +5,7 @@
         <div class="md:flex md:justify-between items-cente py-4">
           <div class="flex items-center">
             <h1 class="text-2xl font-bold text-gray-900 mx-auto mb-5 md:m-0">
-              {{ userRole === 'ADMIN' ? 'Panel de Administración' : 'Panel del Profesor' }}
+              {{ userRole === 'ADMIN' ? 'Panel de Administración' : userRole === 'SECRETARY' ? 'Panel de Secretaría' : 'Panel del Profesor' }}
             </h1>
           </div>
           <div class="flex items-center md:justify-normal justify-between space-x-4">

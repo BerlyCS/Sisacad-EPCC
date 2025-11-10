@@ -6,8 +6,10 @@ import com.application.sisacadepcc.domain.model.Course;
 import com.application.sisacadepcc.presentation.dto.StudentScheduleEntry;
 import com.application.sisacadepcc.service.StudentService;
 import com.application.sisacadepcc.service.StudentCourseService;
+import com.application.sisacadepcc.service.AuthorizationService;
 import com.application.sisacadepcc.domain.repository.StudentRepository;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -22,19 +24,16 @@ public class StudentController {
     private final StudentService service;
     private final StudentCourseService studentCourseService;
     private final StudentRepository studentRepository;
+    private final AuthorizationService authorizationService;
 
     public StudentController(StudentService service,
                              StudentCourseService studentCourseService,
-                             StudentRepository studentRepository) {
+                             StudentRepository studentRepository,
+                             AuthorizationService authorizationService) {
         this.service = service;
         this.studentCourseService = studentCourseService;
         this.studentRepository = studentRepository;
-    }
-
-    @GetMapping
-    @RequiresAdministratorAccess
-    public ResponseEntity<List<Student>> getAllStudents() {
-        return ResponseEntity.ok(service.getAllStudents());
+        this.authorizationService = authorizationService;
     }
 
     @GetMapping("/{documentoIdentidad}/courses")
@@ -117,5 +116,15 @@ public class StudentController {
     public ResponseEntity<Void> deleteStudent(@PathVariable String documentoIdentidad) {
         // Lógica para eliminar estudiante
         return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/list")
+    public ResponseEntity<List<Student>> getAllStudentsSorted(@RequestParam(defaultValue = "dni") String sortBy,
+                                                              @RequestParam(defaultValue = "asc") String direction,
+                                                              Authentication authentication) {
+        if (!authorizationService.isSecretary(authentication) && !authorizationService.isAdministrator(authentication)) {
+            return ResponseEntity.status(403).build();
+        }
+        return ResponseEntity.ok(service.getAllStudentsSorted(sortBy, direction));
     }
 }

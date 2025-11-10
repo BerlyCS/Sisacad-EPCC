@@ -37,6 +37,18 @@
               </router-link>
             </template>
 
+            <template v-if="userRole === 'SECRETARY'">
+              <router-link 
+                v-for="item in secretaryNavigation" 
+                :key="item.name"
+                :to="item.to"
+                class="text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-all duration-200 px-3 py-2 rounded-md text-sm font-medium flex items-center space-x-2"
+                :class="{ 'bg-blue-100 text-blue-700': $route.path === item.to }"
+              >
+                <span>{{ item.name }}</span>
+              </router-link>
+            </template>
+
             <router-link 
               v-if="userRole === 'PROFESSOR' || userRole === 'ADMIN'"
               to="/classrooms" 
@@ -68,6 +80,19 @@
             <template v-if="userRole === 'ADMIN'">
               <router-link 
                 v-for="item in adminNavigation" 
+                :key="item.name"
+                :to="item.to"
+                class="block text-gray-700 hover:bg-gray-100 rounded-md px-3 py-2 text-sm font-medium"
+                :class="{ 'bg-blue-100 text-blue-700': $route.path === item.to }"
+                @click="isMenuOpen = false"
+              >
+                {{ item.name }}
+              </router-link>
+            </template>
+
+            <template v-if="userRole === 'SECRETARY'">
+              <router-link 
+                v-for="item in secretaryNavigation" 
                 :key="item.name"
                 :to="item.to"
                 class="block text-gray-700 hover:bg-gray-100 rounded-md px-3 py-2 text-sm font-medium"
@@ -128,6 +153,10 @@ const adminNavigation = [
   { name: 'Profesores', to: '/admin/professors' },
   { name: 'Estudiantes', to: '/admin/students' },
   { name: 'Secretarias', to: '/admin/secretaries' }
+]
+
+const secretaryNavigation = [
+  { name: 'Estudiantes', to: '/admin/students' }
 ]
 </script>
 
