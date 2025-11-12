@@ -43,44 +43,55 @@
         </div>
 
         <div v-else class="overflow-x-auto">
-          <table class="min-w-full divide-y divide-gray-200">
+          <table class="min-w-full divide-y divide-gray-200 table-fixed">
             <thead class="bg-gray-50">
               <tr>
-                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-24">
                   DNI
                 </th>
-                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-28">
                   CUI
                 </th>
-                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Nombres
                 </th>
-                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Apellidos
                 </th>
-                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Correo
+                </th>
+                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-32 text-center">
+                  Acciones
                 </th>
               </tr>
             </thead>
             <tbody class="bg-white divide-y divide-gray-200">
               <tr v-for="student in students" :key="student.documentoIdentidad" class="hover:bg-gray-50">
-                <td class="px-6 py-4 whitespace-nowrap text-sm font-mono text-gray-900">
+                <td class="px-4 py-4 whitespace-nowrap text-sm font-mono text-gray-900">
                   {{ student.documentoIdentidad }}
                 </td>
-                <td class="px-6 py-4 whitespace-nowrap text-sm font-mono text-gray-900">
+                <td class="px-4 py-4 whitespace-nowrap text-sm font-mono text-gray-900">
                   {{ student.cui }}
                 </td>
-                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                <td class="px-4 py-4 text-sm text-gray-900 break-words">
                   {{ student.nombres }}
                 </td>
-                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                <td class="px-4 py-4 text-sm text-gray-900 break-words">
                   {{ student.apellidoPaterno }} {{ student.apellidoMaterno }}
                 </td>
-                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                  <a :href="`mailto:${student.correoInstitucional}`" class="text-blue-600 hover:text-blue-800">
+                <td class="px-4 py-4 text-sm text-gray-900 break-words">
+                  <a :href="`mailto:${student.correoInstitucional}`" class="text-blue-600 hover:text-blue-800 break-all">
                     {{ student.correoInstitucional }}
                   </a>
+                </td>
+                <td class="px-4 py-4 text-sm text-gray-900 text-center">
+                  <button
+                    @click="goToProfile(student)"
+                    class="px-3 py-1.5 bg-blue-600 text-white rounded hover:bg-blue-700 transition"
+                  >
+                    Ver perfil
+                  </button>
                 </td>
               </tr>
             </tbody>
@@ -105,15 +116,22 @@
 
 <script setup>
 import { ref, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
 import AdminLayout from '../components/TopBar.vue'
 import { useStudentService } from '../services/studentService'
 
 const sortBy = ref('dni')
 const direction = ref('asc')
 const { students, loading, error, fetchStudentsSorted } = useStudentService()
+const router = useRouter()
 
 const fetchSorted = () => {
   fetchStudentsSorted(sortBy.value, direction.value)
+}
+
+const goToProfile = (student) => {
+  if (!student?.cui) return
+  router.push({ name: 'student-profile', params: { cui: student.cui } })
 }
 
 onMounted(() => {

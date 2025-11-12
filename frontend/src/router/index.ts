@@ -64,6 +64,12 @@ const router = createRouter({
       component: () => import('@/views/ReservationManagementView.vue'),
       meta: { requiresAuth: true }
     },
+    {
+      path: '/students/:cui/profile',
+      name: 'student-profile',
+      component: () => import('@/views/StudentProfileView.vue'),
+      meta: { requiresAuth: true, allowedRoles: ['ADMIN', 'SECRETARY', 'PROFESSOR', 'STUDENT'] }
+    },
   ],
 })
 
@@ -76,9 +82,33 @@ router.beforeEach(async (to, from, next) => {
     await auth.initializeAuth()
   }
 
+  if (to.meta?.requiresAuth && !auth.isAuthenticated) {
+    return next({ path: '/', query: { auth: 'required' } })
+  }
+
   // Si intenta acceder a rutas admin sin estar autenticado
   if (to.path.startsWith('/admin') && !auth.isAuthenticated) {
     return next({ path: '/', query: { auth: 'required' } })
+  }
+
+  const allowedRoles = (to.meta as any)?.allowedRoles as string[] | undefined
+  if (allowedRoles && allowedRoles.length > 0) {
+    const userRole = typeof auth.userRole === 'string'
+      ? auth.userRole
+      : ((auth.userRole as unknown as { value?: string })?.value ?? '')
+    if (!userRole || !allowedRoles.includes(userRole)) {
+      return next({ path: '/bienvenido', query: { auth: 'forbidden' } })
+    }
+
+    if (userRole === 'STUDENT' && to.name === 'student-profile') {
+      const requestedCui = typeof to.params.cui === 'string' ? to.params.cui : Array.isArray(to.params.cui) ? to.params.cui[0] : ''
+      const userCui = typeof auth.userCui === 'string'
+        ? auth.userCui
+        : ((auth.userCui as unknown as { value?: string })?.value ?? '')
+      if (userCui && requestedCui && userCui !== requestedCui) {
+        return next({ path: '/bienvenido', query: { auth: 'restricted' } })
+      }
+    }
   }
 
   // Si intenta ir a login estando autenticado, redirigir a bienvenido

@@ -50,6 +50,12 @@ public class StudentRepositoryImpl implements StudentRepository {
                 .map(this::mapToDomain);
     }
 
+    @Override
+    public Optional<Student> findByCui(String cui) {
+        return studentJpaRepository.findByCui(cui)
+                .map(this::mapToDomain);
+    }
+
     private Student mapToDomain(StudentEntity entity) {
         return new Student(
                 entity.getDocumentoIdentidad(),

@@ -1,7 +1,7 @@
 <template>
   <div>
     <div v-if="!entries.length" class="text-gray-500 text-sm text-center py-6">
-      No hay sesiones programadas para esta semana.
+      No hay horarios para mostrar.
     </div>
     <div v-else class="space-y-6">
       <div

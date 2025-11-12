@@ -15,4 +15,6 @@ public interface StudentJpaRepository extends JpaRepository<StudentEntity, Strin
 
     // Agrega este método
     Optional<StudentEntity> findByCorreoInstitucional(String correoInstitucional);
+
+    Optional<StudentEntity> findByCui(String cui);
 }

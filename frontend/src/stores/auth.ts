@@ -112,6 +112,10 @@ export const useAuthStore = defineStore('auth', () => {
     return user.value?.documentoIdentidad || ''
   })
 
+  const userCui = computed(() => {
+    return user.value?.cui || ''
+  })
+
   const isAdmin = computed(() => {
     return user.value?.isAdmin || user.value?.role === 'ADMIN'
   })
@@ -138,6 +142,7 @@ export const useAuthStore = defineStore('auth', () => {
     userName,
     userEmail,
     userDocumentoIdentidad,
+    userCui,
     isAdmin,
     isStudent,
     isProfessor,

@@ -6,6 +6,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.Comparator;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public class StudentService {
@@ -14,6 +15,13 @@ public class StudentService {
 
     public StudentService(StudentRepository repository) {
         this.repository = repository;
+    }
+
+    public Optional<Student> getStudentByCui(String cui) {
+        if (cui == null || cui.isBlank()) {
+            return Optional.empty();
+        }
+        return repository.findByCui(cui.trim());
     }
 
     public List<Student> getAllStudentsSorted(String sortBy, String direction) {

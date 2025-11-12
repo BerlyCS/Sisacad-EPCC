@@ -50,33 +50,37 @@ public class DemoUserService {
         this.secretaryJpaRepository = secretaryJpaRepository;
         this.entityManager = entityManager;
         this.demoProfiles = Map.of(
-                "STUDENT", new DemoUserProfile(
-                        "STUDENT",
-                        "Estudiante Demo",
-                        "student@example.org",
-                        "https://i.pravatar.cc/150?img=12",
-                        null
-                ),
+        "STUDENT", new DemoUserProfile(
+            "STUDENT",
+            "Estudiante Demo",
+            "student@example.org",
+            "https://i.pravatar.cc/150?img=12",
+            "11111111",
+            "20250001"
+        ),
                 "PROFESSOR", new DemoUserProfile(
                         "PROFESSOR",
                         "Profesor Demo",
                         "professor@example.org",
-                        "https://i.pravatar.cc/150?img=11",
-                        null
+            "https://i.pravatar.cc/150?img=11",
+            null,
+            null
                 ),
                 "ADMIN", new DemoUserProfile(
                         "ADMIN",
                         "Administrador Demo",
                         "admin@example.org",
-                        "https://i.pravatar.cc/150?img=10",
-                        null
+            "https://i.pravatar.cc/150?img=10",
+            null,
+            null
                 ),
                 "SECRETARY", new DemoUserProfile(
                         "SECRETARY",
                         "Secretaria Demo",
                         "secretary@example.org",
-                        "https://i.pravatar.cc/150?img=9",
-                        null
+            "https://i.pravatar.cc/150?img=9",
+            null,
+            null
                 )
         );
     }
@@ -120,7 +124,7 @@ public class DemoUserService {
         }
         StudentEntity entity = new StudentEntity();
         entity.setDocumentoIdentidad(profile.documentoIdentidad() != null ? profile.documentoIdentidad() : "11111111");
-        entity.setCui("20250001");
+        entity.setCui(profile.cui() != null ? profile.cui() : "20250001");
         entity.setApellidoPaterno("Demo");
         entity.setApellidoMaterno("Student");
         entity.setNombres("Estudiante");
@@ -214,6 +218,6 @@ public class DemoUserService {
         }
     }
 
-    public record DemoUserProfile(String role, String displayName, String email, String pictureUrl, String documentoIdentidad) {
+    public record DemoUserProfile(String role, String displayName, String email, String pictureUrl, String documentoIdentidad, String cui) {
     }
 }

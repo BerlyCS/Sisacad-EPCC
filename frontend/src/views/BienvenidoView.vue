@@ -143,7 +143,7 @@
               <!-- Mensaje cuando no hay cursos -->
               <div v-else class="text-center py-6">
                 <p class="text-gray-500">No estás matriculado en ningún curso.</p>
-                <p class="text-sm text-gray-400 mt-1">Contacta con administración para matricularte.</p>
+                <p class="text-sm text-gray-400 mt-1">Contacta con secretaría si crees que esto es un error.</p>
               </div>
             </div>
 

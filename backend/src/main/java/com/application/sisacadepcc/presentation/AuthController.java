@@ -118,8 +118,17 @@ public class AuthController {
         attributes.put("email", profile.email());
         attributes.put("name", profile.displayName());
         attributes.put("picture", profile.pictureUrl());
+        attributes.put("role", profile.role());
 
-        List<SimpleGrantedAuthority> authorities = List.of(new SimpleGrantedAuthority("ROLE_USER"));
+        if (profile.documentoIdentidad() != null) {
+            attributes.put("documentoIdentidad", profile.documentoIdentidad());
+        }
+
+        if (profile.cui() != null) {
+            attributes.put("cui", profile.cui());
+        }
+
+        List<SimpleGrantedAuthority> authorities = List.of(new SimpleGrantedAuthority("ROLE_" + profile.role()));
         DefaultOAuth2User principal = new DefaultOAuth2User(authorities, attributes, "email");
         OAuth2AuthenticationToken authentication = new OAuth2AuthenticationToken(principal, authorities, "demo");
 
@@ -140,6 +149,10 @@ public class AuthController {
 
         if (profile.documentoIdentidad() != null) {
             responseBody.put("documentoIdentidad", profile.documentoIdentidad());
+        }
+
+        if (profile.cui() != null) {
+            responseBody.put("cui", profile.cui());
         }
 
         return ResponseEntity.ok(responseBody);

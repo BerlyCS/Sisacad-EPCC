@@ -12,4 +12,6 @@ public interface StudentRepository {
 
     // Agregar este método para buscar por correo institucional
     Optional<Student> findByCorreoInstitucional(String correoInstitucional);
+
+    Optional<Student> findByCui(String cui);
 }

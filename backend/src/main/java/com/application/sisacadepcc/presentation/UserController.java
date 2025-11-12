@@ -1,9 +1,10 @@
 package com.application.sisacadepcc.presentation;
 
 import com.application.sisacadepcc.service.AuthorizationService;
-import com.application.sisacadepcc.domain.repository.StudentRepository;
 import com.application.sisacadepcc.domain.model.Student;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -18,11 +19,9 @@ import java.util.Optional;
 public class UserController {
 
     private final AuthorizationService authorizationService;
-    private final StudentRepository studentRepository;
 
-    public UserController(AuthorizationService authorizationService, StudentRepository studentRepository) {
+    public UserController(AuthorizationService authorizationService) {
         this.authorizationService = authorizationService;
-        this.studentRepository = studentRepository;
     }
 
     @GetMapping("/me")
@@ -38,22 +37,24 @@ public class UserController {
                 return ResponseEntity.ok(Map.of("authenticated", false));
             }
 
-            String role = authorizationService.getUserRole(
-                    org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication()
-            );
+            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+            String role = authorizationService.getUserRole(authentication);
 
             // Buscar información adicional si es estudiante
             String documentoIdentidad = null;
+            String cui = null;
             if ("STUDENT".equals(role)) {
                 try {
-                    // Usar el repositorio directamente - NO llama al endpoint protegido
-                    Optional<Student> student = studentRepository.findByCorreoInstitucional(email);
+                    Optional<Student> student = authorizationService.getAuthenticatedStudent(authentication);
                     if (student.isPresent()) {
                         documentoIdentidad = student.get().getDocumentoIdentidad();
+                        cui = student.get().getCui();
+                    } else if (principal instanceof OAuth2User oauth2User) {
+                        documentoIdentidad = oauth2User.getAttribute("documentoIdentidad");
+                        cui = oauth2User.getAttribute("cui");
                     }
                 } catch (Exception e) {
-                    // Si hay error al buscar el estudiante, continuar sin documentoIdentidad
-                    System.err.println("Error buscando estudiante por email: " + e.getMessage());
+                    System.err.println("Error buscando estudiante autenticado: " + e.getMessage());
                 }
             }
 
@@ -68,6 +69,10 @@ public class UserController {
 
             if (documentoIdentidad != null) {
                 response.put("documentoIdentidad", documentoIdentidad);
+            }
+
+            if (cui != null) {
+                response.put("cui", cui);
             }
 
             return ResponseEntity.ok(response);
