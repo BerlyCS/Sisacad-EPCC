@@ -170,9 +170,11 @@ const loadReservations = async () => {
     }
     
     // Ordenar por fecha de creación (más recientes primero)
-    reservations.value.sort((a, b) => 
-      new Date(b.createdAt!).getTime() - new Date(a.createdAt!).getTime()
-    );
+    reservations.value.sort((a, b) => {
+      const bTime = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+      const aTime = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+      return bTime - aTime;
+    });
     
   } catch (err) {
     error.value = 'Error al cargar las reservas';
@@ -182,14 +184,19 @@ const loadReservations = async () => {
   }
 };
 
-const updateReservationStatus = (reservationId: number, status: 'APPROVED' | 'REJECTED') => {
+const updateReservationStatus = (reservationId: number | undefined, status: 'APPROVED' | 'REJECTED') => {
+  if (reservationId === undefined || reservationId === null) {
+    error.value = 'No se pudo identificar la reserva seleccionada.';
+    return;
+  }
+
   pendingReservationId.value = reservationId;
   pendingAction.value = status;
   showConfirmModal.value = true;
 };
 
 const confirmStatusUpdate = async () => {
-  if (!pendingReservationId.value) return;
+  if (pendingReservationId.value === null) return;
   
   try {
     updating.value = true;
@@ -220,7 +227,11 @@ const getStatusText = (status: string) => {
   return statusMap[status] || status;
 };
 
-const formatDate = (dateString: string) => {
+const formatDate = (dateString?: string) => {
+  if (!dateString) {
+    return 'Sin fecha';
+  }
+
   const date = new Date(dateString);
   return date.toLocaleDateString('es-ES', {
     year: 'numeric',

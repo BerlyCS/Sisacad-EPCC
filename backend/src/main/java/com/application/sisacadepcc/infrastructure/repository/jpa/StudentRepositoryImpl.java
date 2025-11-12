@@ -32,6 +32,18 @@ public class StudentRepositoryImpl implements StudentRepository {
     }
 
     @Override
+    public List<Student> findByDocumentoIdentidadIn(List<String> documentoIdentidades) {
+        if (documentoIdentidades == null || documentoIdentidades.isEmpty()) {
+            return List.of();
+        }
+
+        return studentJpaRepository.findByDocumentoIdentidadIn(documentoIdentidades)
+                .stream()
+                .map(this::mapToDomain)
+                .collect(Collectors.toList());
+    }
+
+    @Override
     public List<Student> findByAnio(Integer anio) {
         return studentJpaRepository.findByAnio(anio)
                 .stream()

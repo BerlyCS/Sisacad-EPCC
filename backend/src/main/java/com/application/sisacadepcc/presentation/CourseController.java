@@ -2,6 +2,7 @@ package com.application.sisacadepcc.presentation;
 
 import com.application.sisacadepcc.config.security.RequiresAdministratorAccess;
 import com.application.sisacadepcc.domain.model.Course;
+import com.application.sisacadepcc.presentation.dto.CourseDetailsResponse;
 import com.application.sisacadepcc.service.CourseService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -22,6 +23,14 @@ public class CourseController {
     @RequiresAdministratorAccess
     public ResponseEntity<List<Course>> getAllCourses() {
         return ResponseEntity.ok(service.getAllCourses());
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<CourseDetailsResponse> getCourseDetails(@PathVariable Long id) {
+        return service.getCourseDetails(id)
+                .map(CourseDetailsResponse::from)
+                .map(ResponseEntity::ok)
+                .orElseGet(() -> ResponseEntity.notFound().build());
     }
 
     @PostMapping

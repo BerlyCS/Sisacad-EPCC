@@ -8,6 +8,7 @@ public interface StudentRepository {
     List<Student> findAll();
     boolean existsByCorreoInstitucional(String email);
     Optional<Student> findByDocumentoIdentidad(String documentoIdentidad);
+    List<Student> findByDocumentoIdentidadIn(List<String> documentoIdentidades);
     List<Student> findByAnio(Integer anio); // Cambiado de año a anio
 
     // Agregar este método para buscar por correo institucional

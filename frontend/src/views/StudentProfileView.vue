@@ -4,7 +4,6 @@
       <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
           <h2 class="text-2xl font-semibold text-gray-800">Perfil del Estudiante</h2>
-          <p class="text-gray-600">Consulta la información académica y los cursos matriculados.</p>
         </div>
         <button
           @click="goBack"
@@ -38,6 +37,7 @@
           :loading="profileLoading"
           :error="profileError"
           :refreshable="false"
+          @select="openCourseDetail"
         />
 
         <StudentScheduleCard
@@ -78,6 +78,13 @@ const loadProfile = () => {
 
 const reloadProfile = () => {
   loadProfile()
+}
+
+const openCourseDetail = course => {
+  if (!course || typeof course.courseId !== 'number') {
+    return
+  }
+  router.push({ name: 'course-detail', params: { courseId: course.courseId } })
 }
 
 const goBack = () => {

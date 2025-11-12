@@ -3,7 +3,6 @@
     <header class="flex flex-col gap-2 md:flex-row md:items-center md:justify-between mb-4">
       <div>
         <h3 class="text-lg font-semibold text-gray-800">Cursos matriculados</h3>
-        <p class="text-sm text-gray-500">Listado de asignaturas activas del estudiante.</p>
       </div>
       <button
         v-if="refreshable"
@@ -40,7 +39,16 @@
           </tr>
         </thead>
         <tbody class="bg-white divide-y divide-gray-200">
-          <tr v-for="course in courses" :key="course.courseId">
+          <tr
+            v-for="course in courses"
+            :key="course.courseId"
+            role="button"
+            tabindex="0"
+            @click="$emit('select', course)"
+            @keydown.enter.prevent="$emit('select', course)"
+            @keydown.space.prevent="$emit('select', course)"
+            class="cursor-pointer transition hover:bg-blue-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+          >
             <td class="px-6 py-4 whitespace-nowrap text-sm font-mono text-gray-900">{{ course.courseCode }}</td>
             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ course.name }}</td>
             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ course.courseTypeLabel }}</td>
@@ -73,5 +81,5 @@ const props = defineProps({
   }
 })
 
-defineEmits(['refresh'])
+defineEmits(['refresh', 'select'])
 </script>

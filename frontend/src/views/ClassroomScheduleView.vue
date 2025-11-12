@@ -202,9 +202,9 @@ const timeSlots = [
 
 // Mapeo de timeSlots a rangos de tiempo para búsqueda
 const timeSlotMap = computed(() => {
-  const map: {[key: string]: {start: string, end: string}} = {};
+  const map: { [key: string]: { start: string; end: string } } = {};
   timeSlots.forEach(slot => {
-    const [start, end] = slot.split('-');
+    const [start = '', end = ''] = slot.split('-');
     map[slot] = { start, end };
   });
   return map;
@@ -328,6 +328,10 @@ const handleCellClick = async (day: string, timeSlot: string) => {
   
   // Verificar disponibilidad específica
   const slotInfo = timeSlotMap.value[timeSlot];
+  if (!slotInfo) {
+    error.value = 'Horario inválido';
+    return;
+  }
   try {
     const available = await reservationService.checkAvailability(
       classroomName.value,
@@ -396,6 +400,10 @@ const submitReservation = async () => {
   try {
     loading.value = true;
     const slotInfo = timeSlotMap.value[selectedSlot.value.timeSlot];
+    if (!slotInfo) {
+      error.value = 'Horario inválido';
+      return;
+    }
     
     await reservationService.createReservation({
       classroomName: classroomName.value,
@@ -509,6 +517,7 @@ onMounted(() => {
   font-size: 0.75em;
   overflow: hidden;
   display: -webkit-box;
+  line-clamp: 3;
   -webkit-line-clamp: 3;
   -webkit-box-orient: vertical;
   max-height: 50px;

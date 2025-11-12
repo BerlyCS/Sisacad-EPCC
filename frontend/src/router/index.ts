@@ -59,6 +59,12 @@ const router = createRouter({
       meta: { requiresAuth: true }
     },
     {
+      path: '/courses/:courseId',
+      name: 'course-detail',
+      component: () => import('@/views/CourseDetailView.vue'),
+      meta: { requiresAuth: true, allowedRoles: ['ADMIN', 'SECRETARY', 'PROFESSOR', 'STUDENT'] }
+    },
+    {
       path: '/reservation-management',
       name: 'ReservationManagement',
       component: () => import('@/views/ReservationManagementView.vue'),

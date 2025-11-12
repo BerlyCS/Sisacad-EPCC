@@ -122,8 +122,9 @@
               <StudentCoursesCard
                 :courses="studentCourses"
                 :loading="profileLoading"
-                :error="''"
+                :error="profileError"
                 @refresh="loadStudentProfile"
+                @select="openCourseDetail"
               />
 
               <StudentScheduleCard
@@ -203,6 +204,14 @@ const loadStudentProfile = async () => {
   } catch (error) {
     console.error('Error cargando perfil del estudiante:', error)
   }
+}
+
+const openCourseDetail = course => {
+  if (!course || typeof course.courseId !== 'number') {
+    return
+  }
+
+  router.push({ name: 'course-detail', params: { courseId: course.courseId } })
 }
 
 onMounted(async () => {
