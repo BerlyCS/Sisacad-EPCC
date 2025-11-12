@@ -30,106 +30,23 @@
         </button>
       </div>
 
-      <div v-else-if="studentProfile" class="space-y-6">
-        <!-- Datos del estudiante -->
-        <section class="bg-white shadow rounded-lg p-6">
-          <h3 class="text-lg font-semibold text-gray-800 mb-4">Información personal</h3>
-          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            <div class="bg-blue-50 border border-blue-100 rounded-lg p-4">
-              <p class="text-sm text-blue-700 uppercase tracking-wide">Nombre completo</p>
-              <p class="text-gray-900 font-semibold mt-1">
-                {{ studentProfile.student.nombres }} {{ studentProfile.student.apellidoPaterno }} {{ studentProfile.student.apellidoMaterno }}
-              </p>
-            </div>
-            <div class="bg-blue-50 border border-blue-100 rounded-lg p-4">
-              <p class="text-sm text-blue-700 uppercase tracking-wide">CUI</p>
-              <p class="text-gray-900 font-semibold mt-1">{{ studentProfile.student.cui }}</p>
-            </div>
-            <div class="bg-blue-50 border border-blue-100 rounded-lg p-4">
-              <p class="text-sm text-blue-700 uppercase tracking-wide">DNI</p>
-              <p class="text-gray-900 font-semibold mt-1">{{ studentProfile.student.documentoIdentidad }}</p>
-            </div>
-            <div class="bg-blue-50 border border-blue-100 rounded-lg p-4">
-              <p class="text-sm text-blue-700 uppercase tracking-wide">Correo institucional</p>
-              <p class="text-gray-900 font-semibold mt-1 break-words">{{ studentProfile.student.correoInstitucional }}</p>
-            </div>
-            <div class="bg-blue-50 border border-blue-100 rounded-lg p-4">
-              <p class="text-sm text-blue-700 uppercase tracking-wide">Año académico</p>
-              <p class="text-gray-900 font-semibold mt-1">{{ studentProfile.student.anio ?? 'No registrado' }}</p>
-            </div>
-          </div>
-        </section>
+      <template v-else-if="studentProfile">
+        <StudentProfileSummary :profile="studentProfile" />
 
-        <!-- Cursos matriculados -->
-        <section class="bg-white shadow rounded-lg p-6">
-          <div class="flex items-center justify-between mb-4">
-            <h3 class="text-lg font-semibold text-gray-800">Cursos matriculados</h3>
-            <span class="text-sm text-gray-600">Total: {{ studentProfile.courses.length }}</span>
-          </div>
+        <StudentCoursesCard
+          :courses="courses"
+          :loading="profileLoading"
+          :error="profileError"
+          :refreshable="false"
+        />
 
-          <div v-if="studentProfile.courses.length === 0" class="text-center py-6 text-gray-500">
-            El estudiante no tiene cursos matriculados.
-          </div>
-
-          <div v-else class="overflow-x-auto">
-            <table class="min-w-full divide-y divide-gray-200">
-              <thead class="bg-gray-50">
-                <tr>
-                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Código</th>
-                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nombre</th>
-                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tipo</th>
-                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Grupo</th>
-                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Créditos</th>
-                </tr>
-              </thead>
-              <tbody class="bg-white divide-y divide-gray-200">
-                <tr v-for="course in studentProfile.courses" :key="course.courseId" class="hover:bg-gray-50">
-                  <td class="px-6 py-4 whitespace-nowrap text-sm font-mono text-gray-900">{{ course.courseCode }}</td>
-                  <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ course.name }}</td>
-                  <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ course.courseTypeLabel }}</td>
-                  <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ course.groupLetter || '-' }}</td>
-                  <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ course.creditNumber ?? '-' }}</td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-        </section>
-
-        <!-- Horario -->
-        <section class="bg-white shadow rounded-lg p-6">
-          <div class="flex items-center justify-between mb-4">
-            <h3 class="text-lg font-semibold text-gray-800">Horario académico</h3>
-            <span class="text-sm text-gray-600">Módulo en construcción</span>
-          </div>
-
-          <div v-if="hasSchedule" class="overflow-x-auto">
-            <table class="min-w-full divide-y divide-gray-200">
-              <thead class="bg-gray-50">
-                <tr>
-                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Día</th>
-                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Curso</th>
-                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tipo</th>
-                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Horario</th>
-                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Aula</th>
-                </tr>
-              </thead>
-              <tbody class="bg-white divide-y divide-gray-200">
-                <tr v-for="slot in studentProfile.schedule" :key="`${slot.courseId}-${slot.dayOfWeek}-${slot.startTime}`">
-                  <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ slot.dayOfWeek }}</td>
-                  <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ slot.courseName }}</td>
-                  <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ formatCourseType(slot.courseType) }}</td>
-                  <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ slot.startTime }} - {{ slot.endTime }}</td>
-                  <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ slot.classroomName || '-' }}</td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-
-          <div v-else class="border border-dashed border-gray-300 rounded-lg p-6 text-center text-gray-500">
-            Aún no hemos habilitado el módulo de horario interactivo.
-          </div>
-        </section>
-      </div>
+        <StudentScheduleCard
+          :entries="schedule"
+          :loading="profileLoading"
+          :error="profileError"
+          :refreshable="false"
+        />
+      </template>
     </div>
   </AdminLayout>
 </template>
@@ -138,6 +55,9 @@
 import { computed, onMounted, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import AdminLayout from '../components/TopBar.vue'
+import StudentProfileSummary from '../components/student/StudentProfileSummary.vue'
+import StudentCoursesCard from '../components/student/StudentCoursesCard.vue'
+import StudentScheduleCard from '../components/student/StudentScheduleCard.vue'
 import { useStudentService } from '../services/studentService'
 
 const route = useRoute()
@@ -146,6 +66,8 @@ const router = useRouter()
 const { studentProfile, profileLoading, profileError, fetchStudentProfile } = useStudentService()
 
 const cui = computed(() => String(route.params.cui ?? ''))
+const courses = computed(() => studentProfile.value?.courses ?? [])
+const schedule = computed(() => studentProfile.value?.schedule ?? [])
 
 const loadProfile = () => {
   if (!cui.value) {
@@ -164,13 +86,6 @@ const goBack = () => {
   } else {
     router.push('/admin/students')
   }
-}
-
-const hasSchedule = computed(() => Boolean(studentProfile.value?.schedule?.length))
-
-const formatCourseType = (type) => {
-  if (!type) return 'Teoría'
-  return type === 'LAB' ? 'Laboratorio' : 'Teoría'
 }
 
 onMounted(() => {

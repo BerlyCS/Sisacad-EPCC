@@ -89,95 +89,53 @@
           </div>
 
           <!-- Panel para estudiantes -->
-          <div v-else-if="authStore.user.role === 'STUDENT'" class="pt-4 border-gray-200">
-            <h3 class="text-lg font-semibold text-gray-800 mb-3">Panel del Estudiante</h3>
-            
-            <!-- Sección para ver cursos matriculados -->
-            <div class="mt-6 p-6 bg-blue-50 rounded-lg border border-blue-200">
-              <div class="flex items-center justify-between mb-4">
-                <h4 class="text-lg font-semibold text-blue-800">Mis Cursos Matriculados</h4>
-                <button 
-                  @click="loadMyCourses"
-                  :disabled="coursesLoading"
-                  class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition disabled:opacity-50"
-                >
-                  <span v-if="!coursesLoading">Actualizar</span>
-                  <span v-else>Cargando...</span>
-                </button>
-              </div>
+          <div v-else-if="authStore.user.role === 'STUDENT'" class="pt-4 border-gray-200 space-y-6">
+            <div class="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
 
-              <!-- Estado de carga -->
-              <div v-if="coursesLoading" class="text-center py-4">
-                <p class="text-blue-600">Cargando cursos...</p>
-              </div>
-
-              <!-- Mensaje de error -->
-              <div v-else-if="coursesError" class="text-center py-4">
-                <p class="text-red-600">{{ coursesError }}</p>
-                <button 
-                  @click="loadMyCourses"
-                  class="mt-2 px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 transition"
-                >
-                  Reintentar
-                </button>
-              </div>
-
-              <!-- Lista de cursos -->
-              <div v-else-if="studentCourses.length > 0" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                <div 
-                  v-for="course in studentCourses" 
-                  :key="course.courseCode"
-                  class="bg-white p-4 rounded-lg shadow border border-gray-200 hover:shadow-md transition"
-                >
-                  <h5 class="font-semibold text-gray-800 text-lg">{{ course.name }}</h5>
-                  <div class="mt-2 text-sm text-gray-600 space-y-1">
-                    <p><span class="font-medium">Código:</span> {{ course.courseCode }}</p>
-                    <p><span class="font-medium">Créditos:</span> {{ course.creditNumber }}</p>
-                    <p><span class="font-medium">Grupo:</span> {{ course.groupLetter }}</p>
-                    <p><span class="font-medium">Año:</span> {{ course.anio }}</p>
-                    <p><span class="font-medium"></span> {{ course.courseTypeLabel }}</p>
-                  </div>
-                </div>
-              </div>
-
-              <!-- Mensaje cuando no hay cursos -->
-              <div v-else class="text-center py-6">
-                <p class="text-gray-500">No estás matriculado en ningún curso.</p>
-                <p class="text-sm text-gray-400 mt-1">Contacta con secretaría si crees que esto es un error.</p>
+              <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 w-full md:w-auto">
+                <PrincipalButton color="blue" :to="studentProfileRoute">
+                  <UserIcon class="w-15 h-15 mx-auto mt-2 mb-3" />
+                  <h4 class="text-lg">Mi Perfil</h4>
+                </PrincipalButton>
               </div>
             </div>
 
-            <!-- Horario semanal -->
-            <div class="mt-6 p-6 bg-indigo-50 rounded-lg border border-indigo-200">
-              <div class="flex items-center justify-between mb-4">
-                <h4 class="text-lg font-semibold text-indigo-800">Mi Horario Semanal</h4>
-                <button
-                  @click="loadMySchedule"
-                  :disabled="scheduleLoading"
-                  class="px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700 transition disabled:opacity-50"
-                >
-                  <span v-if="!scheduleLoading">Actualizar</span>
-                  <span v-else>Cargando...</span>
-                </button>
-              </div>
+            <div v-if="profileLoading" class="bg-white shadow rounded-lg p-6 text-center">
+              <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+              <p class="text-gray-600 mt-3">Cargando tu información...</p>
+            </div>
 
-              <div v-if="scheduleLoading" class="text-center py-4">
-                <p class="text-indigo-600">Cargando horario...</p>
-              </div>
+            <div v-else-if="profileError" class="bg-red-50 border border-red-200 rounded-lg p-6 text-center">
+              <h4 class="text-lg font-semibold text-red-800">No se pudo cargar tu información</h4>
+              <p class="text-red-700 mt-2">{{ profileError }}</p>
+              <button
+                @click="loadStudentProfile"
+                class="mt-4 px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 transition"
+              >
+                Reintentar
+              </button>
+            </div>
 
-              <div v-else-if="scheduleError" class="text-center py-4">
-                <p class="text-red-600">{{ scheduleError }}</p>
-                <button
-                  @click="loadMySchedule"
-                  class="mt-2 px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 transition"
-                >
-                  Reintentar
-                </button>
-              </div>
+            <template v-else-if="studentProfile">
+              <StudentProfileSummary :profile="studentProfile" subtitle="Información personal del estudiante" />
 
-              <div v-else>
-                <StudentScheduleTable :entries="studentSchedule" />
-              </div>
+              <StudentCoursesCard
+                :courses="studentCourses"
+                :loading="profileLoading"
+                :error="''"
+                @refresh="loadStudentProfile"
+              />
+
+              <StudentScheduleCard
+                :entries="studentScheduleEntries"
+                :loading="profileLoading"
+                :error="''"
+                @refresh="loadStudentProfile"
+              />
+            </template>
+
+            <div v-else class="bg-white shadow rounded-lg p-6 text-center text-gray-500">
+              No hay información disponible para tu perfil.
             </div>
           </div>
 
@@ -215,33 +173,46 @@
 </template>
 
 <script setup>
-import { onMounted, ref } from 'vue'
+import { computed, onMounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '../stores/auth'
-import { useStudentCourseService } from '../services/studentCourseService'
-import { useStudentScheduleService } from '../services/studentScheduleService'
+import { useStudentService } from '../services/studentService'
 
 import PrincipalButton from '../components/PrincipalButton.vue'
-import StudentScheduleTable from '../components/StudentScheduleTable.vue'
-import { BookOpenIcon, AcademicCapIcon, BriefcaseIcon, BuildingLibraryIcon, UserIcon, CalendarIcon, ClipboardDocumentListIcon } from '@heroicons/vue/16/solid'
+import StudentProfileSummary from '../components/student/StudentProfileSummary.vue'
+import StudentCoursesCard from '../components/student/StudentCoursesCard.vue'
+import StudentScheduleCard from '../components/student/StudentScheduleCard.vue'
+import { BookOpenIcon, AcademicCapIcon, BriefcaseIcon, BuildingLibraryIcon, UserIcon, CalendarIcon, ClipboardDocumentListIcon, ArrowPathIcon } from '@heroicons/vue/16/solid'
 
 const router = useRouter()
 const authStore = useAuthStore()
+const { studentProfile, profileLoading, profileError, fetchStudentProfile } = useStudentService()
 
-// Servicio para cursos del estudiante - IMPORTANTE: usar la destructuración correcta
-const { courses: studentCourses, loading: coursesLoading, error: coursesError, fetchMyCourses } = useStudentCourseService()
-const { schedule: studentSchedule, loading: scheduleLoading, error: scheduleError, fetchMySchedule } = useStudentScheduleService()
+const userCui = computed(() => authStore.userCui)
+const studentCourses = computed(() => studentProfile.value?.courses ?? [])
+const studentScheduleEntries = computed(() => studentProfile.value?.schedule ?? [])
+const studentProfileRoute = computed(() => (userCui.value ? `/students/${userCui.value}/profile` : '/students/profile'))
+
+const loadStudentProfile = async () => {
+  if (!userCui.value) {
+    return
+  }
+
+  try {
+    await fetchStudentProfile(userCui.value)
+  } catch (error) {
+    console.error('Error cargando perfil del estudiante:', error)
+  }
+}
 
 onMounted(async () => {
   // Inicializar el estado de autenticación
   await authStore.initializeAuth()
-  
-  // Si es estudiante, cargar sus cursos automáticamente
+
   if (authStore.isAuthenticated && authStore.user.role === 'STUDENT') {
-    await loadMyCourses()
-    await loadMySchedule()
+    await loadStudentProfile()
   }
-  
+
   // Si no está autenticado, redirigir al login después de un breve delay
   if (!authStore.isAuthenticated) {
     console.log('Usuario no autenticado, redirigiendo...')
@@ -251,30 +222,20 @@ onMounted(async () => {
   }
 })
 
-const loadMyCourses = async () => {
-  try {
-    await fetchMyCourses() // Ahora está definido porque viene del servicio
-  } catch (error) {
-    console.error('Error cargando cursos:', error)
+watch(userCui, async newCui => {
+  if (!newCui || authStore.user.role !== 'STUDENT') {
+    return
   }
-}
 
-const loadMySchedule = async () => {
-  try {
-    await fetchMySchedule()
-  } catch (error) {
-    console.error('Error cargando horario:', error)
-  }
-}
+  await loadStudentProfile()
+})
 
 const handleLogout = async () => {
   const success = await authStore.logout()
-  
-  // Si el logout fue exitoso via API, redirigir
+
   if (success) {
     router.push('/?logout=success')
   }
-  // Si falló, el método logout ya hizo la redirección directa
 }
 
 const goToLogin = () => {
