@@ -6,6 +6,7 @@ import CourseManagementView from '../views/CourseManagementView.vue'
 import ProfessorManagementView from '../views/ProfessorManagementView.vue'
 import StudentManagementView from '../views/StudentManagementView.vue'
 import SecretaryManagementView from '../views/SecretaryManagementView.vue'
+import NotFoundComponent from '@/components/ui/NotFoundComponent.vue'
 import { useAuthStore } from '../stores/auth'
 
 const router = createRouter({
@@ -81,6 +82,11 @@ const router = createRouter({
       name: 'student-profile',
       component: () => import('@/views/StudentProfileView.vue'),
       meta: { requiresAuth: true, allowedRoles: ['ADMIN', 'SECRETARY', 'PROFESSOR', 'STUDENT'] }
+    },
+    {
+      path: '/:pathMatch(.*)*',
+      name: 'not-found',
+      component: NotFoundComponent
     },
   ],
 })
