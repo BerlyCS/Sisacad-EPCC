@@ -36,124 +36,21 @@
 
     <div class="flex justify-center bg-zinc-200 text-center">
       <div class="bg-white p-8 rounded-lg shadow-lg max-w-9/10 w-full mt-4">
-        <div v-if="authStore.user && authStore.isAuthenticated"> 
-          <!-- Botones de administración solo para administradores -->
-          <div v-if="authStore.user.isAdmin" class="pt-4 border-gray-200">
-            <h3 class="text-lg font-semibold text-gray-800 mb-3">Panel de Administración</h3>
-            <div class="grid grid-cols-1 gap-4 lg:grid-cols-4 sm:grid-cols-2 mt-5">
-              <!-- Botones existentes de administración -->
-              <PrincipalButton color="teal" to="/admin/classrooms" >
-                <building-library-icon class="w-15 h-15 mx-auto mt-2 mb-4"/>
-                <h4 class="text-xl">Gestionar Aulas</h4>
-              </PrincipalButton>
-              <PrincipalButton color="orange" to="/admin/courses" >
-                <BookOpenIcon class="w-15 h-15 mx-auto mt-2 mb-4"/>
-                <h4 class="text-xl">Gestionar Cursos</h4>
-              </PrincipalButton>
-              <PrincipalButton color="purple" to="/admin/professors" >
-                <briefcase-icon class="w-15 h-15 mx-auto mt-2 mb-4"/>
-                <h4 class="text-xl">Gestionar Profesores</h4>
-              </PrincipalButton>
-              <PrincipalButton color="pink" to="/admin/students" >
-                <academic-cap-icon class="w-15 h-15 mx-auto mt-2 mb-4"/>
-                <h4 class="text-xl">Gestionar Estudiantes</h4>
-              </PrincipalButton>
-              <PrincipalButton color="gray" to="/admin/secretaries" >
-                <UserIcon class="w-15 h-15 mx-auto mt-2 mb-4"/>
-                <h4 class="text-xl">Gestionar Secretarias</h4>
-              </PrincipalButton>
-              
-              <!-- NUEVOS BOTONES PARA ADMINISTRADORES -->
-              <PrincipalButton color="blue" to="/classrooms" >
-                <CalendarIcon class="w-15 h-15 mx-auto mt-2 mb-4"/>
-                <h4 class="text-xl">Reservar Aula</h4>
-              </PrincipalButton>
-              
-              <PrincipalButton color="green" to="/reservation-management" >
-                <ClipboardDocumentListIcon class="w-15 h-15 mx-auto mt-2 mb-4"/>
-                <h4 class="text-xl">Gestionar Reservas</h4>
-              </PrincipalButton>
-            </div>
-          </div>
-
-          <!-- Panel para profesores (no administradores) -->
-          <div v-else-if="authStore.user.role === 'PROFESSOR'" class="pt-4 border-gray-200">
-            <h3 class="text-lg font-semibold text-gray-800 mb-3">Panel del Profesor</h3>
-            <div class="grid grid-cols-1 gap-4 lg:grid-cols-3 sm:grid-cols-2 mt-5">
-              <!-- Solo el botón de Reservar Aula para profesores -->
-              <PrincipalButton color="blue" to="/classrooms" >
-                <CalendarIcon class="w-15 h-15 mx-auto mt-2 mb-4"/>
-                <h4 class="text-xl">Reservar Aula</h4>
-              </PrincipalButton>
-            </div>
-          </div>
-
-          <!-- Panel para estudiantes -->
-          <div v-else-if="authStore.user.role === 'STUDENT'" class="pt-4 border-gray-200 space-y-6">
-            <div class="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-
-              <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 w-full md:w-auto">
-                <PrincipalButton color="blue" :to="studentProfileRoute">
-                  <UserIcon class="w-15 h-15 mx-auto mt-2 mb-3" />
-                  <h4 class="text-lg">Mi Perfil</h4>
-                </PrincipalButton>
-              </div>
-            </div>
-
-            <div v-if="profileLoading" class="bg-white shadow rounded-lg p-6 text-center">
-              <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-              <p class="text-gray-600 mt-3">Cargando tu información...</p>
-            </div>
-
-            <div v-else-if="profileError" class="bg-red-50 border border-red-200 rounded-lg p-6 text-center">
-              <h4 class="text-lg font-semibold text-red-800">No se pudo cargar tu información</h4>
-              <p class="text-red-700 mt-2">{{ profileError }}</p>
-              <button
-                @click="loadStudentProfile"
-                class="mt-4 px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 transition"
-              >
-                Reintentar
-              </button>
-            </div>
-
-            <template v-else-if="studentProfile">
-              <StudentProfileSummary :profile="studentProfile" subtitle="Información personal del estudiante" />
-
-              <StudentCoursesCard
-                :courses="studentCourses"
-                :loading="profileLoading"
-                :error="profileError"
-                @refresh="loadStudentProfile"
-                @select="openCourseDetail"
-              />
-
-              <StudentScheduleCard
-                :entries="studentScheduleEntries"
-                :loading="profileLoading"
-                :error="''"
-                @refresh="loadStudentProfile"
-              />
-            </template>
-
-            <div v-else class="bg-white shadow rounded-lg p-6 text-center text-gray-500">
-              No hay información disponible para tu perfil.
-            </div>
-          </div>
-
-          <!-- Panel para secretarias -->
-          <div v-else-if="authStore.user.role === 'SECRETARY'" class="pt-4 border-gray-200">
-            <h3 class="text-lg font-semibold text-gray-800 mb-3">Panel de la Secretaria</h3>
-            <div class="grid grid-cols-1 gap-4 lg:grid-cols-2 sm:grid-cols-1 mt-5">
-              <PrincipalButton color="blue" to="/admin/students" >
-                <AcademicCapIcon class="w-15 h-15 mx-auto mt-2 mb-4"/>
-                <h4 class="text-xl">Ver Estudiantes</h4>
-              </PrincipalButton>
-              <PrincipalButton color="green" to="/admin/student-enrollment" >
-                <UserIcon class="w-15 h-15 mx-auto mt-2 mb-4"/>
-                <h4 class="text-xl">Matricular Estudiantes</h4>
-              </PrincipalButton>
-            </div>
-          </div>
+        <div v-if="authStore.user && authStore.isAuthenticated">
+          <AdminDashboard v-if="authStore.user.isAdmin" />
+          <ProfessorDashboard v-else-if="authStore.user.role === 'PROFESSOR'" />
+          <StudentDashboard
+            v-else-if="authStore.user.role === 'STUDENT'"
+            :student-profile="studentProfile"
+            :profile-loading="profileLoading"
+            :profile-error="profileError"
+            :student-courses="studentCourses"
+            :student-schedule-entries="studentScheduleEntries"
+            :student-profile-route="studentProfileRoute"
+            :load-student-profile="reloadStudentProfile"
+            :open-course-detail="openCourseDetail"
+          />
+          <SecretaryDashboard v-else-if="authStore.user.role === 'SECRETARY'" />
         </div>
         
         <div v-else-if="authStore.loading">
@@ -183,23 +80,40 @@ import { useRouter } from 'vue-router'
 import { useAuthStore } from '../stores/auth'
 import { useStudentProfile } from '../composables/useStudentProfile'
 
-import PrincipalButton from '../components/ui/PrincipalButton.vue'
-import StudentProfileSummary from '../components/features/student/StudentProfileSummary.vue'
-import StudentCoursesCard from '../components/features/student/StudentCoursesCard.vue'
-import StudentScheduleCard from '../components/features/student/StudentScheduleCard.vue'
-import { BookOpenIcon, AcademicCapIcon, BriefcaseIcon, BuildingLibraryIcon, UserIcon, CalendarIcon, ClipboardDocumentListIcon, ArrowPathIcon } from '@heroicons/vue/16/solid'
+import { AdminDashboard, ProfessorDashboard, StudentDashboard, SecretaryDashboard } from '@/components/features/dashboard'
 
 const router = useRouter()
 const authStore = useAuthStore()
 const { studentProfile, profileLoading, profileError, courses: studentCourses, schedule: studentScheduleEntries, loadProfile: loadStudentProfile } = useStudentProfile()
 
+const resolveCui = value => {
+  if (typeof value === 'string') {
+    return value
+  }
+  if (value && typeof value === 'object' && 'value' in value) {
+    const maybeValue = value.value
+    return typeof maybeValue === 'string' ? maybeValue : ''
+  }
+  return ''
+}
+
+const getCurrentUserCui = () => resolveCui(authStore.userCui)
+
 // Ruta al perfil del estudiante, requiere el CUI del usuario autenticado
 const studentProfileRoute = computed(() => {
-  const cui = typeof authStore.userCui === 'string'
-    ? authStore.userCui
-    : (authStore.userCui?.value ?? '')
+  const cui = getCurrentUserCui()
   return cui ? { name: 'student-profile', params: { cui } } : null
 })
+
+const fetchProfileByCui = async cui => {
+  const targetCui = cui ?? getCurrentUserCui()
+  if (!targetCui) {
+    return
+  }
+  await loadStudentProfile(targetCui)
+}
+
+const reloadStudentProfile = () => fetchProfileByCui()
 
 const openCourseDetail = course => {
   if (!course || typeof course.courseId !== 'number') {
@@ -214,7 +128,7 @@ onMounted(async () => {
   await authStore.initializeAuth()
 
   if (authStore.isAuthenticated && authStore.user.role === 'STUDENT') {
-    await loadStudentProfile(authStore.userCui)
+    await fetchProfileByCui()
   }
 
   // Si no está autenticado, redirigir al login después de un breve delay
@@ -227,11 +141,16 @@ onMounted(async () => {
 })
 
 watch(() => authStore.userCui, async newCui => {
-  if (!newCui || authStore.user.role !== 'STUDENT') {
+  if (authStore.user.role !== 'STUDENT') {
     return
   }
 
-  await loadStudentProfile(newCui)
+  const resolved = resolveCui(newCui)
+  if (!resolved) {
+    return
+  }
+
+  await fetchProfileByCui(resolved)
 })
 
 const handleLogout = async () => {
