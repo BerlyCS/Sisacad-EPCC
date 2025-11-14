@@ -79,7 +79,7 @@
 
 <script setup>
 import { onMounted } from 'vue'
-import AdminLayout from '../components/TopBar.vue'
+import AdminLayout from '../components/ui/TopBar.vue'
 import { useProfessorService } from '../services/professorService'
 
 const { professors, loading, error, fetchProfessors } = useProfessorService()

@@ -98,7 +98,7 @@
 
 <script setup>
 import { onMounted } from 'vue'
-import AdminLayout from '../components/TopBar.vue'
+import AdminLayout from '../components/ui/TopBar.vue'
 import { useClassroomService } from '../services/classroomService'
 
 const { classrooms, loading, error, fetchClassrooms } = useClassroomService()

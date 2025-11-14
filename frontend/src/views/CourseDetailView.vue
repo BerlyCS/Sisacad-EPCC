@@ -56,8 +56,8 @@
 <script setup lang="ts">
 import { computed, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import AdminLayout from '@/components/TopBar.vue'
-import CourseInfoCard from '@/components/course/CourseInfoCard.vue'
+import AdminLayout from '@/components/ui/TopBar.vue'
+import CourseInfoCard from '@/components/features/course/CourseInfoCard.vue'
 import { useCourseService } from '@/services/courseService'
 
 const route = useRoute()

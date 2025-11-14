@@ -54,30 +54,23 @@
 <script setup>
 import { computed, onMounted, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import AdminLayout from '../components/TopBar.vue'
-import StudentProfileSummary from '../components/student/StudentProfileSummary.vue'
-import StudentCoursesCard from '../components/student/StudentCoursesCard.vue'
-import StudentScheduleCard from '../components/student/StudentScheduleCard.vue'
-import { useStudentService } from '../services/studentService'
+import AdminLayout from '../components/ui/TopBar.vue'
+import StudentProfileSummary from '../components/features/student/StudentProfileSummary.vue'
+import StudentCoursesCard from '../components/features/student/StudentCoursesCard.vue'
+import StudentScheduleCard from '../components/features/student/StudentScheduleCard.vue'
+import { useStudentProfile } from '../composables/useStudentProfile'
 
 const route = useRoute()
 const router = useRouter()
 
-const { studentProfile, profileLoading, profileError, fetchStudentProfile } = useStudentService()
-
 const cui = computed(() => String(route.params.cui ?? ''))
-const courses = computed(() => studentProfile.value?.courses ?? [])
-const schedule = computed(() => studentProfile.value?.schedule ?? [])
 
-const loadProfile = () => {
-  if (!cui.value) {
-    return
-  }
-  fetchStudentProfile(cui.value)
+const loadProfileForCui = () => {
+  loadProfile(cui.value)
 }
 
 const reloadProfile = () => {
-  loadProfile()
+  loadProfileForCui()
 }
 
 const openCourseDetail = course => {
@@ -96,13 +89,13 @@ const goBack = () => {
 }
 
 onMounted(() => {
-  loadProfile()
+  loadProfileForCui()
 })
 
 watch(
   () => route.params.cui,
   () => {
-    loadProfile()
+    loadProfileForCui()
   }
 )
 </script>

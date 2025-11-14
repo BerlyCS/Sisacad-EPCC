@@ -177,34 +177,17 @@
 import { computed, onMounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '../stores/auth'
-import { useStudentService } from '../services/studentService'
+import { useStudentProfile } from '../composables/useStudentProfile'
 
-import PrincipalButton from '../components/PrincipalButton.vue'
-import StudentProfileSummary from '../components/student/StudentProfileSummary.vue'
-import StudentCoursesCard from '../components/student/StudentCoursesCard.vue'
-import StudentScheduleCard from '../components/student/StudentScheduleCard.vue'
+import PrincipalButton from '../components/ui/PrincipalButton.vue'
+import StudentProfileSummary from '../components/features/student/StudentProfileSummary.vue'
+import StudentCoursesCard from '../components/features/student/StudentCoursesCard.vue'
+import StudentScheduleCard from '../components/features/student/StudentScheduleCard.vue'
 import { BookOpenIcon, AcademicCapIcon, BriefcaseIcon, BuildingLibraryIcon, UserIcon, CalendarIcon, ClipboardDocumentListIcon, ArrowPathIcon } from '@heroicons/vue/16/solid'
 
 const router = useRouter()
 const authStore = useAuthStore()
-const { studentProfile, profileLoading, profileError, fetchStudentProfile } = useStudentService()
-
-const userCui = computed(() => authStore.userCui)
-const studentCourses = computed(() => studentProfile.value?.courses ?? [])
-const studentScheduleEntries = computed(() => studentProfile.value?.schedule ?? [])
-const studentProfileRoute = computed(() => (userCui.value ? `/students/${userCui.value}/profile` : '/students/profile'))
-
-const loadStudentProfile = async () => {
-  if (!userCui.value) {
-    return
-  }
-
-  try {
-    await fetchStudentProfile(userCui.value)
-  } catch (error) {
-    console.error('Error cargando perfil del estudiante:', error)
-  }
-}
+const { studentProfile, profileLoading, profileError, courses: studentCourses, schedule: studentScheduleEntries, loadProfile: loadStudentProfile } = useStudentProfile()
 
 const openCourseDetail = course => {
   if (!course || typeof course.courseId !== 'number') {
@@ -219,7 +202,7 @@ onMounted(async () => {
   await authStore.initializeAuth()
 
   if (authStore.isAuthenticated && authStore.user.role === 'STUDENT') {
-    await loadStudentProfile()
+    await loadStudentProfile(authStore.userCui)
   }
 
   // Si no está autenticado, redirigir al login después de un breve delay
@@ -231,12 +214,12 @@ onMounted(async () => {
   }
 })
 
-watch(userCui, async newCui => {
+watch(() => authStore.userCui, async newCui => {
   if (!newCui || authStore.user.role !== 'STUDENT') {
     return
   }
 
-  await loadStudentProfile()
+  await loadStudentProfile(newCui)
 })
 
 const handleLogout = async () => {

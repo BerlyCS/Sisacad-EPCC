@@ -142,7 +142,7 @@
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue';
-import AdminLayout from '@/components/TopBar.vue';
+import AdminLayout from '@/components/ui/TopBar.vue';
 import { reservationService, type Reservation } from '@/services/reservationService';
 
 const reservations = ref<Reservation[]>([]);

@@ -1,0 +1,1 @@
+export { default as CourseInfoCard } from './CourseInfoCard.vue'

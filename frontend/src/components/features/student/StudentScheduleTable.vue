@@ -35,7 +35,7 @@
 
 <script setup lang="ts">
 import { computed } from 'vue'
-import type { StudentScheduleEntry } from '../services/studentScheduleService'
+import type { StudentScheduleEntry } from '@/services/studentScheduleService'
 
 type DayKey = 'LUNES' | 'MARTES' | 'MIERCOLES' | 'JUEVES' | 'VIERNES' | 'SABADO' | 'DOMINGO'
 

@@ -50,7 +50,7 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
-import AdminLayout from '../components/TopBar.vue';
+import AdminLayout from '../components/ui/TopBar.vue';
 import { reservationService } from '@/services/reservationService';
 import { BeakerIcon, BuildingOfficeIcon, ChevronRightIcon, ExclamationTriangleIcon } from '@heroicons/vue/16/solid';
 

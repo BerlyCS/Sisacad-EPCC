@@ -117,7 +117,7 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
-import AdminLayout from '../components/TopBar.vue'
+import AdminLayout from '../components/ui/TopBar.vue'
 import { useStudentService } from '../services/studentService'
 
 const sortBy = ref('dni')

@@ -85,7 +85,7 @@
 
 <script setup>
 import { onMounted } from 'vue'
-import AdminLayout from '../components/TopBar.vue'
+import AdminLayout from '../components/ui/TopBar.vue'
 import { useCourseService } from '../services/courseService'
 
 const { courses, loading, error, fetchCourses } = useCourseService()

@@ -34,7 +34,7 @@
 </template>
 
 <script setup>
-import StudentScheduleTable from '../StudentScheduleTable.vue'
+import StudentScheduleTable from './StudentScheduleTable.vue'
 
 defineProps({
   entries: {
