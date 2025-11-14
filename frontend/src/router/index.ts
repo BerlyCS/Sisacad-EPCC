@@ -84,6 +84,24 @@ const router = createRouter({
       meta: { requiresAuth: true, allowedRoles: ['ADMIN', 'SECRETARY', 'PROFESSOR', 'STUDENT'] }
     },
     {
+      path: '/student/profile',
+      name: 'student-own-profile',
+      component: () => import('@/views/StudentProfileView.vue'),
+      meta: { requiresAuth: true, allowedRoles: ['STUDENT'] }
+    },
+    {
+      path: '/student/courses',
+      name: 'student-courses',
+      component: () => import('@/views/StudentCoursesView.vue'),
+      meta: { requiresAuth: true, allowedRoles: ['STUDENT'] }
+    },
+    {
+      path: '/student/schedule',
+      name: 'student-schedule',
+      component: () => import('@/views/StudentScheduleView.vue'),
+      meta: { requiresAuth: true, allowedRoles: ['STUDENT'] }
+    },
+    {
       path: '/:pathMatch(.*)*',
       name: 'not-found',
       component: NotFoundComponent

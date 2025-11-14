@@ -60,13 +60,33 @@
             </router-link>
 
             <router-link
-              v-if="userRole === 'STUDENT' && userCui"
-              :to="`/students/${userCui}/profile`"
+              v-if="userRole === 'STUDENT'"
+              to="/student/profile"
               class="text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-all duration-200 px-3 py-2 rounded-md text-sm font-medium flex items-center space-x-2"
-              :class="{ 'bg-blue-100 text-blue-700': $route.path.includes(`/students/${userCui}/profile`) }"
+              :class="{ 'bg-blue-100 text-blue-700': $route.path === '/student/profile' }"
             >
               <i class="fas fa-user-graduate"></i>
               <span>Mi Perfil</span>
+            </router-link>
+
+            <router-link
+              v-if="userRole === 'STUDENT'"
+              to="/student/courses"
+              class="text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-all duration-200 px-3 py-2 rounded-md text-sm font-medium flex items-center space-x-2"
+              :class="{ 'bg-blue-100 text-blue-700': $route.path === '/student/courses' }"
+            >
+              <i class="fas fa-book"></i>
+              <span>Mis Cursos</span>
+            </router-link>
+
+            <router-link
+              v-if="userRole === 'STUDENT'"
+              to="/student/schedule"
+              class="text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-all duration-200 px-3 py-2 rounded-md text-sm font-medium flex items-center space-x-2"
+              :class="{ 'bg-blue-100 text-blue-700': $route.path === '/student/schedule' }"
+            >
+              <i class="fas fa-calendar"></i>
+              <span>Mi Horario</span>
             </router-link>
 
             <router-link 
@@ -124,13 +144,33 @@
             </router-link>
 
             <router-link
-              v-if="userRole === 'STUDENT' && userCui"
-              :to="`/students/${userCui}/profile`"
+              v-if="userRole === 'STUDENT'"
+              to="/student/profile"
               class="block text-gray-700 hover:bg-gray-100 rounded-md px-3 py-2 text-sm font-medium"
-              :class="{ 'bg-blue-100 text-blue-700': $route.path.includes(`/students/${userCui}/profile`) }"
+              :class="{ 'bg-blue-100 text-blue-700': $route.path === '/student/profile' }"
               @click="isMenuOpen = false"
             >
               Mi Perfil
+            </router-link>
+
+            <router-link
+              v-if="userRole === 'STUDENT'"
+              to="/student/courses"
+              class="block text-gray-700 hover:bg-gray-100 rounded-md px-3 py-2 text-sm font-medium"
+              :class="{ 'bg-blue-100 text-blue-700': $route.path === '/student/courses' }"
+              @click="isMenuOpen = false"
+            >
+              Mis Cursos
+            </router-link>
+
+            <router-link
+              v-if="userRole === 'STUDENT'"
+              to="/student/schedule"
+              class="block text-gray-700 hover:bg-gray-100 rounded-md px-3 py-2 text-sm font-medium"
+              :class="{ 'bg-blue-100 text-blue-700': $route.path === '/student/schedule' }"
+              @click="isMenuOpen = false"
+            >
+              Mi Horario
             </router-link>
 
             <router-link 

@@ -31,21 +31,6 @@
 
       <template v-else-if="studentProfile">
         <StudentProfileSummary :profile="studentProfile" />
-
-        <StudentCoursesCard
-          :courses="courses"
-          :loading="profileLoading"
-          :error="profileError"
-          :refreshable="false"
-          @select="openCourseDetail"
-        />
-
-        <StudentScheduleCard
-          :entries="schedule"
-          :loading="profileLoading"
-          :error="profileError"
-          :refreshable="false"
-        />
       </template>
     </div>
   </AdminLayout>
@@ -56,17 +41,22 @@ import { computed, onMounted, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import AdminLayout from '../components/ui/TopBar.vue'
 import StudentProfileSummary from '../components/features/student/StudentProfileSummary.vue'
-import StudentCoursesCard from '../components/features/student/StudentCoursesCard.vue'
-import StudentScheduleCard from '../components/features/student/StudentScheduleCard.vue'
 import { useStudentProfile } from '../composables/useStudentProfile'
+import { useAuthStore } from '../stores/auth'
 
 // Composable state (was missing before causing undefined references)
-const { studentProfile, profileLoading, profileError, courses, schedule, loadProfile } = useStudentProfile()
+const { studentProfile, profileLoading, profileError, loadProfile } = useStudentProfile()
 
 const route = useRoute()
 const router = useRouter()
+const authStore = useAuthStore()
 
-const cui = computed(() => String(route.params.cui ?? ''))
+const cui = computed(() => {
+  const paramCui = route.params.cui
+  if (paramCui) return String(paramCui)
+  // For own profile route
+  return authStore.userCui ? String(authStore.userCui) : ''
+})
 
 const loadProfileForCui = () => {
   if (!cui.value) return
@@ -77,18 +67,11 @@ const reloadProfile = () => {
   loadProfileForCui()
 }
 
-const openCourseDetail = course => {
-  if (!course || typeof course.courseId !== 'number') {
-    return
-  }
-  router.push({ name: 'course-detail', params: { courseId: course.courseId } })
-}
-
 const goBack = () => {
   if (window.history.length > 1) {
     router.back()
   } else {
-    router.push('/admin/students')
+    router.push('/bienvenido')
   }
 }
 
