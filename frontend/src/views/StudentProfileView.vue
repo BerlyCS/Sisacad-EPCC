@@ -60,12 +60,16 @@ import StudentCoursesCard from '../components/features/student/StudentCoursesCar
 import StudentScheduleCard from '../components/features/student/StudentScheduleCard.vue'
 import { useStudentProfile } from '../composables/useStudentProfile'
 
+// Composable state (was missing before causing undefined references)
+const { studentProfile, profileLoading, profileError, courses, schedule, loadProfile } = useStudentProfile()
+
 const route = useRoute()
 const router = useRouter()
 
 const cui = computed(() => String(route.params.cui ?? ''))
 
 const loadProfileForCui = () => {
+  if (!cui.value) return
   loadProfile(cui.value)
 }
 

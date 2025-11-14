@@ -20,7 +20,7 @@
           >
             <div class="flex-1 text-left">
               <p class="font-semibold text-slate-800">{{ slot.courseName }}</p>
-              <p class="text-xs text-slate-500">{{ slot.courseTypeLabel }}</p>
+              <p class="text-xs text-slate-500">{{ COURSE_TYPE_LABEL[slot.courseType] || 'Teoría' }}</p>
             </div>
             <div class="mt-2 md:mt-0 md:flex md:items-center md:space-x-6 text-xs text-slate-600">
               <span class="font-medium">{{ slot.startTime }} - {{ slot.endTime }}</span>
@@ -48,6 +48,11 @@ const DAY_LABEL: Record<DayKey, string> = {
   VIERNES: 'Viernes',
   SABADO: 'Sábado',
   DOMINGO: 'Domingo'
+}
+
+const COURSE_TYPE_LABEL: Record<string, string> = {
+  THEORY: 'Teoría',
+  LAB: 'Laboratorio'
 }
 
 const props = defineProps<{

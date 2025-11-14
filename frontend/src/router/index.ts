@@ -47,6 +47,12 @@ const router = createRouter({
       component: SecretaryManagementView,
     },
     {
+      path: '/admin/student-enrollment',
+      name: 'student-enrollment',
+      component: () => import('@/views/StudentEnrollmentView.vue'),
+      meta: { requiresAuth: true, allowedRoles: ['ADMIN', 'SECRETARY'] }
+    },
+    {
       path: '/classrooms',
       name: 'ClassroomList',
       component: () => import('@/views/ClassroomListView.vue'),

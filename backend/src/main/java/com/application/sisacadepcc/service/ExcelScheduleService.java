@@ -247,6 +247,33 @@ public class ExcelScheduleService {
                 .collect(Collectors.toList());
     }
 
+    public List<OccupiedTimeSlot> findByCourse(String courseName, String groupLetter,
+                                               com.application.sisacadepcc.domain.model.valueobject.CourseType courseType) {
+        List<OccupiedTimeSlot> base = findByCourseName(courseName);
+        if (base.isEmpty()) return base;
+
+        return base.stream()
+                .filter(slot -> {
+                    boolean groupOk = true;
+                    if (groupLetter != null && !groupLetter.isBlank()) {
+                        groupOk = groupLetter.equalsIgnoreCase(Optional.ofNullable(slot.getGroupLetter()).orElse(""));
+                    }
+
+                    boolean typeOk = true;
+                    if (courseType != null) {
+                        if (courseType == com.application.sisacadepcc.domain.model.valueobject.CourseType.LAB) {
+                            typeOk = slot.isLab();
+                        } else {
+                            // Treat non-lab (teoría/práctica) as THEORY in domain
+                            typeOk = !slot.isLab();
+                        }
+                    }
+
+                    return groupOk && typeOk;
+                })
+                .collect(Collectors.toList());
+    }
+
     private String normalizeCourseName(String value) {
         if (value == null) {
             return "";
@@ -318,6 +345,8 @@ public class ExcelScheduleService {
         private String startTime;
         private String endTime;
         private String courseName;
+        private String groupLetter; // A, B, C ... if detected from text
+        private boolean lab; // true if LAB/LABORATORIO detected
 
         public OccupiedTimeSlot(String classroomName, String dayOfWeek, String startTime, String endTime, String courseName) {
             this.classroomName = classroomName;
@@ -325,6 +354,7 @@ public class ExcelScheduleService {
             this.startTime = startTime;
             this.endTime = endTime;
             this.courseName = courseName;
+            parseHintsFromCourseText(courseName);
         }
 
         // Getters
@@ -333,10 +363,51 @@ public class ExcelScheduleService {
         public String getStartTime() { return startTime; }
         public String getEndTime() { return endTime; }
         public String getCourseName() { return courseName; }
+        public String getGroupLetter() { return groupLetter; }
+        public boolean isLab() { return lab; }
 
         @Override
         public String toString() {
             return String.format("%s %s %s-%s (%s)", classroomName, dayOfWeek, startTime, endTime, courseName);
+        }
+
+        private void parseHintsFromCourseText(String text) {
+            if (text == null) {
+                this.groupLetter = null;
+                this.lab = false;
+                return;
+            }
+
+            String upper = text.toUpperCase(Locale.ROOT);
+            // detect lab markers
+            this.lab = upper.contains("LABORATORIO") || upper.matches(".*\\bLAB\\b.*");
+
+            // group detection: (A) or GRUPO A or TEORIA A / PRACTICA A / LAB A
+            String detected = null;
+
+            java.util.regex.Pattern pParen = java.util.regex.Pattern.compile(".*\\(([A-F])\\).*", java.util.regex.Pattern.UNICODE_CASE);
+            java.util.regex.Matcher m1 = pParen.matcher(upper);
+            if (m1.matches()) {
+                detected = m1.group(1);
+            }
+
+            if (detected == null) {
+                java.util.regex.Pattern pGrupo = java.util.regex.Pattern.compile(".*\\bGRUPO\\s+([A-F])\\b.*");
+                java.util.regex.Matcher m2 = pGrupo.matcher(upper);
+                if (m2.matches()) {
+                    detected = m2.group(1);
+                }
+            }
+
+            if (detected == null) {
+                java.util.regex.Pattern pSuffix = java.util.regex.Pattern.compile(".*\\b(TEORIA|PRACTICA|LAB(?:ORATORIO)?)\\s*([A-F])\\b.*");
+                java.util.regex.Matcher m3 = pSuffix.matcher(upper);
+                if (m3.matches()) {
+                    detected = m3.group(2);
+                }
+            }
+
+            this.groupLetter = detected;
         }
     }
 }

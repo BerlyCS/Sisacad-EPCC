@@ -30,7 +30,7 @@
         class="w-full flex items-center justify-center space-x-3 px-4 py-2 bg-red-700 text-white font-semibold rounded hover:bg-red-800 transition disabled:opacity-50 disabled:cursor-not-allowed"
       >
         <img
-          src="https://dutic.unsa.edu.pe/logo_unsa.png"
+          src="../assets/logo_unsa.png"
           alt="Icono UNSA"
           class="h-6 max-w-[20px] object-contain"
         />

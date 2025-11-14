@@ -11,6 +11,9 @@ import com.application.sisacadepcc.presentation.dto.StudentScheduleEntry;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
@@ -26,6 +29,7 @@ public class StudentCourseService {
     private final StudentRepository studentRepository;
     private final CourseRepository courseRepository;
     private final ExcelScheduleService excelScheduleService;
+    private static final DateTimeFormatter TIME_FORMATTER = DateTimeFormatter.ofPattern("H:mm");
     private static final Map<String, Integer> DAY_POSITION = Map.of(
             "LUNES", 1,
             "MARTES", 2,
@@ -81,6 +85,10 @@ public class StudentCourseService {
         Course course = courseRepository.findById(courseId)
                 .orElseThrow(() -> new IllegalArgumentException("Curso no encontrado: " + courseId));
 
+        if (studentCourseRepository.existsByStudentAndCourse(studentDocumentoIdentidad, courseId)) {
+            throw new IllegalArgumentException("El estudiante ya está matriculado en este curso");
+        }
+
         if (CourseType.LAB.equals(course.getCourseType())) {
             Long theoryCourseId = course.getLabPrerequisiteCourseId();
             if (theoryCourseId == null) {
@@ -93,10 +101,10 @@ public class StudentCourseService {
             }
         }
 
-        if (!studentCourseRepository.existsByStudentAndCourse(studentDocumentoIdentidad, courseId)) {
-            StudentCourse enrollment = new StudentCourse(null, studentDocumentoIdentidad, courseId);
-            studentCourseRepository.save(enrollment);
-        }
+        ensureNoScheduleConflict(studentDocumentoIdentidad, course);
+
+        StudentCourse enrollment = new StudentCourse(null, studentDocumentoIdentidad, courseId);
+        studentCourseRepository.save(enrollment);
     }
 
     public List<StudentCourse> getAllEnrollments() {
@@ -112,7 +120,9 @@ public class StudentCourseService {
         List<StudentScheduleEntry> entries = new ArrayList<>();
 
         for (Course course : courses) {
-            List<ExcelScheduleService.OccupiedTimeSlot> slots = excelScheduleService.findByCourseName(course.getName());
+            String group = (course.getGroupLetter() == '\0') ? null : String.valueOf(course.getGroupLetter());
+            List<ExcelScheduleService.OccupiedTimeSlot> slots = excelScheduleService
+                .findByCourse(course.getName(), group, course.getCourseType());
             for (ExcelScheduleService.OccupiedTimeSlot slot : slots) {
                 entries.add(new StudentScheduleEntry(
                         course.getCourseId(),
@@ -134,5 +144,69 @@ public class StudentCourseService {
 
         entries.sort(comparator);
         return entries;
+    }
+
+    private void ensureNoScheduleConflict(String studentDocumentoIdentidad, Course course) {
+        List<StudentScheduleEntry> currentSchedule = getScheduleForStudent(studentDocumentoIdentidad);
+        if (currentSchedule.isEmpty()) {
+            return;
+        }
+
+        String group = (course.getGroupLetter() == '\0') ? null : String.valueOf(course.getGroupLetter());
+        List<ExcelScheduleService.OccupiedTimeSlot> targetSlots = excelScheduleService
+            .findByCourse(course.getName(), group, course.getCourseType());
+        if (targetSlots == null || targetSlots.isEmpty()) {
+            return;
+        }
+
+        for (ExcelScheduleService.OccupiedTimeSlot slot : targetSlots) {
+            for (StudentScheduleEntry entry : currentSchedule) {
+                if (isSameDay(slot.getDayOfWeek(), entry.getDayOfWeek()) &&
+                        hasTimeOverlap(slot.getStartTime(), slot.getEndTime(), entry.getStartTime(), entry.getEndTime())) {
+                    throw new IllegalArgumentException(String.format(
+                            "El horario del curso %s (%s-%s) se superpone con %s (%s-%s)",
+                            course.getName(), slot.getStartTime(), slot.getEndTime(),
+                            entry.getCourseName(), entry.getStartTime(), entry.getEndTime()
+                    ));
+                }
+            }
+        }
+    }
+
+    private boolean isSameDay(String dayA, String dayB) {
+        if (dayA == null || dayB == null) {
+            return false;
+        }
+        return dayA.trim().equalsIgnoreCase(dayB.trim());
+    }
+
+    private boolean hasTimeOverlap(String startA, String endA, String startB, String endB) {
+        LocalTime rangeAStart = parseTime(startA);
+        LocalTime rangeAEnd = parseTime(endA);
+        LocalTime rangeBStart = parseTime(startB);
+        LocalTime rangeBEnd = parseTime(endB);
+
+        if (rangeAStart == null || rangeAEnd == null || rangeBStart == null || rangeBEnd == null) {
+            return false;
+        }
+
+        // Consider inclusive-exclusive ranges to avoid false positives when one ends exactly when another starts
+        return rangeAStart.isBefore(rangeBEnd) && rangeBStart.isBefore(rangeAEnd);
+    }
+
+    private LocalTime parseTime(String raw) {
+        if (raw == null || raw.isBlank()) {
+            return null;
+        }
+        String normalized = raw.trim();
+        try {
+            return LocalTime.parse(normalized, TIME_FORMATTER);
+        } catch (DateTimeParseException ex) {
+            try {
+                return LocalTime.parse(normalized, DateTimeFormatter.ofPattern("HH:mm"));
+            } catch (DateTimeParseException ignored) {
+                return null;
+            }
+        }
     }
 }

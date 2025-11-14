@@ -176,7 +176,8 @@ const adminNavigation = [
 ]
 
 const secretaryNavigation = [
-  { name: 'Estudiantes', to: '/admin/students' }
+  { name: 'Estudiantes', to: '/admin/students' },
+  { name: 'Matricular', to: '/admin/student-enrollment' }
 ]
 </script>
 

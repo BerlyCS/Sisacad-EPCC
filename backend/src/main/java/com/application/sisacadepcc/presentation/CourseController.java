@@ -20,7 +20,6 @@ public class CourseController {
     }
 
     @GetMapping
-    @RequiresAdministratorAccess
     public ResponseEntity<List<Course>> getAllCourses() {
         return ResponseEntity.ok(service.getAllCourses());
     }

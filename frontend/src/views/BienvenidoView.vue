@@ -148,6 +148,10 @@
                 <AcademicCapIcon class="w-15 h-15 mx-auto mt-2 mb-4"/>
                 <h4 class="text-xl">Ver Estudiantes</h4>
               </PrincipalButton>
+              <PrincipalButton color="green" to="/admin/student-enrollment" >
+                <UserIcon class="w-15 h-15 mx-auto mt-2 mb-4"/>
+                <h4 class="text-xl">Matricular Estudiantes</h4>
+              </PrincipalButton>
             </div>
           </div>
         </div>
@@ -188,6 +192,14 @@ import { BookOpenIcon, AcademicCapIcon, BriefcaseIcon, BuildingLibraryIcon, User
 const router = useRouter()
 const authStore = useAuthStore()
 const { studentProfile, profileLoading, profileError, courses: studentCourses, schedule: studentScheduleEntries, loadProfile: loadStudentProfile } = useStudentProfile()
+
+// Ruta al perfil del estudiante, requiere el CUI del usuario autenticado
+const studentProfileRoute = computed(() => {
+  const cui = typeof authStore.userCui === 'string'
+    ? authStore.userCui
+    : (authStore.userCui?.value ?? '')
+  return cui ? { name: 'student-profile', params: { cui } } : null
+})
 
 const openCourseDetail = course => {
   if (!course || typeof course.courseId !== 'number') {

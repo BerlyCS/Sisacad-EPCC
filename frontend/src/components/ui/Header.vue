@@ -18,14 +18,16 @@
             </div>
           </div>
           <div class="flex items-center md:justify-normal justify-between space-x-4">
-            <span class="text-gray-700">Hola, {{ user && user.name ? user.name : 'Usuario' }}</span>
+            <span class="text-gray-700">Hola, {{ user && user.authenticated && user.name ? user.name : 'Usuario' }}</span>
             <button 
+              v-if="user && user.authenticated"
               @click="goToDashboard"
               class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition"
             >
               Dashboard
             </button>
             <button 
+              v-if="user && user.authenticated"
               @click="logout"
               class="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 transition"
             >
@@ -48,6 +50,10 @@ const authStore = useAuthStore()
 const { user, userRole, initialized } = storeToRefs(authStore)
 
 const roleTitle = computed(() => {
+  if (!user.value || !user.value.authenticated) {
+    return 'SISACAD - EPCC'
+  }
+  
   switch (userRole.value) {
     case 'ADMIN':
       return 'Panel de Administración'
@@ -58,7 +64,7 @@ const roleTitle = computed(() => {
     case 'STUDENT':
       return 'Panel del Estudiante'
     default:
-      return 'Invitado'
+      return 'SISACAD - EPCC'
   }
 })
 
