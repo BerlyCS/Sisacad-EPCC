@@ -99,6 +99,30 @@ public class StudentController {
         }
     }
 
+    @GetMapping("/my-profile")
+    public ResponseEntity<Student> getMyProfile(@AuthenticationPrincipal OAuth2User principal) {
+        try {
+            if (principal == null) {
+                return ResponseEntity.badRequest().build();
+            }
+
+            String email = principal.getAttribute("email");
+            if (email == null) {
+                return ResponseEntity.badRequest().build();
+            }
+
+            Optional<Student> student = studentRepository.findByCorreoInstitucional(email);
+            if (student.isEmpty()) {
+                return ResponseEntity.notFound().build();
+            }
+
+            return ResponseEntity.ok(student.get());
+
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().build();
+        }
+    }
+
     @PostMapping
     @RequiresAdministratorAccess
     public ResponseEntity<Student> createStudent(@RequestBody Student student) {
@@ -131,7 +155,7 @@ public class StudentController {
     }
 
     @GetMapping("/profile/{cui}")
-    public ResponseEntity<StudentProfileResponse> getStudentProfile(@PathVariable String cui,
+    public ResponseEntity<Student> getStudentProfile(@PathVariable String cui,
                                                                     Authentication authentication) {
         if (!authorizationService.hasAnyRole(authentication, UserRole.ADMIN, UserRole.SECRETARY,
                 UserRole.PROFESSOR, UserRole.STUDENT)) {
@@ -152,10 +176,58 @@ public class StudentController {
             }
         }
 
-        List<Course> courses = studentCourseService.getCoursesByStudent(student.getDocumentoIdentidad());
-        List<StudentScheduleEntry> schedule = studentCourseService.getScheduleForStudent(student.getDocumentoIdentidad());
+        return ResponseEntity.ok(student);
+    }
 
-        StudentProfileResponse response = new StudentProfileResponse(student, courses, schedule);
-        return ResponseEntity.ok(response);
+    @GetMapping("/{cui}/courses")
+    public ResponseEntity<List<Course>> getStudentCourses(@PathVariable String cui,
+                                                          Authentication authentication) {
+        if (!authorizationService.hasAnyRole(authentication, UserRole.ADMIN, UserRole.SECRETARY,
+                UserRole.PROFESSOR, UserRole.STUDENT)) {
+            return ResponseEntity.status(403).build();
+        }
+
+        Optional<Student> studentOptional = service.getStudentByCui(cui);
+        if (studentOptional.isEmpty()) {
+            return ResponseEntity.notFound().build();
+        }
+
+        Student student = studentOptional.get();
+
+        if (authorizationService.hasRole(authentication, UserRole.STUDENT)) {
+            Optional<String> requesterCui = authorizationService.getAuthenticatedStudentCui(authentication);
+            if (requesterCui.isEmpty() || !requesterCui.get().equalsIgnoreCase(cui)) {
+                return ResponseEntity.status(403).build();
+            }
+        }
+
+        List<Course> courses = studentCourseService.getCoursesByStudent(student.getDocumentoIdentidad());
+        return ResponseEntity.ok(courses);
+    }
+
+    @GetMapping("/{cui}/schedule")
+    public ResponseEntity<List<StudentScheduleEntry>> getStudentSchedule(@PathVariable String cui,
+                                                                         Authentication authentication) {
+        if (!authorizationService.hasAnyRole(authentication, UserRole.ADMIN, UserRole.SECRETARY,
+                UserRole.PROFESSOR, UserRole.STUDENT)) {
+            return ResponseEntity.status(403).build();
+        }
+
+        Optional<Student> studentOptional = service.getStudentByCui(cui);
+        if (studentOptional.isEmpty()) {
+            return ResponseEntity.notFound().build();
+        }
+
+        Student student = studentOptional.get();
+
+        if (authorizationService.hasRole(authentication, UserRole.STUDENT)) {
+            Optional<String> requesterCui = authorizationService.getAuthenticatedStudentCui(authentication);
+            if (requesterCui.isEmpty() || !requesterCui.get().equalsIgnoreCase(cui)) {
+                return ResponseEntity.status(403).build();
+            }
+        }
+
+        List<StudentScheduleEntry> schedule = studentCourseService.getScheduleForStudent(student.getDocumentoIdentidad());
+        return ResponseEntity.ok(schedule);
     }
 }

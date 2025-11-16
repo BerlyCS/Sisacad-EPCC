@@ -32,7 +32,17 @@ const authStore = useAuthStore()
 const { courses: studentCourses, profileLoading, profileError, loadProfile: loadStudentProfile } = useStudentProfile()
 
 const openCourseDetail = (course) => {
-  router.push(`/courses/${course.id}`)
+  if (!course) {
+    return
+  }
+
+  const targetCourseId = course.courseId ?? course.courseCode
+  if (!targetCourseId) {
+    console.warn('No se pudo determinar el identificador del curso seleccionado')
+    return
+  }
+
+  router.push({ name: 'course-detail', params: { courseId: targetCourseId } })
 }
 
 const resolveCui = (value) => {
@@ -59,7 +69,7 @@ const fetchProfileByCui = async (cui) => {
 onMounted(async () => {
   await authStore.initializeAuth()
   if (authStore.isAuthenticated && authStore.user.role === 'STUDENT') {
-    await fetchProfileByCui()
+    await loadStudentProfile()
   }
 })
 </script>
