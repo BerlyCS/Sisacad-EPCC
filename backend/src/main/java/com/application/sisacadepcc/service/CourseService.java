@@ -15,6 +15,7 @@ import org.springframework.stereotype.Service;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 public class CourseService {
@@ -36,6 +37,19 @@ public class CourseService {
 
     public List<Course> getAllCourses() {
         return repository.findAll();
+    }
+
+    public List<Course> getCoursesForProfessor(Long professorId) {
+        if (professorId == null) {
+            return List.of();
+        }
+
+        return repository.findAll().stream()
+                .filter(course -> course.getTeacherIDs() != null)
+                .filter(course -> course.getTeacherIDs().stream()
+                        .filter(Objects::nonNull)
+                        .anyMatch(id -> Objects.equals(id, professorId)))
+                .collect(Collectors.toList());
     }
 
     public Optional<CourseDetails> getCourseDetails(Long courseId) {

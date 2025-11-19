@@ -5,6 +5,7 @@ import com.application.sisacadepcc.domain.repository.ProfessorRepository;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Repository
@@ -39,4 +40,9 @@ public class ProfessorRepositoryImpl implements ProfessorRepository {
         return jpaRepository.existsByCorreo(email);
     }
 
+    @Override
+    public Optional<Professor> findByCorreo(String correo) {
+        return jpaRepository.findByCorreo(correo)
+                .map(this::mapToDomain);
+    }
 }

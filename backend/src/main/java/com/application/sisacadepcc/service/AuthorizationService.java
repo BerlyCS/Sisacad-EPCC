@@ -1,5 +1,6 @@
 package com.application.sisacadepcc.service;
 
+import com.application.sisacadepcc.domain.model.Professor;
 import com.application.sisacadepcc.domain.model.Student;
 import com.application.sisacadepcc.domain.repository.AdministratorRepository;
 import com.application.sisacadepcc.domain.repository.ProfessorRepository;
@@ -33,67 +34,61 @@ public class AuthorizationService {
     }
 
     public boolean isAdministrator(Authentication authentication) {
-        if (authentication == null || !authentication.isAuthenticated()) {
+        if (!isAuthenticated(authentication)) {
             return false;
         }
 
-        Object principal = authentication.getPrincipal();
-        if (principal instanceof OAuth2User oauth2User) {
-            String email = oauth2User.getAttribute("email");
-            if (email != null) {
-                // Verificar si el email existe en la tabla de administradores
-                return administratorRepository.findAll().stream()
-                        .anyMatch(admin -> email.equalsIgnoreCase(admin.getInstitutionalEmail()));
-            }
+        if (matchesRoleAttribute(authentication, UserRole.ADMIN)) {
+            return true;
         }
-        return false;
+
+        return mapEmail(authentication)
+                .map(email -> administratorRepository.findAll().stream()
+                        .anyMatch(admin -> email.equalsIgnoreCase(admin.getInstitutionalEmail())))
+                .orElse(false);
     }
 
     public boolean isProfessor(Authentication authentication) {
-        if (authentication == null || !authentication.isAuthenticated()) {
+        if (!isAuthenticated(authentication)) {
             return false;
         }
 
-        Object principal = authentication.getPrincipal();
-        if (principal instanceof OAuth2User oauth2User) {
-            String email = oauth2User.getAttribute("email");
-            if (email != null) {
-                return professorRepository.findAll().stream()
-                        .anyMatch(prof -> email.equalsIgnoreCase(prof.getCorreo()));
-            }
+        if (matchesRoleAttribute(authentication, UserRole.PROFESSOR)) {
+            return true;
         }
-        return false;
+
+        return mapEmail(authentication)
+                .map(email -> professorRepository.findByCorreo(email).isPresent())
+                .orElse(false);
     }
 
     public boolean isSecretary(Authentication authentication) {
-        if (authentication == null || !authentication.isAuthenticated()) {
+        if (!isAuthenticated(authentication)) {
             return false;
         }
 
-        Object principal = authentication.getPrincipal();
-        if (principal instanceof OAuth2User oauth2User) {
-            String email = oauth2User.getAttribute("email");
-            if (email != null) {
-                return secretaryRepository.findAll().stream()
-                        .anyMatch(secretary -> email.equalsIgnoreCase(secretary.getInstitutionalEmail()));
-            }
+        if (matchesRoleAttribute(authentication, UserRole.SECRETARY)) {
+            return true;
         }
-        return false;
+
+        return mapEmail(authentication)
+                .map(email -> secretaryRepository.findAll().stream()
+                        .anyMatch(secretary -> email.equalsIgnoreCase(secretary.getInstitutionalEmail())))
+                .orElse(false);
     }
 
     public boolean isStudent(Authentication authentication) {
-        if (authentication == null || !authentication.isAuthenticated()) {
+        if (!isAuthenticated(authentication)) {
             return false;
         }
 
-        Object principal = authentication.getPrincipal();
-        if (principal instanceof OAuth2User oauth2User) {
-            String email = oauth2User.getAttribute("email");
-            if (email != null) {
-                return studentRepository.findByCorreoInstitucional(email).isPresent();
-            }
+        if (matchesRoleAttribute(authentication, UserRole.STUDENT)) {
+            return true;
         }
-        return false;
+
+        return mapEmail(authentication)
+                .flatMap(studentRepository::findByCorreoInstitucional)
+                .isPresent();
     }
 
     public String getUserRole(Authentication authentication) {
@@ -122,6 +117,10 @@ public class AuthorizationService {
         if (role == null) {
             return false;
         }
+        if (matchesRoleAttribute(authentication, role)) {
+            return true;
+        }
+
         return switch (role) {
             case ADMIN -> isAdministrator(authentication);
             case PROFESSOR -> isProfessor(authentication);
@@ -139,7 +138,7 @@ public class AuthorizationService {
     }
 
     public Optional<Student> getAuthenticatedStudent(Authentication authentication) {
-        if (authentication == null || !authentication.isAuthenticated()) {
+        if (!isAuthenticated(authentication)) {
             return Optional.empty();
         }
 
@@ -147,7 +146,15 @@ public class AuthorizationService {
         if (principal instanceof OAuth2User oauth2User) {
             String email = oauth2User.getAttribute("email");
             if (email != null) {
-                return studentRepository.findByCorreoInstitucional(email);
+                Optional<Student> student = studentRepository.findByCorreoInstitucional(email);
+                if (student.isPresent()) {
+                    return student;
+                }
+            }
+
+            Student fallback = buildStudentFromAttributes(oauth2User);
+            if (fallback != null) {
+                return Optional.of(fallback);
             }
         }
         return Optional.empty();
@@ -165,6 +172,77 @@ public class AuthorizationService {
         }
 
         return getAuthenticatedStudent(authentication).map(Student::getCui);
+    }
+
+    public Optional<Professor> getAuthenticatedProfessor(Authentication authentication) {
+        if (!isAuthenticated(authentication)) {
+            return Optional.empty();
+        }
+
+        return mapEmail(authentication)
+                .flatMap(professorRepository::findByCorreo)
+                .or(() -> buildProfessorFromAttributes(authentication));
+    }
+
+    private Optional<Professor> buildProfessorFromAttributes(Authentication authentication) {
+        Object principal = authentication.getPrincipal();
+        if (principal instanceof OAuth2User oauth2User) {
+            String email = oauth2User.getAttribute("email");
+            String rawId = oauth2User.getAttribute("professorId");
+            if (email != null || rawId != null) {
+                Professor professor = new Professor();
+                professor.setCorreo(email);
+                professor.setNombres(oauth2User.getAttribute("name"));
+                if (rawId != null) {
+                    try {
+                        professor.setId(Long.parseLong(rawId));
+                    } catch (NumberFormatException ignored) {
+                        professor.setId(null);
+                    }
+                }
+                return Optional.of(professor);
+            }
+        }
+        return Optional.empty();
+    }
+
+    private Student buildStudentFromAttributes(OAuth2User oauth2User) {
+        String documento = oauth2User.getAttribute("documentoIdentidad");
+        String email = oauth2User.getAttribute("email");
+        String cui = oauth2User.getAttribute("cui");
+        if (documento == null && email == null) {
+            return null;
+        }
+        Student student = new Student();
+        student.setDocumentoIdentidad(documento);
+        student.setCui(cui);
+        student.setNombres(oauth2User.getAttribute("name"));
+        student.setCorreoInstitucional(email);
+        return student;
+    }
+
+    private boolean isAuthenticated(Authentication authentication) {
+        return authentication != null && authentication.isAuthenticated();
+    }
+
+    private boolean matchesRoleAttribute(Authentication authentication, UserRole expectedRole) {
+        return resolveRoleFromAttributes(authentication)
+                .map(role -> role == expectedRole)
+                .orElse(false);
+    }
+
+    private Optional<String> mapEmail(Authentication authentication) {
+        if (!isAuthenticated(authentication)) {
+            return Optional.empty();
+        }
+        Object principal = authentication.getPrincipal();
+        if (principal instanceof OAuth2User oauth2User) {
+            String email = oauth2User.getAttribute("email");
+            if (email != null && !email.isBlank()) {
+                return Optional.of(email);
+            }
+        }
+        return Optional.empty();
     }
 
     private Optional<UserRole> resolveRoleFromAttributes(Authentication authentication) {

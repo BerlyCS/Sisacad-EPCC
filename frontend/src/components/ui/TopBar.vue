@@ -59,6 +59,16 @@
               <span>Reservar Aula</span>
             </router-link>
 
+            <router-link 
+              v-if="userRole === 'PROFESSOR'"
+              to="/professor/grades" 
+              class="text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-all duration-200 px-3 py-2 rounded-md text-sm font-medium flex items-center space-x-2"
+              :class="{ 'bg-blue-100 text-blue-700': $route.path === '/professor/grades' }"
+            >
+              <i class="fas fa-chart-bar"></i>
+              <span>Calificaciones</span>
+            </router-link>
+
             <router-link
               v-if="userRole === 'STUDENT'"
               to="/student/profile"
@@ -87,6 +97,16 @@
             >
               <i class="fas fa-calendar"></i>
               <span>Mi Horario</span>
+            </router-link>
+
+            <router-link
+              v-if="userRole === 'STUDENT'"
+              to="/student/grades"
+              class="text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-all duration-200 px-3 py-2 rounded-md text-sm font-medium flex items-center space-x-2"
+              :class="{ 'bg-blue-100 text-blue-700': $route.path === '/student/grades' }"
+            >
+              <i class="fas fa-chart-line"></i>
+              <span>Mis Calificaciones</span>
             </router-link>
 
             <router-link 
@@ -143,6 +163,16 @@
               Reservar Aula
             </router-link>
 
+            <router-link 
+              v-if="userRole === 'PROFESSOR'"
+              to="/professor/grades"
+              class="block text-gray-700 hover:bg-gray-100 rounded-md px-3 py-2 text-sm font-medium"
+              :class="{ 'bg-blue-100 text-blue-700': $route.path === '/professor/grades' }"
+              @click="isMenuOpen = false"
+            >
+              Calificaciones
+            </router-link>
+
             <router-link
               v-if="userRole === 'STUDENT'"
               to="/student/profile"
@@ -171,6 +201,16 @@
               @click="isMenuOpen = false"
             >
               Mi Horario
+            </router-link>
+
+            <router-link
+              v-if="userRole === 'STUDENT'"
+              to="/student/grades"
+              class="block text-gray-700 hover:bg-gray-100 rounded-md px-3 py-2 text-sm font-medium"
+              :class="{ 'bg-blue-100 text-blue-700': $route.path === '/student/grades' }"
+              @click="isMenuOpen = false"
+            >
+              Mis Calificaciones
             </router-link>
 
             <router-link 

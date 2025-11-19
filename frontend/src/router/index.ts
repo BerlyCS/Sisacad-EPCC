@@ -38,6 +38,12 @@ const router = createRouter({
       component: ProfessorManagementView,
     },
     {
+      path: '/professor/grades',
+      name: 'professor-grades',
+      component: () => import('@/views/ProfessorGradesView.vue'),
+      meta: { requiresAuth: true, allowedRoles: ['PROFESSOR', 'ADMIN'] }
+    },
+    {
       path: '/admin/students',
       name: 'students',
       component: StudentManagementView,
@@ -99,6 +105,12 @@ const router = createRouter({
       path: '/student/schedule',
       name: 'student-schedule',
       component: () => import('@/views/StudentScheduleView.vue'),
+      meta: { requiresAuth: true, allowedRoles: ['STUDENT'] }
+    },
+    {
+      path: '/student/grades',
+      name: 'student-grades',
+      component: () => import('@/views/StudentGradesView.vue'),
       meta: { requiresAuth: true, allowedRoles: ['STUDENT'] }
     },
     {

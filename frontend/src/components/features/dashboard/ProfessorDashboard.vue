@@ -6,11 +6,15 @@
         <CalendarIcon class="w-15 h-15 mx-auto mt-2 mb-4" />
         <h4 class="text-xl">Reservar Aula</h4>
       </PrincipalButton>
+      <PrincipalButton color="purple" to="/professor/grades">
+        <ChartBarIcon class="w-15 h-15 mx-auto mt-2 mb-4" />
+        <h4 class="text-xl">Ver Calificaciones</h4>
+      </PrincipalButton>
     </div>
   </div>
 </template>
 
 <script setup>
 import { PrincipalButton } from '@/components/ui'
-import { CalendarIcon } from '@heroicons/vue/16/solid'
+import { CalendarIcon, ChartBarIcon } from '@heroicons/vue/16/solid'
 </script>

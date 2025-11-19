@@ -20,12 +20,14 @@ import { PrincipalButton } from '@/components/ui'
 import {
   UserCircleIcon,
   BookOpenIcon,
-  CalendarDaysIcon
+  CalendarDaysIcon,
+  ChartBarIcon
 } from '@heroicons/vue/16/solid'
 
 const navOptions = [
   { id: 'profile', label: 'Mi Perfil', icon: UserCircleIcon, color: 'purple', route: '/student/profile' },
   { id: 'courses', label: 'Mis Cursos', icon: BookOpenIcon, color: 'teal', route: '/student/courses' },
-  { id: 'schedule', label: 'Mi Horario', icon: CalendarDaysIcon, color: 'orange', route: '/student/schedule' }
+  { id: 'schedule', label: 'Mi Horario', icon: CalendarDaysIcon, color: 'orange', route: '/student/schedule' },
+  { id: 'grades', label: 'Mis Calificaciones', icon: ChartBarIcon, color: 'blue', route: '/student/grades' }
 ]
 </script>
