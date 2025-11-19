@@ -15,7 +15,16 @@
     </header>
 
     <div v-if="loading" class="text-blue-600 text-sm">Cargando cursos asignados...</div>
-    <div v-else-if="error" class="text-red-500 text-sm">{{ error }}</div>
+    <div v-else-if="error" class="text-red-500 text-sm flex items-center gap-4">
+      <span>{{ error }}</span>
+      <button
+        type="button"
+        class="text-blue-600 text-xs font-semibold underline hover:text-blue-800"
+        @click="emit('retry')"
+      >
+        Reintentar
+      </button>
+    </div>
     <div v-else-if="!filteredCourses.length" class="text-gray-500 text-sm">No se encontraron cursos.</div>
 
     <ul class="space-y-3" v-else>
@@ -48,10 +57,13 @@ import type { ProfessorCourseSummary } from '@/services/gradeService'
 const props = defineProps<{
   courses: ProfessorCourseSummary[]
   loading: boolean
-  error: string
+  error?: string
 }>()
 
-const emit = defineEmits<{ (e: 'select', course: ProfessorCourseSummary): void }>()
+const emit = defineEmits<{
+  (e: 'select', course: ProfessorCourseSummary): void
+  (e: 'retry'): void
+}>()
 
 const query = ref('')
 

@@ -30,8 +30,11 @@ public class ProfessorController {
     }
 
     @GetMapping
-    @RequiresAdministratorAccess
-    public ResponseEntity<List<Professor>> getAllProfessors() {
+    public ResponseEntity<List<Professor>> getAllProfessors(Authentication authentication) {
+        if (!authorizationService.hasAnyRole(authentication, UserRole.ADMIN, UserRole.SECRETARY)) {
+            return ResponseEntity.status(403).build();
+        }
+
         return ResponseEntity.ok(service.getAllProfessors());
     }
 

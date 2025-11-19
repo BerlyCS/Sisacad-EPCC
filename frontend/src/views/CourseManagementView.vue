@@ -324,7 +324,8 @@ watchEffect(() => {
   }
 
   if (!selectedProfessorId.value && availableProfessors.value.length > 0) {
-    selectedProfessorId.value = availableProfessors.value[0].id
+    const nextProfessor = availableProfessors.value[0]
+    selectedProfessorId.value = nextProfessor ? nextProfessor.id : null
   }
 })
 

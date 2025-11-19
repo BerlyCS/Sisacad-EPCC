@@ -6,6 +6,10 @@
         <AcademicCapIcon class="w-15 h-15 mx-auto mt-2 mb-4" />
         <h4 class="text-xl">Ver Estudiantes</h4>
       </PrincipalButton>
+      <PrincipalButton color="orange" to="/admin/courses">
+        <BookOpenIcon class="w-15 h-15 mx-auto mt-2 mb-4" />
+        <h4 class="text-xl">Gestionar Cursos</h4>
+      </PrincipalButton>
       <PrincipalButton color="green" to="/admin/student-enrollment">
         <UserIcon class="w-15 h-15 mx-auto mt-2 mb-4" />
         <h4 class="text-xl">Matricular Estudiantes</h4>
@@ -16,5 +20,5 @@
 
 <script setup>
 import { PrincipalButton } from '@/components/ui'
-import { AcademicCapIcon, UserIcon } from '@heroicons/vue/16/solid'
+import { AcademicCapIcon, BookOpenIcon, UserIcon } from '@heroicons/vue/16/solid'
 </script>

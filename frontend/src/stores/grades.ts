@@ -94,6 +94,30 @@ export const useGradeStore = defineStore('grades', () => {
     }
   }
 
+  const removeCourseStats = (courseCode: string) => {
+    if (!courseCode) {
+      return
+    }
+    const nextStats = { ...statsByCourse.value }
+    delete nextStats[courseCode]
+    statsByCourse.value = nextStats
+  }
+
+  const ensureSelectionConsistency = () => {
+    if (!selectedCourseCode.value) {
+      return
+    }
+
+    const stillExists = professorCourses.value.some(
+      course => course.courseCode === selectedCourseCode.value
+    )
+
+    if (!stillExists) {
+      removeCourseStats(selectedCourseCode.value)
+      selectedCourseCode.value = ''
+    }
+  }
+
   const loadProfessorCourses = async () => {
     professorCoursesLoading.value = true
     professorCoursesError.value = ''
@@ -105,6 +129,7 @@ export const useGradeStore = defineStore('grades', () => {
       professorCoursesError.value = error instanceof Error ? error.message : 'No se pudieron cargar los cursos asignados'
       professorCourses.value = []
     } finally {
+      ensureSelectionConsistency()
       professorCoursesLoading.value = false
     }
   }
