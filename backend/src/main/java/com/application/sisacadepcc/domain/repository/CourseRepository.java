@@ -8,4 +8,5 @@ public interface CourseRepository {
     List<Course> findAll();
     Optional<Course> findById(Long id);
     List<Course> findByAnio(Integer anio); // Cambiado de año a anio
+    Optional<Course> updateTeacherAssignments(Long courseId, List<Long> teacherIds);
 }

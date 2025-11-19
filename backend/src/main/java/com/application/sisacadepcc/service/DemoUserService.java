@@ -9,7 +9,6 @@ import com.application.sisacadepcc.infrastructure.repository.jpa.SecretaryJpaRep
 import com.application.sisacadepcc.infrastructure.repository.jpa.StudentEntity;
 import com.application.sisacadepcc.infrastructure.repository.jpa.StudentJpaRepository;
 import jakarta.annotation.PostConstruct;
-import jakarta.persistence.EntityManager;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -27,28 +26,23 @@ public class DemoUserService {
 
     private static final Logger log = LoggerFactory.getLogger(DemoUserService.class);
 
-    private static final long DEMO_PROFESSOR_ID = 22222222;
-
     private final boolean demoLoginEnabled;
     private final StudentJpaRepository studentJpaRepository;
     private final ProfessorJpaRepository professorJpaRepository;
     private final AdministratorJpaRepository administratorJpaRepository;
     private final SecretaryJpaRepository secretaryJpaRepository;
-    private final EntityManager entityManager;
     private final Map<String, DemoUserProfile> demoProfiles;
 
     public DemoUserService(@Value("${app.demo.login.enabled:true}") boolean demoLoginEnabled,
                            StudentJpaRepository studentJpaRepository,
                            ProfessorJpaRepository professorJpaRepository,
                            AdministratorJpaRepository administratorJpaRepository,
-                           SecretaryJpaRepository secretaryJpaRepository,
-                           EntityManager entityManager) {
+                           SecretaryJpaRepository secretaryJpaRepository) {
         this.demoLoginEnabled = demoLoginEnabled;
         this.studentJpaRepository = studentJpaRepository;
         this.professorJpaRepository = professorJpaRepository;
         this.administratorJpaRepository = administratorJpaRepository;
         this.secretaryJpaRepository = secretaryJpaRepository;
-        this.entityManager = entityManager;
         this.demoProfiles = Map.of(
         "STUDENT", new DemoUserProfile(
             "STUDENT",
@@ -141,12 +135,8 @@ public class DemoUserService {
         if (professorJpaRepository.existsByCorreo(profile.email())) {
             return;
         }
-        syncIdentitySequence("docentes", "id");
 
-        ProfessorEntity entity = professorJpaRepository.findById(DEMO_PROFESSOR_ID)
-                .orElseGet(ProfessorEntity::new);
-
-        entity.setId(DEMO_PROFESSOR_ID);
+        ProfessorEntity entity = new ProfessorEntity();
         entity.setApellidoPaterno("Demo");
         entity.setApellidoMaterno("Professor");
         entity.setNombres("Profesor");
@@ -191,31 +181,6 @@ public class DemoUserService {
         entity.setName("Secretaria");
         entity.setInstitutionalEmail(profile.email());
         secretaryJpaRepository.save(entity);
-    }
-
-    private void syncIdentitySequence(String tableName, String columnName) {
-        try {
-            Object sequenceNameResult = entityManager.createNativeQuery(
-                            "SELECT pg_get_serial_sequence(:tableName, :columnName)")
-                    .setParameter("tableName", tableName)
-                    .setParameter("columnName", columnName)
-                    .getSingleResult();
-
-            if (sequenceNameResult == null) {
-                return;
-            }
-
-            String sequenceName = sequenceNameResult.toString();
-            String setvalSql = String.format(
-                    "SELECT setval('%s', (SELECT COALESCE(MAX(%s), 0) FROM %s) + 1, false)",
-                    sequenceName,
-                    columnName,
-                    tableName
-            );
-            entityManager.createNativeQuery(setvalSql).getSingleResult();
-        } catch (Exception ex) {
-            log.debug("No se pudo sincronizar la secuencia para {}.{}: {}", tableName, columnName, ex.getMessage());
-        }
     }
 
     public record DemoUserProfile(String role, String displayName, String email, String pictureUrl, String documentoIdentidad, String cui) {

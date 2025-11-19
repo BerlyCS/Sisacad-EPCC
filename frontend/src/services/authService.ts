@@ -34,7 +34,10 @@ export const authService = {
       return await response.json()
     } catch (error) {
       console.warn('Error obteniendo usuario:', error)
-      return { authenticated: false }
+      if (error instanceof Error) {
+        throw error
+      }
+      throw new Error('No se pudo obtener la sesión actual')
     }
   },
 

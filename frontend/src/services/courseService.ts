@@ -236,6 +236,44 @@ export const useCourseService = () => {
     }
   }
 
+  const assignProfessorToCourse = async (courseId: number, professorId: number): Promise<Course> => {
+    if (!courseId || !professorId) {
+      throw new Error('Curso o docente inválido')
+    }
+
+    const response = await fetch(`${API_BASE_URL}/courses/${courseId}/professors/${professorId}`, {
+      method: 'POST',
+      credentials: 'include'
+    })
+
+    if (!response.ok) {
+      const body = await response.json().catch(() => ({}))
+      const message = body?.message || body?.error || 'No se pudo asignar el docente'
+      throw new Error(message)
+    }
+
+    return response.json()
+  }
+
+  const removeProfessorFromCourse = async (courseId: number, professorId: number): Promise<Course> => {
+    if (!courseId || !professorId) {
+      throw new Error('Curso o docente inválido')
+    }
+
+    const response = await fetch(`${API_BASE_URL}/courses/${courseId}/professors/${professorId}`, {
+      method: 'DELETE',
+      credentials: 'include'
+    })
+
+    if (!response.ok) {
+      const body = await response.json().catch(() => ({}))
+      const message = body?.message || body?.error || 'No se pudo quitar el docente'
+      throw new Error(message)
+    }
+
+    return response.json()
+  }
+
   return {
     courses,
     loading,
@@ -244,6 +282,8 @@ export const useCourseService = () => {
     courseDetails,
     courseDetailsLoading,
     courseDetailsError,
-    fetchCourseDetails
+    fetchCourseDetails,
+    assignProfessorToCourse,
+    removeProfessorFromCourse
   }
 }

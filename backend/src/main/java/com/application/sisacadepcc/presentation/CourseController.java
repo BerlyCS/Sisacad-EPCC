@@ -3,8 +3,11 @@ package com.application.sisacadepcc.presentation;
 import com.application.sisacadepcc.config.security.RequiresAdministratorAccess;
 import com.application.sisacadepcc.domain.model.Course;
 import com.application.sisacadepcc.presentation.dto.CourseDetailsResponse;
+import com.application.sisacadepcc.service.AuthorizationService;
 import com.application.sisacadepcc.service.CourseService;
+import com.application.sisacadepcc.service.UserRole;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -14,9 +17,12 @@ import java.util.List;
 public class CourseController {
 
     private final CourseService service;
+    private final AuthorizationService authorizationService;
 
-    public CourseController(CourseService service) {
+    public CourseController(CourseService service,
+                           AuthorizationService authorizationService) {
         this.service = service;
+        this.authorizationService = authorizationService;
     }
 
     @GetMapping
@@ -51,5 +57,31 @@ public class CourseController {
     public ResponseEntity<Void> deleteCourse(@PathVariable Long id) {
         // Lógica para eliminar curso
         return ResponseEntity.noContent().build();
+    }
+
+    @PostMapping("/{courseId}/professors/{professorId}")
+    public ResponseEntity<Course> assignProfessor(@PathVariable Long courseId,
+                                                  @PathVariable Long professorId,
+                                                  Authentication authentication) {
+        if (!authorizationService.hasAnyRole(authentication, UserRole.ADMIN, UserRole.SECRETARY)) {
+            return ResponseEntity.status(403).build();
+        }
+
+        return service.assignProfessorToCourse(courseId, professorId)
+                .map(ResponseEntity::ok)
+                .orElseGet(() -> ResponseEntity.notFound().build());
+    }
+
+    @DeleteMapping("/{courseId}/professors/{professorId}")
+    public ResponseEntity<Course> unassignProfessor(@PathVariable Long courseId,
+                                                    @PathVariable Long professorId,
+                                                    Authentication authentication) {
+        if (!authorizationService.hasAnyRole(authentication, UserRole.ADMIN, UserRole.SECRETARY)) {
+            return ResponseEntity.status(403).build();
+        }
+
+        return service.removeProfessorFromCourse(courseId, professorId)
+                .map(ResponseEntity::ok)
+                .orElseGet(() -> ResponseEntity.notFound().build());
     }
 }

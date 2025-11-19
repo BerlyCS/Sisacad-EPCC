@@ -44,7 +44,7 @@ public class CourseEntity {
             joinColumns = @JoinColumn(name = "course_id")
     )
     @Column(name = "student_id")
-    private List<Long> enrolledStudentIDs;
+        private List<Long> enrolledStudentIDs = new ArrayList<>();
 
     @ElementCollection
     @CollectionTable(
@@ -52,7 +52,7 @@ public class CourseEntity {
             joinColumns = @JoinColumn(name = "course_id")
     )
     @Column(name = "teacher_id")
-    private List<Long> teacherIDs;
+        private List<Long> teacherIDs = new ArrayList<>();
 
 
         @ElementCollection

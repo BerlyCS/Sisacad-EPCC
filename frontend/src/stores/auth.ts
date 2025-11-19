@@ -28,19 +28,28 @@ export const useAuthStore = defineStore('auth', () => {
     error.value = ''
   }
 
-  const initializeAuth = async () => {
-    if (initialized.value) return
-    
+  const initializeAuth = async (force = false): Promise<boolean> => {
+    if (initialized.value && !force) {
+      return user.value?.authenticated ?? false
+    }
+
     setLoading(true)
+    clearError()
     try {
       const userData = await authService.getCurrentUser()
       if (userData.authenticated) {
         user.value = userData
+      } else {
+        user.value = null
       }
       initialized.value = true
+      return userData.authenticated
     } catch (error) {
       console.warn('Error inicializando auth:', error)
       user.value = null
+      initialized.value = false
+      setError('No se pudo conectar con el servidor de autenticación')
+      return false
     } finally {
       setLoading(false)
     }
