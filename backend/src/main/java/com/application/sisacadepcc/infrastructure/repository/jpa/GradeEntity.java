@@ -13,11 +13,11 @@ public class GradeEntity {
     @Column(name = "grade_id")
     private Long gradeID;
 
-    @Column(name = "student_id", nullable = false)
-    private Long studentID;
+    @Column(name = "student_documento_identidad", nullable = false)
+    private String studentDocumentoIdentidad;
 
-    @Column(name = "course_id", nullable = false)
-    private Long courseID;
+    @Column(name = "course_code", nullable = false)
+    private String courseCode;
 
     @Column(name = "professor_id", nullable = false)
     private Long professorID;
@@ -43,10 +43,10 @@ public class GradeEntity {
     // --- Constructors ---
     public GradeEntity() {}
 
-    public GradeEntity(Long studentID, Long courseID, Long professorID,
+    public GradeEntity(String studentDocumentoIdentidad, String courseCode, Long professorID,
                        List<Integer> continuousGrades, List<Integer> examGrades) {
-        this.studentID = studentID;
-        this.courseID = courseID;
+        this.studentDocumentoIdentidad = studentDocumentoIdentidad;
+        this.courseCode = courseCode;
         this.professorID = professorID;
         if (continuousGrades != null) this.continuousGrades = continuousGrades;
         if (examGrades != null) this.examGrades = examGrades;
@@ -61,20 +61,20 @@ public class GradeEntity {
         this.gradeID = gradeID;
     }
 
-    public Long getStudentID() {
-        return studentID;
+    public String getStudentDocumentoIdentidad() {
+        return studentDocumentoIdentidad;
     }
 
-    public void setStudentID(Long studentID) {
-        this.studentID = studentID;
+    public void setStudentDocumentoIdentidad(String studentDocumentoIdentidad) {
+        this.studentDocumentoIdentidad = studentDocumentoIdentidad;
     }
 
-    public Long getCourseID() {
-        return courseID;
+    public String getCourseCode() {
+        return courseCode;
     }
 
-    public void setCourseID(Long courseID) {
-        this.courseID = courseID;
+    public void setCourseCode(String courseCode) {
+        this.courseCode = courseCode;
     }
 
     public Long getProfessorID() {

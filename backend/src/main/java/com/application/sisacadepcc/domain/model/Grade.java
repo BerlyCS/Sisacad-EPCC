@@ -9,18 +9,18 @@ import java.util.List;
 public class Grade {
 
     private final Long gradeID;
-    private final Long studentID;
-    private final Long courseID;
+    private final String studentDocumentoIdentidad;
+    private final String courseCode;
     private final Long professorID;
 
     private final List<Integer> continuousGrades;
     private final List<Integer> examGrades;
 
-    public Grade(Long gradeID, Long studentID, Long courseID, Long professorID,
+    public Grade(Long gradeID, String studentDocumentoIdentidad, String courseCode, Long professorID,
                  List<Integer> continuousGrades, List<Integer> examGrades) {
         this.gradeID = gradeID;
-        this.studentID = studentID;
-        this.courseID = courseID;
+        this.studentDocumentoIdentidad = studentDocumentoIdentidad;
+        this.courseCode = courseCode;
         this.professorID = professorID;
 
         this.continuousGrades = continuousGrades != null
@@ -34,8 +34,8 @@ public class Grade {
 
     // Getters
     public Long getGradeID() { return gradeID; }
-    public Long getStudentID() { return studentID; }
-    public Long getCourseID() { return courseID; }
+    public String getStudentDocumentoIdentidad() { return studentDocumentoIdentidad; }
+    public String getCourseCode() { return courseCode; }
     public Long getProfessorID() { return professorID; }
 
     public List<Integer> getContinuousGrades() {

@@ -28,4 +28,15 @@ public class AuthorizationAspect {
 
         return joinPoint.proceed();
     }
+
+    @Around("@annotation(RequiresStudentAccess)")
+    public Object checkStudentAccess(ProceedingJoinPoint joinPoint) throws Throwable {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
+        if (!authorizationService.isStudent(authentication)) {
+            throw new SecurityException("Acceso denegado. Se requiere rol de estudiante.");
+        }
+
+        return joinPoint.proceed();
+    }
 }

@@ -51,6 +51,8 @@ public class CourseRepositoryImpl implements CourseRepository {
     course.setLabPrerequisiteCourseId(entity.getLabPrerequisiteCourseId());
     course.setEnrolledStudentIDs(entity.getEnrolledStudentIDs());
     course.setTeacherIDs(entity.getTeacherIDs());
+    course.setContinuousGradeWeights(entity.getContinuousGradeWeights());
+    course.setExamGradeWeights(entity.getExamGradeWeights());
     return course;
     }
 }

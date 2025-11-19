@@ -2,6 +2,7 @@ package com.application.sisacadepcc.domain.model;
 
 import com.application.sisacadepcc.domain.model.valueobject.CourseType;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -18,12 +19,16 @@ public class Course {
     private Long labPrerequisiteCourseId;
     private List<Long> enrolledStudentIDs;
     private List<Long> teacherIDs;
+    private List<BigDecimal> continuousGradeWeights;
+    private List<BigDecimal> examGradeWeights;
 
     // Constructor sin parámetros
     public Course() {
         this.enrolledStudentIDs = new ArrayList<>();
         this.teacherIDs = new ArrayList<>();
         this.courseType = CourseType.THEORY;
+        this.continuousGradeWeights = new ArrayList<>();
+        this.examGradeWeights = new ArrayList<>();
     }
 
     // Constructor con parámetros
@@ -69,6 +74,16 @@ public class Course {
 
     public List<Long> getTeacherIDs() { return teacherIDs; }
     public void setTeacherIDs(List<Long> teacherIDs) { this.teacherIDs = teacherIDs; }
+
+    public List<BigDecimal> getContinuousGradeWeights() { return continuousGradeWeights; }
+    public void setContinuousGradeWeights(List<BigDecimal> continuousGradeWeights) {
+        this.continuousGradeWeights = continuousGradeWeights != null ? continuousGradeWeights : new ArrayList<>();
+    }
+
+    public List<BigDecimal> getExamGradeWeights() { return examGradeWeights; }
+    public void setExamGradeWeights(List<BigDecimal> examGradeWeights) {
+        this.examGradeWeights = examGradeWeights != null ? examGradeWeights : new ArrayList<>();
+    }
 
     public void enrollStudent(Long studentID) {
         if (!enrolledStudentIDs.contains(studentID)) {

@@ -23,8 +23,16 @@ public class GradeService {
         return repository.findById(gradeID);
     }
 
-    public Optional<Grade> findByCourseAndStudent(Long courseID, Long studentID) {
-        return repository.findByCourseAndStudent(courseID, studentID);
+    public Optional<Grade> findByCourseAndStudent(String courseCode, String studentDocumentoIdentidad) {
+        return repository.findByCourseAndStudent(courseCode, studentDocumentoIdentidad);
+    }
+
+    public List<Grade> findByStudentDocumento(String studentDocumentoIdentidad) {
+        return repository.findByStudentDocumento(studentDocumentoIdentidad);
+    }
+
+    public List<Grade> findByCourseCode(String courseCode) {
+        return repository.findByCourseCode(courseCode);
     }
 
     public boolean save(Grade grade) {

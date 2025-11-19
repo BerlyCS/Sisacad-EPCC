@@ -3,6 +3,8 @@ package com.application.sisacadepcc.infrastructure.repository.jpa;
 import com.application.sisacadepcc.domain.model.valueobject.CourseType;
 import jakarta.persistence.*;
 
+import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.List;
 
 @Entity
@@ -52,6 +54,23 @@ public class CourseEntity {
     @Column(name = "teacher_id")
     private List<Long> teacherIDs;
 
+
+        @ElementCollection
+        @CollectionTable(
+            name = "course_continuous_grade_weights",
+            joinColumns = @JoinColumn(name = "course_id")
+        )
+        @Column(name = "weight", precision = 5, scale = 2)
+        private List<BigDecimal> continuousGradeWeights = new ArrayList<>();
+
+        @ElementCollection
+        @CollectionTable(
+            name = "course_exam_grade_weights",
+            joinColumns = @JoinColumn(name = "course_id")
+        )
+        @Column(name = "weight", precision = 5, scale = 2)
+        private List<BigDecimal> examGradeWeights = new ArrayList<>();
+
     public CourseEntity() {
         // Required by JPA
     }
@@ -75,17 +94,27 @@ public class CourseEntity {
     public Integer getAnio() { return anio; }
     public void setAnio(Integer anio) { this.anio = anio; }
 
-        public CourseType getCourseType() { return courseType; }
-        public void setCourseType(CourseType courseType) { this.courseType = courseType; }
+    public CourseType getCourseType() { return courseType; }
+    public void setCourseType(CourseType courseType) { this.courseType = courseType; }
 
-        public Long getLabPrerequisiteCourseId() { return labPrerequisiteCourseId; }
-        public void setLabPrerequisiteCourseId(Long labPrerequisiteCourseId) {
-                this.labPrerequisiteCourseId = labPrerequisiteCourseId;
-        }
+    public Long getLabPrerequisiteCourseId() { return labPrerequisiteCourseId; }
+    public void setLabPrerequisiteCourseId(Long labPrerequisiteCourseId) {
+        this.labPrerequisiteCourseId = labPrerequisiteCourseId;
+    }
 
     public List<Long> getEnrolledStudentIDs() { return enrolledStudentIDs; }
     public void setEnrolledStudentIDs(List<Long> enrolledStudentIDs) { this.enrolledStudentIDs = enrolledStudentIDs; }
 
     public List<Long> getTeacherIDs() { return teacherIDs; }
     public void setTeacherIDs(List<Long> teacherIDs) { this.teacherIDs = teacherIDs; }
+
+    public List<BigDecimal> getContinuousGradeWeights() { return continuousGradeWeights; }
+    public void setContinuousGradeWeights(List<BigDecimal> continuousGradeWeights) {
+        this.continuousGradeWeights = continuousGradeWeights;
+    }
+
+    public List<BigDecimal> getExamGradeWeights() { return examGradeWeights; }
+    public void setExamGradeWeights(List<BigDecimal> examGradeWeights) {
+        this.examGradeWeights = examGradeWeights;
+    }
 }

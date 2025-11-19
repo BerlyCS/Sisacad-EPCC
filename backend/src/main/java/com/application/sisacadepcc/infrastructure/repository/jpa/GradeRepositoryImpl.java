@@ -32,9 +32,25 @@ public class GradeRepositoryImpl implements GradeRepository {
     }
 
     @Override
-    public Optional<Grade> findByCourseAndStudent(Long courseID, Long studentID) {
-        return jpaRepository.findByCourseIDAndStudentID(courseID, studentID)
+    public Optional<Grade> findByCourseAndStudent(String courseCode, String studentDocumentoIdentidad) {
+        return jpaRepository.findByCourseCodeAndStudentDocumentoIdentidad(courseCode, studentDocumentoIdentidad)
                 .map(this::mapToDomain);
+    }
+
+    @Override
+    public List<Grade> findByStudentDocumento(String studentDocumentoIdentidad) {
+        return jpaRepository.findByStudentDocumentoIdentidad(studentDocumentoIdentidad)
+                .stream()
+                .map(this::mapToDomain)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<Grade> findByCourseCode(String courseCode) {
+        return jpaRepository.findByCourseCode(courseCode)
+                .stream()
+                .map(this::mapToDomain)
+                .collect(Collectors.toList());
     }
 
     @Override
@@ -63,8 +79,8 @@ public class GradeRepositoryImpl implements GradeRepository {
     private Grade mapToDomain(GradeEntity entity) {
         return new Grade(
                 entity.getGradeID(),
-                entity.getStudentID(),
-                entity.getCourseID(),
+                entity.getStudentDocumentoIdentidad(),
+                entity.getCourseCode(),
                 entity.getProfessorID(),
                 entity.getContinuousGrades(),
                 entity.getExamGrades()
@@ -74,8 +90,8 @@ public class GradeRepositoryImpl implements GradeRepository {
     private GradeEntity mapToEntity(Grade domain) {
         GradeEntity entity = new GradeEntity();
         entity.setGradeID(domain.getGradeID());
-        entity.setStudentID(domain.getStudentID());
-        entity.setCourseID(domain.getCourseID());
+        entity.setStudentDocumentoIdentidad(domain.getStudentDocumentoIdentidad());
+        entity.setCourseCode(domain.getCourseCode());
         entity.setProfessorID(domain.getProfessorID());
         entity.setContinuousGrades(domain.getContinuousGrades());
         entity.setExamGrades(domain.getExamGrades());
