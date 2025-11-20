@@ -1,17 +1,34 @@
-import { ref, computed } from 'vue'
+import { computed } from 'vue'
 import { useStudentService } from '@/services/studentService'
 
 export const useStudentProfile = () => {
-  const { studentProfile, profileLoading, profileError, fetchMyProfile, fetchMyCourses, fetchMySchedule } = useStudentService()
+  const {
+    studentProfile,
+    profileLoading,
+    profileError,
+    fetchMyProfile,
+    fetchMyCourses,
+    fetchMySchedule,
+    fetchStudentProfile,
+    fetchStudentCourses,
+    fetchStudentSchedule
+  } = useStudentService()
 
   const courses = computed(() => studentProfile.value?.courses ?? [])
   const schedule = computed(() => studentProfile.value?.schedule ?? [])
 
-  const loadProfile = async () => {
+  const loadProfile = async (cui?: string) => {
     try {
-      await fetchMyProfile()
-      await fetchMyCourses()
-      await fetchMySchedule()
+      if (cui) {
+        await fetchStudentProfile(cui)
+        await Promise.all([
+          fetchStudentCourses(cui),
+          fetchStudentSchedule(cui)
+        ])
+      } else {
+        await fetchMyProfile()
+        await Promise.all([fetchMyCourses(), fetchMySchedule()])
+      }
     } catch (error) {
       console.error('Error loading student profile:', error)
     }

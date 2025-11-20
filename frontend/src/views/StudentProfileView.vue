@@ -59,8 +59,11 @@ const cui = computed(() => {
 })
 
 const loadProfileForCui = () => {
-  if (!cui.value) return
-  loadProfile(cui.value)
+  if (cui.value) {
+    loadProfile(cui.value)
+    return
+  }
+  loadProfile()
 }
 
 const reloadProfile = () => {

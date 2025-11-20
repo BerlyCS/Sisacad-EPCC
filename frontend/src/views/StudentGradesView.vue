@@ -5,7 +5,6 @@
         <div>
           <p class="text-sm font-semibold text-blue-500 uppercase tracking-wide">Seguimiento académico</p>
           <h1 class="text-3xl font-bold text-gray-900">Mis Calificaciones</h1>
-          <p class="text-gray-600 mt-1">Consulta el detalle de cada curso y verifica tu progreso en tiempo real.</p>
         </div>
         <button
           type="button"

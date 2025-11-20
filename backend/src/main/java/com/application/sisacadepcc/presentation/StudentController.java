@@ -38,9 +38,9 @@ public class StudentController {
         this.authorizationService = authorizationService;
     }
 
-    @GetMapping("/{documentoIdentidad}/courses")
+    @GetMapping("/document/{documentoIdentidad}/courses")
     @RequiresAdministratorAccess
-    public ResponseEntity<List<Course>> getCoursesByStudent(@PathVariable String documentoIdentidad) {
+    public ResponseEntity<List<Course>> getCoursesByStudentDocument(@PathVariable String documentoIdentidad) {
         List<Course> courses = studentCourseService.getCoursesByStudent(documentoIdentidad);
         return ResponseEntity.ok(courses);
     }

@@ -4,6 +4,7 @@ import com.application.sisacadepcc.service.AuthorizationService;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
@@ -23,7 +24,7 @@ public class AuthorizationAspect {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
         if (!authorizationService.isAdministrator(authentication)) {
-            throw new SecurityException("Acceso denegado. Se requiere rol de administrador.");
+            throw new AccessDeniedException("Acceso denegado. Se requiere rol de administrador.");
         }
 
         return joinPoint.proceed();
@@ -34,7 +35,7 @@ public class AuthorizationAspect {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
         if (!authorizationService.isStudent(authentication)) {
-            throw new SecurityException("Acceso denegado. Se requiere rol de estudiante.");
+            throw new AccessDeniedException("Acceso denegado. Se requiere rol de estudiante.");
         }
 
         return joinPoint.proceed();
