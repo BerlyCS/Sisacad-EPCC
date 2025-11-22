@@ -17,13 +17,17 @@
           </p>
         </div>
         <div class="flex flex-col gap-2 sm:flex-row">
-          <button
-            type="button"
-            class="px-4 py-2 bg-gray-200 text-gray-600 rounded-md cursor-not-allowed text-sm"
-            disabled
+          <a
+            :href="syllabusDownloadUrl || undefined"
+            target="_blank"
+            rel="noopener"
+            class="px-4 py-2 rounded-md text-center text-sm font-semibold transition"
+            :class="syllabusDownloadUrl
+              ? 'bg-blue-600 text-white hover:bg-blue-700'
+              : 'bg-gray-200 text-gray-500 cursor-not-allowed pointer-events-none'"
           >
             Descargar sílabo
-          </button>
+          </a>
           <button
             type="button"
             @click="router.push({ name: 'student-attendance', params: { courseId: details.courseId } })"
@@ -81,21 +85,47 @@
       <div v-if="!details.syllabus.topics.length" class="text-sm text-gray-500">
         No se registraron temas en el sílabo.
       </div>
-      <ul v-else class="space-y-2">
+      <ul v-else class="space-y-3">
         <li
           v-for="topic in details.syllabus.topics"
-          :key="`${topic.name}-${topic.weight}`"
-          class="flex items-center justify-between rounded-md bg-gray-50 px-3 py-2"
+          :key="`${topic.name}-${topic.sessionDate ?? topic.weight ?? topic.status}`"
+          class="rounded-md border border-gray-100 bg-gray-50 px-4 py-3 space-y-2"
         >
-          <span class="text-gray-700">{{ topic.name }}</span>
-          <span v-if="topic.weight != null" class="text-sm text-gray-500">{{ topic.weight }}%</span>
+          <div class="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
+            <div>
+              <p class="text-sm font-semibold text-gray-800">{{ topic.name }}</p>
+              <p class="text-xs text-gray-500">{{ formatTopicDate(topic.sessionDate) }}</p>
+            </div>
+            <div class="flex flex-wrap items-center gap-2">
+              <span
+                v-if="topic.weight != null"
+                class="inline-flex items-center rounded-full bg-white px-3 py-1 text-xs font-semibold text-gray-600"
+              >
+                Peso {{ topic.weight }}%
+              </span>
+              <span
+                class="inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold"
+                :class="statusBadgeClasses(topic.status)"
+              >
+                {{ statusLabel(topic.status) }}
+              </span>
+            </div>
+          </div>
+
+          <details
+            v-if="topic.status === 'COMPLETED'"
+            class="rounded-md bg-white/70 px-3 py-2 text-xs text-gray-600"
+          >
+            <summary class="cursor-pointer select-none text-gray-700">
+              Ver más detalles
+            </summary>
+            <p class="mt-2">
+              Este tema se completó el {{ formatTopicDate(topic.sessionDate) }}. Revisa el sílabo descargado para repasar materiales adicionales.
+            </p>
+          </details>
         </li>
       </ul>
 
-      <div v-if="details.syllabus.content" class="text-xs text-gray-500">
-        Archivo relacionado: <span class="font-medium">{{ details.syllabus.content.name || 'Sin archivo' }}</span>
-        <span v-if="details.syllabus.content.type"> ({{ details.syllabus.content.type }})</span>
-      </div>
     </div>
 
     <div class="bg-white shadow rounded-lg p-6 space-y-4">
@@ -132,7 +162,6 @@
           <p><span class="font-semibold">Correo:</span> {{ selectedStudent.correoInstitucional || 'No registrado' }}</p>
           <p><span class="font-semibold">Año:</span> {{ selectedStudent.anio ?? 'Sin dato' }}</p>
         </div>
-        <p v-else class="text-xs text-gray-500">Selecciona un estudiante para ver sus datos de contacto.</p>
       </div>
     </div>
   </section>
@@ -141,7 +170,8 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
-import type { CourseDetails, CourseStudentSummary } from '@/services/courseService'
+import type { CourseDetails, CourseStudentSummary, CourseTopicSummary } from '@/services/courseService'
+import { syllabusService } from '@/services/syllabusService'
 
 const props = defineProps<{ details: CourseDetails }>()
 const emit = defineEmits<{ (e: 'open-lab', courseId: number): void }>()
@@ -178,6 +208,52 @@ const teacherCountLabel = computed(() => {
   }
   return `${count} docente${count === 1 ? '' : 's'}`
 })
+
+const syllabusDownloadUrl = computed(() => {
+  const syllabusId = props.details.syllabus?.syllabusId ?? props.details.syllabusId
+  return syllabusService.buildDownloadUrl(syllabusId ?? undefined)
+})
+
+const formatTopicDate = (isoDate: string | null) => {
+  if (!isoDate) {
+    return 'Sin fecha programada'
+  }
+  const date = new Date(isoDate)
+  if (Number.isNaN(date.getTime())) {
+    return isoDate
+  }
+  return date.toLocaleDateString('es-PE', {
+    weekday: 'short',
+    day: 'numeric',
+    month: 'short'
+  })
+}
+
+const statusBadgeClasses = (status: CourseTopicSummary['status']) => {
+  switch (status) {
+    case 'COMPLETED':
+      return 'bg-green-100 text-green-700'
+    case 'TODAY':
+      return 'bg-blue-100 text-blue-700'
+    case 'UPCOMING':
+      return 'bg-amber-100 text-amber-800'
+    default:
+      return 'bg-gray-200 text-gray-600'
+  }
+}
+
+const statusLabel = (status: CourseTopicSummary['status']) => {
+  switch (status) {
+    case 'COMPLETED':
+      return 'Completado'
+    case 'TODAY':
+      return 'Sesión de hoy'
+    case 'UPCOMING':
+      return 'Próximo'
+    default:
+      return 'Sin fecha'
+  }
+}
 
 const openLabCourse = () => {
   if (!props.details.labCourse) {

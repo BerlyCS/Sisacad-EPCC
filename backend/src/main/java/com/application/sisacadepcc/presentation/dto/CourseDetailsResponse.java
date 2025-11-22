@@ -7,6 +7,7 @@ import com.application.sisacadepcc.domain.model.valueobject.Content;
 import com.application.sisacadepcc.domain.model.valueobject.CourseType;
 import com.application.sisacadepcc.domain.model.valueobject.Topic;
 import com.application.sisacadepcc.service.dto.CourseDetails;
+import java.time.Clock;
 import java.time.LocalDate;
 import java.util.List;
 
@@ -29,7 +30,11 @@ public record CourseDetailsResponse(
         List<Long> teacherIds
 ) {
 
-    public static CourseDetailsResponse from(CourseDetails details) {
+        public static CourseDetailsResponse from(CourseDetails details) {
+                return from(details, Clock.systemDefaultZone());
+        }
+
+        public static CourseDetailsResponse from(CourseDetails details, Clock clock) {
         Course course = details.course();
         String groupLetter = mapGroupLetter(course.getGroupLetter());
         CourseType type = course.getCourseType();
@@ -39,7 +44,7 @@ public record CourseDetailsResponse(
                 : null;
 
         SyllabusSummary syllabusSummary = details.syllabus() != null
-                ? SyllabusSummary.from(details.syllabus())
+                ? SyllabusSummary.from(details.syllabus(), clock)
                 : null;
 
         List<StudentSummary> students = details.enrolledStudents()
@@ -107,7 +112,7 @@ public record CourseDetailsResponse(
             ContentSummary content,
             List<TopicSummary> topics
     ) {
-        private static SyllabusSummary from(Syllabus syllabus) {
+        private static SyllabusSummary from(Syllabus syllabus, Clock clock) {
             Content content = syllabus.getContent();
             ContentSummary contentSummary = content != null
                     ? new ContentSummary(content.getName(), content.getType(), content.getUrl(), content.getSizeBytes())
@@ -115,7 +120,7 @@ public record CourseDetailsResponse(
 
             List<TopicSummary> topicSummaries = syllabus.getTopics() != null
                     ? syllabus.getTopics().stream()
-                            .map(TopicSummary::from)
+                            .map(topic -> TopicSummary.from(topic, clock))
                             .toList()
                     : List.of();
 
@@ -138,12 +143,29 @@ public record CourseDetailsResponse(
     public record TopicSummary(
             String name,
             Double weight,
-            LocalDate sessionDate
+            LocalDate sessionDate,
+            SyllabusResponse.TopicScheduleStatus status
     ) {
-        private static TopicSummary from(Topic topic) {
+                private static TopicSummary from(Topic topic, Clock clock) {
             Double weight = topic.getWeight() != null ? topic.getWeight().doubleValue() : null;
-            return new TopicSummary(topic.getName(), weight, topic.getSessionDate());
+                        LocalDate sessionDate = topic.getSessionDate();
+                        SyllabusResponse.TopicScheduleStatus status = resolveStatus(sessionDate, clock);
+                        return new TopicSummary(topic.getName(), weight, sessionDate, status);
         }
+
+                private static SyllabusResponse.TopicScheduleStatus resolveStatus(LocalDate sessionDate, Clock clock) {
+                        if (sessionDate == null) {
+                                return SyllabusResponse.TopicScheduleStatus.UNSCHEDULED;
+                        }
+                        LocalDate today = LocalDate.now(clock);
+                        if (sessionDate.isEqual(today)) {
+                                return SyllabusResponse.TopicScheduleStatus.TODAY;
+                        }
+                        if (sessionDate.isBefore(today)) {
+                                return SyllabusResponse.TopicScheduleStatus.COMPLETED;
+                        }
+                        return SyllabusResponse.TopicScheduleStatus.UPCOMING;
+                }
     }
 
     public record StudentSummary(

@@ -1,4 +1,5 @@
 import { ref } from 'vue'
+import type { TopicScheduleStatus } from './syllabusService'
 
 const API_BASE_URL = 'http://localhost:8080/api'
 
@@ -36,6 +37,8 @@ export interface CourseStudentSummary {
 export interface CourseTopicSummary {
   name: string
   weight: number | null
+  sessionDate: string | null
+  status: TopicScheduleStatus
 }
 
 export interface CourseContentSummary {
@@ -170,7 +173,9 @@ export const useCourseService = () => {
           topics: Array.isArray(data.syllabus.topics)
             ? data.syllabus.topics.map((topic: any) => ({
                 name: topic.name ?? 'Tema',
-                weight: topic.weight != null ? Number(topic.weight) : null
+                weight: topic.weight != null ? Number(topic.weight) : null,
+                sessionDate: topic.sessionDate ?? null,
+                status: ((topic.status ?? 'UNSCHEDULED').toString().toUpperCase()) as TopicScheduleStatus
               }))
             : []
         }

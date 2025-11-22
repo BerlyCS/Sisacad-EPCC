@@ -397,6 +397,12 @@ const hasIncompleteTopicRows = () => {
   })
 }
 
+const formHasTopicData = () => {
+  return topicsForm.value.some(topic =>
+    Boolean(topic.name.trim()) || (topic.weight !== '' && topic.weight != null) || Boolean(topic.sessionDate)
+  )
+}
+
 const canUploadFile = computed(() => Boolean(syllabusFile.value) && !uploadingFile.value)
 
 const selectedFileSummary = computed(() => {
@@ -544,7 +550,15 @@ const handleUploadFile = async () => {
     return
   }
 
-  const preservedTopics = mapTopicsToPayload(currentSyllabus.value?.topics)
+  const formHasData = formHasTopicData()
+  if (formHasData && hasIncompleteTopicRows()) {
+    fileActionError.value = 'Completa los campos de cada tema o elimina las filas incompletas antes de subir el sílabo'
+    return
+  }
+
+  const preservedTopics = formHasData
+    ? buildTopicsPayloadFromForm()
+    : mapTopicsToPayload(currentSyllabus.value?.topics)
 
   uploadingFile.value = true
   try {
