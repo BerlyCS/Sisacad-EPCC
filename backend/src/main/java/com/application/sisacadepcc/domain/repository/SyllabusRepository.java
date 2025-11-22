@@ -16,4 +16,10 @@ public interface SyllabusRepository {
     List<Topic> getTopics(Long syllabusId);
 
     Optional<Syllabus> findById(Long syllabusId);
+
+    Optional<Syllabus> findByCourseId(Long courseId);
+
+    Syllabus save(Syllabus syllabus);
+
+    void deleteById(Long syllabusId);
 }

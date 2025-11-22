@@ -2,9 +2,9 @@
   <section class="bg-white rounded-2xl shadow-sm border border-gray-100 p-5 space-y-4">
     <header class="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
       <div>
-        <p class="text-sm font-semibold text-blue-500 uppercase tracking-wide">Mis cursos</p>
-        <h2 class="text-2xl font-bold text-gray-900">Selecciona un curso</h2>
-        <p class="text-gray-500">El panel mostrará estadísticas de calificaciones para el curso elegido.</p>
+        <p class="text-sm font-semibold text-blue-500 uppercase tracking-wide">{{ heading }}</p>
+        <h2 class="text-2xl font-bold text-gray-900">{{ subheading }}</h2>
+        <p class="text-gray-500">{{ description }}</p>
       </div>
       <input
         v-model="query"
@@ -54,11 +54,22 @@
 import { computed, ref } from 'vue'
 import type { ProfessorCourseSummary } from '@/services/gradeService'
 
-const props = defineProps<{
+const props = withDefaults(defineProps<{
   courses: ProfessorCourseSummary[]
   loading: boolean
   error?: string
-}>()
+  heading?: string
+  subheading?: string
+  description?: string
+}>(), {
+  heading: 'Mis cursos',
+  subheading: 'Selecciona un curso',
+  description: 'El panel mostrará estadísticas de calificaciones para el curso elegido.'
+})
+
+const heading = computed(() => props.heading)
+const subheading = computed(() => props.subheading)
+const description = computed(() => props.description)
 
 const emit = defineEmits<{
   (e: 'select', course: ProfessorCourseSummary): void

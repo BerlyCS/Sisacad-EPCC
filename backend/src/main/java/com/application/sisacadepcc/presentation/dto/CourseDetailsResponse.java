@@ -7,6 +7,7 @@ import com.application.sisacadepcc.domain.model.valueobject.Content;
 import com.application.sisacadepcc.domain.model.valueobject.CourseType;
 import com.application.sisacadepcc.domain.model.valueobject.Topic;
 import com.application.sisacadepcc.service.dto.CourseDetails;
+import java.time.LocalDate;
 import java.util.List;
 
 public record CourseDetailsResponse(
@@ -136,11 +137,12 @@ public record CourseDetailsResponse(
 
     public record TopicSummary(
             String name,
-            Double weight
+            Double weight,
+            LocalDate sessionDate
     ) {
         private static TopicSummary from(Topic topic) {
             Double weight = topic.getWeight() != null ? topic.getWeight().doubleValue() : null;
-            return new TopicSummary(topic.getName(), weight);
+            return new TopicSummary(topic.getName(), weight, topic.getSessionDate());
         }
     }
 
