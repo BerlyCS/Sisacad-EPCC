@@ -3,6 +3,7 @@ package com.application.sisacadepcc.presentation;
 import com.application.sisacadepcc.config.security.RequiresAdministratorAccess;
 import com.application.sisacadepcc.domain.model.Course;
 import com.application.sisacadepcc.presentation.dto.CourseDetailsResponse;
+import com.application.sisacadepcc.presentation.dto.UpdateLabCapacityRequest;
 import com.application.sisacadepcc.service.AuthorizationService;
 import com.application.sisacadepcc.service.CourseService;
 import com.application.sisacadepcc.service.UserRole;
@@ -57,6 +58,24 @@ public class CourseController {
     public ResponseEntity<Void> deleteCourse(@PathVariable Long id) {
         // Lógica para eliminar curso
         return ResponseEntity.noContent().build();
+    }
+
+    @PatchMapping("/{courseId}/lab-capacity")
+    public ResponseEntity<Course> updateLabCapacity(@PathVariable Long courseId,
+                                                    @RequestBody UpdateLabCapacityRequest request,
+                                                    Authentication authentication) {
+        if (!authorizationService.hasAnyRole(authentication, UserRole.ADMIN, UserRole.SECRETARY)) {
+            return ResponseEntity.status(403).build();
+        }
+
+        Integer newCapacity = request != null ? request.labCapacity() : null;
+        if (newCapacity != null && newCapacity < 0) {
+            return ResponseEntity.badRequest().build();
+        }
+
+        return service.updateLabCapacity(courseId, newCapacity)
+                .map(ResponseEntity::ok)
+                .orElseGet(() -> ResponseEntity.notFound().build());
     }
 
     @PostMapping("/{courseId}/professors/{professorId}")

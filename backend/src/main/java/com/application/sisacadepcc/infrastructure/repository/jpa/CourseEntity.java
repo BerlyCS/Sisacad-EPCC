@@ -38,6 +38,9 @@ public class CourseEntity {
     @Column(name = "lab_prerequisite_course_id")
     private Long labPrerequisiteCourseId;
 
+    @Column(name = "lab_capacity")
+    private Integer labCapacity;
+
     @ElementCollection
     @CollectionTable(
             name = "course_enrolled_students",
@@ -71,6 +74,13 @@ public class CourseEntity {
         @Column(name = "weight", precision = 5, scale = 2)
         private List<BigDecimal> examGradeWeights = new ArrayList<>();
 
+            @ElementCollection
+            @CollectionTable(
+                name = "course_schedule_slots",
+                joinColumns = @JoinColumn(name = "course_id")
+            )
+            private List<ScheduleSlotEmbeddable> scheduleSlots = new ArrayList<>();
+
     public CourseEntity() {
         // Required by JPA
     }
@@ -102,6 +112,9 @@ public class CourseEntity {
         this.labPrerequisiteCourseId = labPrerequisiteCourseId;
     }
 
+    public Integer getLabCapacity() { return labCapacity; }
+    public void setLabCapacity(Integer labCapacity) { this.labCapacity = labCapacity; }
+
     public List<Long> getEnrolledStudentIDs() { return enrolledStudentIDs; }
     public void setEnrolledStudentIDs(List<Long> enrolledStudentIDs) { this.enrolledStudentIDs = enrolledStudentIDs; }
 
@@ -117,4 +130,7 @@ public class CourseEntity {
     public void setExamGradeWeights(List<BigDecimal> examGradeWeights) {
         this.examGradeWeights = examGradeWeights;
     }
+
+    public List<ScheduleSlotEmbeddable> getScheduleSlots() { return scheduleSlots; }
+    public void setScheduleSlots(List<ScheduleSlotEmbeddable> scheduleSlots) { this.scheduleSlots = scheduleSlots; }
 }

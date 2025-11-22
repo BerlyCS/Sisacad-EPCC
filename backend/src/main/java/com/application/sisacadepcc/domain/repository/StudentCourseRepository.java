@@ -11,4 +11,5 @@ public interface StudentCourseRepository {
     void saveAll(List<StudentCourse> studentCourses);
     void deleteAll();
     boolean existsByStudentAndCourse(String studentDocumentoIdentidad, Long courseId);
+    long countByCourseId(Long courseId);
 }

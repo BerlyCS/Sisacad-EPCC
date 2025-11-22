@@ -1,5 +1,6 @@
 package com.application.sisacadepcc.domain.model;
 
+import com.application.sisacadepcc.domain.model.valueobject.CourseScheduleSlot;
 import com.application.sisacadepcc.domain.model.valueobject.CourseType;
 
 import java.math.BigDecimal;
@@ -7,6 +8,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class Course {
+
+    private static final int DEFAULT_LAB_CAPACITY = 20;
 
     private Long courseId;
     private Long courseCode;
@@ -21,6 +24,8 @@ public class Course {
     private List<Long> teacherIDs;
     private List<BigDecimal> continuousGradeWeights;
     private List<BigDecimal> examGradeWeights;
+    private Integer labCapacity;
+    private List<CourseScheduleSlot> scheduleSlots;
 
     // Constructor sin parámetros
     public Course() {
@@ -29,6 +34,8 @@ public class Course {
         this.courseType = CourseType.THEORY;
         this.continuousGradeWeights = new ArrayList<>();
         this.examGradeWeights = new ArrayList<>();
+        this.labCapacity = null;
+        this.scheduleSlots = new ArrayList<>();
     }
 
     // Constructor con parámetros
@@ -85,6 +92,26 @@ public class Course {
         this.examGradeWeights = examGradeWeights != null ? examGradeWeights : new ArrayList<>();
     }
 
+    public Integer getLabCapacity() {
+        if (labCapacity == null || labCapacity <= 0) {
+            return DEFAULT_LAB_CAPACITY;
+        }
+        return labCapacity;
+    }
+
+    public void setLabCapacity(Integer labCapacity) {
+        this.labCapacity = labCapacity;
+    }
+
+    public int getEffectiveLabCapacity() {
+        return getLabCapacity();
+    }
+
+    public List<CourseScheduleSlot> getScheduleSlots() { return scheduleSlots; }
+    public void setScheduleSlots(List<CourseScheduleSlot> scheduleSlots) {
+        this.scheduleSlots = scheduleSlots != null ? scheduleSlots : new ArrayList<>();
+    }
+
     public void enrollStudent(Long studentID) {
         if (!enrolledStudentIDs.contains(studentID)) {
             enrolledStudentIDs.add(studentID);
@@ -103,5 +130,11 @@ public class Course {
 
     public void removeTeacher(Long teacherID) {
         teacherIDs.remove(teacherID);
+    }
+
+    public void addScheduleSlot(CourseScheduleSlot slot) {
+        if (slot != null && scheduleSlots.stream().noneMatch(existing -> existing.equals(slot))) {
+            scheduleSlots.add(slot);
+        }
     }
 }

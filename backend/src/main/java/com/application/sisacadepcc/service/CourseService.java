@@ -66,6 +66,17 @@ public class CourseService {
                 .map(this::buildCourseDetails);
     }
 
+    public List<Course> getLabSectionsForTheoryCourse(Long theoryCourseId) {
+        if (theoryCourseId == null) {
+            return List.of();
+        }
+        return repository.findByLabPrerequisiteCourseId(theoryCourseId);
+    }
+
+    public Optional<Course> updateLabCapacity(Long courseId, Integer labCapacity) {
+        return repository.updateLabCapacity(courseId, labCapacity);
+    }
+
     public Optional<Course> assignProfessorToCourse(Long courseId, Long professorId) {
         if (courseId == null || professorId == null) {
             return Optional.empty();

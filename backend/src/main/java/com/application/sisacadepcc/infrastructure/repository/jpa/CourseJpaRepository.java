@@ -6,4 +6,5 @@ import java.util.List;
 public interface CourseJpaRepository extends JpaRepository<CourseEntity, Long> {
 
     List<CourseEntity> findByAnio(Integer anio);
+    List<CourseEntity> findByLabPrerequisiteCourseId(Long theoryCourseId);
 }

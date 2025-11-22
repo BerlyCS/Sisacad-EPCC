@@ -8,6 +8,7 @@ import java.util.List;
 public interface StudentCourseJpaRepository extends JpaRepository<StudentCourseEntity, Long> {
     List<StudentCourseEntity> findByCourseId(Long courseId);
     List<StudentCourseEntity> findByStudentDocumentoIdentidad(String studentDocumentoIdentidad);
+    long countByCourseId(Long courseId);
 
     @Query("SELECT sc FROM StudentCourseEntity sc WHERE sc.studentDocumentoIdentidad = :studentDoc AND sc.courseId = :courseId")
     List<StudentCourseEntity> findByStudentAndCourse(@Param("studentDoc") String studentDocumentoIdentidad,

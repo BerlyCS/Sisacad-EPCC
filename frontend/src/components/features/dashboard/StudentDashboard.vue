@@ -22,7 +22,8 @@ import {
   BookOpenIcon,
   CalendarDaysIcon,
   ChartBarIcon,
-  ClipboardDocumentCheckIcon
+  ClipboardDocumentCheckIcon,
+  BeakerIcon
 } from '@heroicons/vue/16/solid'
 
 const navOptions = [
@@ -30,6 +31,7 @@ const navOptions = [
   { id: 'courses', label: 'Mis Cursos', icon: BookOpenIcon, color: 'teal', route: '/student/courses' },
   { id: 'schedule', label: 'Mi Horario', icon: CalendarDaysIcon, color: 'orange', route: '/student/schedule' },
   { id: 'grades', label: 'Mis Calificaciones', icon: ChartBarIcon, color: 'blue', route: '/student/grades' },
-  { id: 'attendance', label: 'Mi Asistencia', icon: ClipboardDocumentCheckIcon, color: 'green', route: '/student/attendance' }
+  { id: 'attendance', label: 'Mi Asistencia', icon: ClipboardDocumentCheckIcon, color: 'green', route: '/student/attendance' },
+  { id: 'labs', label: 'Laboratorios', icon: BeakerIcon, color: 'pink', route: '/student/labs' }
 ]
 </script>

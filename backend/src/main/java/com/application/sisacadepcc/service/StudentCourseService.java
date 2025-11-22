@@ -8,6 +8,7 @@ import com.application.sisacadepcc.domain.repository.CourseRepository;
 import com.application.sisacadepcc.domain.repository.StudentCourseRepository;
 import com.application.sisacadepcc.domain.repository.StudentRepository;
 import com.application.sisacadepcc.presentation.dto.StudentScheduleEntry;
+import com.application.sisacadepcc.service.dto.EnrollmentValidationResult;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -85,26 +86,53 @@ public class StudentCourseService {
         Course course = courseRepository.findById(courseId)
                 .orElseThrow(() -> new IllegalArgumentException("Curso no encontrado: " + courseId));
 
-        if (studentCourseRepository.existsByStudentAndCourse(studentDocumentoIdentidad, courseId)) {
-            throw new IllegalArgumentException("El estudiante ya está matriculado en este curso");
+        EnrollmentValidationResult validation = validateCourseEnrollment(studentDocumentoIdentidad, course);
+        if (!validation.allowed()) {
+            throw new IllegalArgumentException(validation.message());
         }
-
-        if (CourseType.LAB.equals(course.getCourseType())) {
-            Long theoryCourseId = course.getLabPrerequisiteCourseId();
-            if (theoryCourseId == null) {
-                throw new IllegalStateException("El laboratorio no tiene curso teórico configurado");
-            }
-            boolean hasTheoryEnrollment = studentCourseRepository
-                    .existsByStudentAndCourse(studentDocumentoIdentidad, theoryCourseId);
-            if (!hasTheoryEnrollment) {
-                throw new IllegalArgumentException("El estudiante no está matriculado en el curso teórico requerido");
-            }
-        }
-
-        ensureNoScheduleConflict(studentDocumentoIdentidad, course);
 
         StudentCourse enrollment = new StudentCourse(null, studentDocumentoIdentidad, courseId);
         studentCourseRepository.save(enrollment);
+    }
+
+    public EnrollmentValidationResult validateLabEnrollment(String studentDocumentoIdentidad, Long labCourseId) {
+        if (labCourseId == null) {
+            return EnrollmentValidationResult.failure("INVALID_COURSE", "Debe proporcionar un curso válido", null, null);
+        }
+
+        Course course = courseRepository.findById(labCourseId)
+                .orElse(null);
+        if (course == null) {
+            return EnrollmentValidationResult.failure("COURSE_NOT_FOUND", "Curso no encontrado", labCourseId, null);
+        }
+
+        if (!CourseType.LAB.equals(course.getCourseType())) {
+            return EnrollmentValidationResult.failure("NOT_A_LAB", "El curso seleccionado no es un laboratorio", labCourseId, null);
+        }
+
+        if (studentDocumentoIdentidad == null || studentDocumentoIdentidad.isBlank()) {
+            return EnrollmentValidationResult.failure("INVALID_STUDENT", "No se pudo identificar al estudiante", labCourseId, null);
+        }
+
+        return validateCourseEnrollment(studentDocumentoIdentidad.trim(), course);
+    }
+
+    @Transactional
+    public EnrollmentValidationResult confirmLabEnrollment(String studentDocumentoIdentidad, Long labCourseId) {
+        EnrollmentValidationResult validation = validateLabEnrollment(studentDocumentoIdentidad, labCourseId);
+        if (!validation.allowed()) {
+            return validation;
+        }
+
+        try {
+            enrollStudentInCourse(studentDocumentoIdentidad, labCourseId);
+        } catch (IllegalArgumentException | IllegalStateException ex) {
+            return EnrollmentValidationResult.failure("ENROLLMENT_FAILED", ex.getMessage(), labCourseId, validation.remainingSeats());
+        }
+
+        Course course = courseRepository.findById(labCourseId).orElse(null);
+        Integer remainingSeats = course != null ? computeRemainingSeats(course) : validation.remainingSeats();
+        return EnrollmentValidationResult.success(labCourseId, remainingSeats);
     }
 
     public List<StudentCourse> getAllEnrollments() {
@@ -147,30 +175,80 @@ public class StudentCourseService {
     }
 
     private void ensureNoScheduleConflict(String studentDocumentoIdentidad, Course course) {
+        detectScheduleConflict(studentDocumentoIdentidad, course)
+                .ifPresent(message -> {
+                    throw new IllegalArgumentException(message);
+                });
+    }
+
+    private java.util.Optional<String> detectScheduleConflict(String studentDocumentoIdentidad, Course course) {
         List<StudentScheduleEntry> currentSchedule = getScheduleForStudent(studentDocumentoIdentidad);
         if (currentSchedule.isEmpty()) {
-            return;
+            return java.util.Optional.empty();
         }
 
         String group = (course.getGroupLetter() == '\0') ? null : String.valueOf(course.getGroupLetter());
         List<ExcelScheduleService.OccupiedTimeSlot> targetSlots = excelScheduleService
-            .findByCourse(course.getName(), group, course.getCourseType());
+                .findByCourse(course.getName(), group, course.getCourseType());
         if (targetSlots == null || targetSlots.isEmpty()) {
-            return;
+            return java.util.Optional.empty();
         }
 
         for (ExcelScheduleService.OccupiedTimeSlot slot : targetSlots) {
             for (StudentScheduleEntry entry : currentSchedule) {
                 if (isSameDay(slot.getDayOfWeek(), entry.getDayOfWeek()) &&
                         hasTimeOverlap(slot.getStartTime(), slot.getEndTime(), entry.getStartTime(), entry.getEndTime())) {
-                    throw new IllegalArgumentException(String.format(
+                    String message = String.format(
                             "El horario del curso %s (%s-%s) se superpone con %s (%s-%s)",
                             course.getName(), slot.getStartTime(), slot.getEndTime(),
                             entry.getCourseName(), entry.getStartTime(), entry.getEndTime()
-                    ));
+                    );
+                    return java.util.Optional.of(message);
                 }
             }
         }
+
+        return java.util.Optional.empty();
+    }
+
+    private EnrollmentValidationResult validateCourseEnrollment(String studentDocumentoIdentidad, Course course) {
+        if (studentCourseRepository.existsByStudentAndCourse(studentDocumentoIdentidad, course.getCourseId())) {
+            return EnrollmentValidationResult.failure("ALREADY_ENROLLED", "El estudiante ya está matriculado en este curso", course.getCourseId(), computeRemainingSeats(course));
+        }
+
+        if (CourseType.LAB.equals(course.getCourseType())) {
+            Long theoryCourseId = course.getLabPrerequisiteCourseId();
+            if (theoryCourseId == null) {
+                return EnrollmentValidationResult.failure("LAB_WITHOUT_THEORY", "El laboratorio no tiene curso teórico configurado", course.getCourseId(), computeRemainingSeats(course));
+            }
+
+            boolean hasTheoryEnrollment = studentCourseRepository
+                    .existsByStudentAndCourse(studentDocumentoIdentidad, theoryCourseId);
+            if (!hasTheoryEnrollment) {
+                return EnrollmentValidationResult.failure("MISSING_THEORY", "El estudiante debe estar matriculado en el curso teórico", course.getCourseId(), computeRemainingSeats(course));
+            }
+
+            Integer remainingSeats = computeRemainingSeats(course);
+            if (remainingSeats != null && remainingSeats <= 0) {
+                return EnrollmentValidationResult.failure("LAB_FULL", "No hay vacantes disponibles en el laboratorio", course.getCourseId(), 0);
+            }
+        }
+
+        java.util.Optional<String> conflict = detectScheduleConflict(studentDocumentoIdentidad, course);
+        if (conflict.isPresent()) {
+            return EnrollmentValidationResult.failure("SCHEDULE_CONFLICT", conflict.get(), course.getCourseId(), computeRemainingSeats(course));
+        }
+
+        return EnrollmentValidationResult.success(course.getCourseId(), computeRemainingSeats(course));
+    }
+
+    private Integer computeRemainingSeats(Course course) {
+        if (course == null || !CourseType.LAB.equals(course.getCourseType()) || course.getCourseId() == null) {
+            return null;
+        }
+        long enrolledCount = studentCourseRepository.countByCourseId(course.getCourseId());
+        int capacity = course.getEffectiveLabCapacity();
+        return Math.max(capacity - Math.toIntExact(enrolledCount), 0);
     }
 
     private boolean isSameDay(String dayA, String dayB) {

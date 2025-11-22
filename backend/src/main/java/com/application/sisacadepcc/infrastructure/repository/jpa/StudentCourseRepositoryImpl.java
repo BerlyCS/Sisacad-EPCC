@@ -61,6 +61,14 @@ public class StudentCourseRepositoryImpl implements StudentCourseRepository {
         return !jpaRepository.findByStudentAndCourse(studentDocumentoIdentidad, courseId).isEmpty();
     }
 
+    @Override
+    public long countByCourseId(Long courseId) {
+        if (courseId == null) {
+            return 0;
+        }
+        return jpaRepository.countByCourseId(courseId);
+    }
+
     private StudentCourse toDomain(StudentCourseEntity entity) {
         return new StudentCourse(
                 entity.getId(),

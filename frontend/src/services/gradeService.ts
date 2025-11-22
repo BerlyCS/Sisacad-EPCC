@@ -50,7 +50,7 @@ export interface CourseRosterEntry {
   courseId: number
   courseCode: string
   groupLetter: string
-  courseType: 'THEORY' | 'LAB'
+  courseType: 'THEORY' | 'LAB' | 'PRACTICE'
   canGrade: boolean
   continuousGrades: number[]
   examGrades: number[]

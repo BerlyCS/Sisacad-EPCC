@@ -11,14 +11,15 @@ const COURSE_TYPE_LABEL: Record<CourseType, string> = {
 
 export interface Course {
   courseId: number
-  courseCode: number
+  courseCode: number | null
   name: string
-  creditNumber: number
-  groupLetter: string
-  syllabusID: number
-  anio: number
+  creditNumber: number | null
+  groupLetter: string | null
+  syllabusID: number | null
+  anio: number | null
   courseType: CourseType
   labPrerequisiteCourseId: number | null
+  labCapacity: number | null
   enrolledStudentIDs: number[]
   teacherIDs: number[]
   courseTypeLabel: string
@@ -29,44 +30,81 @@ export const useStudentCourseService = () => {
   const loading = ref(false)
   const error = ref('')
 
+  const normalizeCourseType = (raw: unknown): CourseType => {
+    const normalized = typeof raw === 'string' ? raw.toUpperCase() : 'THEORY'
+    return normalized === 'LAB' ? 'LAB' : 'THEORY'
+  }
+
+  const normalizeGroupLetter = (raw: unknown): string | null => {
+    if (raw == null) {
+      return null
+    }
+    if (typeof raw === 'string') {
+      const trimmed = raw.trim()
+      if (!trimmed || trimmed === '\u0000') {
+        return null
+      }
+      return trimmed
+    }
+    return null
+  }
+
+  const toNumberOrNull = (raw: unknown): number | null => {
+    if (raw == null) {
+      return null
+    }
+    const parsed = Number(raw)
+    return Number.isFinite(parsed) ? parsed : null
+  }
+
+  const ensureNumberArray = (input: unknown): number[] =>
+    Array.isArray(input)
+      ? input
+          .map((value: unknown) => Number(value))
+          .filter((value: number) => Number.isFinite(value))
+      : []
+
   const fetchMyCourses = async () => {
     loading.value = true
     error.value = ''
     try {
-      console.log('Frontend: Intentando obtener cursos desde:', `${API_BASE_URL}/students/my-courses`)
-      
       const response = await fetch(`${API_BASE_URL}/students/my-courses`, {
         credentials: 'include'
       })
-      
-      console.log('Frontend: Respuesta recibida - Status:', response.status)
-      
+
       if (!response.ok) {
-        const errorText = await response.text()
-        console.error('Frontend: Error en respuesta:', errorText)
-        throw new Error(`Error ${response.status}: ${errorText}`)
+        throw new Error(`Error ${response.status}`)
       }
-      
+
       const data: any[] = await response.json()
-      console.log('Frontend: Cursos recibidos:', data)
-      courses.value = data.map(course => ({
-        courseId: course.courseId ?? course.courseID,
-        courseCode: course.courseCode ?? course.courseID,
-        name: course.name,
-        creditNumber: course.creditNumber,
-        groupLetter: course.groupLetter,
-        syllabusID: course.syllabusID,
-        anio: course.anio,
-        courseType: course.courseType,
-        labPrerequisiteCourseId: course.labPrerequisiteCourseId,
-        enrolledStudentIDs: course.enrolledStudentIDs,
-        teacherIDs: course.teacherIDs,
-        courseTypeLabel: COURSE_TYPE_LABEL[course.courseType as CourseType]
-      }))
-      
+      courses.value = Array.isArray(data)
+        ? data.map((course: any) => {
+            const courseId = toNumberOrNull(course.courseId ?? course.courseID) ?? 0
+            const courseType = normalizeCourseType(course.courseType)
+            const teacherIDs = ensureNumberArray(course.teacherIDs ?? [])
+            const enrolledStudentIDs = ensureNumberArray(course.enrolledStudentIDs ?? [])
+            const labCapacity = toNumberOrNull(course.labCapacity)
+            return {
+              courseId,
+              courseCode: toNumberOrNull(course.courseCode) ?? courseId,
+              name: course.name ?? 'Curso',
+              creditNumber: toNumberOrNull(course.creditNumber),
+              groupLetter: normalizeGroupLetter(course.groupLetter),
+              syllabusID: toNumberOrNull(course.syllabusID),
+              anio: toNumberOrNull(course.anio),
+              courseType,
+              labPrerequisiteCourseId: toNumberOrNull(course.labPrerequisiteCourseId),
+              labCapacity: labCapacity,
+              enrolledStudentIDs,
+              teacherIDs,
+              courseTypeLabel: COURSE_TYPE_LABEL[courseType]
+            } as Course
+          })
+        : []
+
     } catch (err) {
       error.value = 'No se pudieron cargar los cursos'
-      console.error('Frontend: Error fetching student courses:', err)
+      console.error('Error fetching student courses:', err)
     } finally {
       loading.value = false
     }
