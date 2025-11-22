@@ -25,6 +25,13 @@
             Descargar sílabo
           </button>
           <button
+            type="button"
+            @click="router.push({ name: 'student-attendance', params: { courseId: details.courseId } })"
+            class="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition text-sm"
+          >
+            Ver Asistencia
+          </button>
+          <button
             v-if="details.labCourse"
             type="button"
             @click="openLabCourse"
@@ -133,10 +140,12 @@
 
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
+import { useRouter } from 'vue-router'
 import type { CourseDetails, CourseStudentSummary } from '@/services/courseService'
 
 const props = defineProps<{ details: CourseDetails }>()
 const emit = defineEmits<{ (e: 'open-lab', courseId: number): void }>()
+const router = useRouter()
 
 const selectedStudentId = ref('')
 

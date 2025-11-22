@@ -44,6 +44,12 @@ const router = createRouter({
       meta: { requiresAuth: true, allowedRoles: ['PROFESSOR', 'ADMIN'] }
     },
     {
+      path: '/professor/attendance',
+      name: 'professor-attendance',
+      component: () => import('@/views/ProfessorAttendanceView.vue'),
+      meta: { requiresAuth: true, allowedRoles: ['PROFESSOR', 'ADMIN'] }
+    },
+    {
       path: '/admin/students',
       name: 'students',
       component: StudentManagementView,
@@ -111,6 +117,18 @@ const router = createRouter({
       path: '/student/grades',
       name: 'student-grades',
       component: () => import('@/views/StudentGradesView.vue'),
+      meta: { requiresAuth: true, allowedRoles: ['STUDENT'] }
+    },
+    {
+      path: '/student/attendance',
+      name: 'student-attendance-selection',
+      component: () => import('@/views/StudentAttendanceCoursesView.vue'),
+      meta: { requiresAuth: true, allowedRoles: ['STUDENT'] }
+    },
+    {
+      path: '/student/courses/:courseId/attendance',
+      name: 'student-attendance',
+      component: () => import('@/views/StudentAttendanceView.vue'),
       meta: { requiresAuth: true, allowedRoles: ['STUDENT'] }
     },
     {

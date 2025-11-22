@@ -28,6 +28,7 @@ export interface ProfessorCourseSummary {
   courseName: string
   groupLetter: string
   creditNumber: number | null
+  courseType: 'THEORY' | 'LAB' | 'PRACTICE'
 }
 
 export interface CourseGroupSummary {
@@ -35,7 +36,7 @@ export interface CourseGroupSummary {
   courseCode: string
   courseName: string
   groupLetter: string
-  courseType: 'THEORY' | 'LAB'
+  courseType: 'THEORY' | 'LAB' | 'PRACTICE'
   canGrade: boolean
   studentCount: number
   maxCapacity: number
@@ -135,7 +136,8 @@ const mapProfessorCourseSummary = (payload: any): ProfessorCourseSummary => {
     courseCode: String(payload.courseCode ?? payload.courseId ?? ''),
     courseName: payload.name ?? 'Curso',
     groupLetter: payload.groupLetter ?? '-',
-    creditNumber: payload.creditNumber != null ? Number(payload.creditNumber) : null
+    creditNumber: payload.creditNumber != null ? Number(payload.creditNumber) : null,
+    courseType: ((payload.courseType ?? 'THEORY').toString().toUpperCase()) as 'THEORY' | 'LAB' | 'PRACTICE'
   }
 }
 
@@ -284,7 +286,7 @@ const mapCourseGroupSummary = (payload: any): CourseGroupSummary => ({
   courseCode: String(payload.courseCode ?? payload.courseId ?? ''),
   courseName: payload.courseName ?? payload.name ?? 'Curso',
   groupLetter: String(payload.groupLetter ?? '').trim() || '-',
-  courseType: ((payload.courseType ?? 'THEORY').toString().toUpperCase()) as 'THEORY' | 'LAB',
+  courseType: ((payload.courseType ?? 'THEORY').toString().toUpperCase()) as 'THEORY' | 'LAB' | 'PRACTICE',
   canGrade: Boolean(payload.canGrade ?? false),
   studentCount: Number(payload.studentCount ?? 0),
   maxCapacity: Number(payload.maxCapacity ?? 150)
@@ -298,7 +300,7 @@ const mapCourseRosterEntry = (payload: any): CourseRosterEntry => ({
   courseId: Number(payload.courseId ?? 0),
   courseCode: String(payload.courseCode ?? ''),
   groupLetter: String(payload.groupLetter ?? '').trim() || '-',
-  courseType: ((payload.courseType ?? 'THEORY').toString().toUpperCase()) as 'THEORY' | 'LAB',
+  courseType: ((payload.courseType ?? 'THEORY').toString().toUpperCase()) as 'THEORY' | 'LAB' | 'PRACTICE',
   canGrade: Boolean(payload.canGrade ?? false),
   continuousGrades: toNumberArray(payload.continuousGrades ?? []),
   examGrades: toNumberArray(payload.examGrades ?? []),
