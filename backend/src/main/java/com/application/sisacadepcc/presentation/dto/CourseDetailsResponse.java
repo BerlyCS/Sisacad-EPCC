@@ -77,6 +77,7 @@ public record CourseDetailsResponse(
         return switch (courseType) {
             case THEORY -> "Teoría";
             case LAB -> "Laboratorio";
+            case PRACTICE -> "Práctica";
         };
     }
 

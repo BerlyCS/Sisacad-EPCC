@@ -29,7 +29,7 @@ public class AttendanceRepositoryImpl implements AttendanceRepository {
     @Override
     public Attendance save(Attendance attendance) {
         AttendanceEntity entity = toEntity(attendance);
-        AttendanceEntity saved = jpaRepository.save(entity);
+        AttendanceEntity saved = jpaRepository.saveAndFlush(entity);
         return toDomain(saved);
     }
 
@@ -67,7 +67,9 @@ public class AttendanceRepositoryImpl implements AttendanceRepository {
                 e.getStatus(),
                 e.getTimestamp(),
                 e.getLocation(),
-                e.getDate()
+                e.getDate(),
+                e.getClassType(),
+                e.getTodo()
         );
     }
 
@@ -79,7 +81,9 @@ public class AttendanceRepositoryImpl implements AttendanceRepository {
                 a.getStatus(),
                 a.getTimestamp(),
                 a.getLocation(),
-                a.getDate()
+                a.getDate(),
+                a.getClassType(),
+                a.getTodo()
         );
     }
 }

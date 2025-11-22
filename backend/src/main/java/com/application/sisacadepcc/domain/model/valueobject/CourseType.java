@@ -10,7 +10,8 @@ import java.util.Arrays;
  */
 public enum CourseType {
     THEORY("Teoría"),
-    LAB("Laboratorio");
+    LAB("Laboratorio"),
+    PRACTICE("Práctica");
 
     private final String label;
 

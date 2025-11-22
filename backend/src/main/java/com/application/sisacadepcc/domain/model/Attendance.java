@@ -1,6 +1,7 @@
 package com.application.sisacadepcc.domain.model;
 
 import com.application.sisacadepcc.domain.model.valueobject.AttendanceStatus;
+import com.application.sisacadepcc.domain.model.valueobject.ClassType;
 import com.application.sisacadepcc.domain.model.valueobject.GeoLocation;
 
 import java.time.LocalDate;
@@ -16,6 +17,8 @@ public class Attendance {
     private final LocalDateTime timestamp;
     private final GeoLocation location; // optional
     private final LocalDate date;
+    private final ClassType classType;
+    private final String todo;
 
     public Attendance(Long attendanceId,
                       Long professorId,
@@ -24,7 +27,9 @@ public class Attendance {
                       AttendanceStatus status,
                       LocalDateTime timestamp,
                       GeoLocation location,
-                      LocalDate date) {
+                      LocalDate date,
+                      ClassType classType,
+                      String todo) {
         this.attendanceId = attendanceId;
         this.professorId = professorId;
         this.courseId = courseId;
@@ -33,6 +38,8 @@ public class Attendance {
         this.timestamp = timestamp;
         this.location = location;
         this.date = date;
+        this.classType = classType;
+        this.todo = todo;
     }
 
     public Long getAttendanceId() { return attendanceId; }
@@ -43,4 +50,6 @@ public class Attendance {
     public LocalDateTime getTimestamp() { return timestamp; }
     public GeoLocation getLocation() { return location; }
     public LocalDate getDate() { return date; }
+    public ClassType getClassType() { return classType; }
+    public String getTodo() { return todo; }
 }

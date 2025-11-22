@@ -11,9 +11,40 @@ import java.util.stream.Collectors;
 public class StudentAttendanceRepositoryImpl implements StudentAttendanceRepository {
 
     private final StudentAttendanceJpaRepository jpaRepository;
+    private final AttendanceJpaRepository attendanceJpaRepository;
 
-    public StudentAttendanceRepositoryImpl(StudentAttendanceJpaRepository jpaRepository) {
+    public StudentAttendanceRepositoryImpl(StudentAttendanceJpaRepository jpaRepository, AttendanceJpaRepository attendanceJpaRepository) {
         this.jpaRepository = jpaRepository;
+        this.attendanceJpaRepository = attendanceJpaRepository;
+    }
+
+    @Override
+    public List<StudentAttendance> findByAttendanceId(Long attendanceId) {
+        return jpaRepository.findByAttendance_AttendanceId(attendanceId).stream()
+                .map(this::toDomain)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<StudentAttendance> findByStudentId(String studentId) {
+        return jpaRepository.findByStudentId(studentId).stream()
+                .map(this::toDomain)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public StudentAttendance save(StudentAttendance attendance) {
+        StudentAttendanceEntity entity = toEntity(attendance);
+        StudentAttendanceEntity saved = jpaRepository.save(entity);
+        return toDomain(saved);
+    }
+
+    @Override
+    public void saveAll(List<StudentAttendance> studentAttendances) {
+        List<StudentAttendanceEntity> entities = studentAttendances.stream()
+                .map(this::toEntity)
+                .collect(Collectors.toList());
+        jpaRepository.saveAll(entities);
     }
 
     @Override
@@ -27,59 +58,67 @@ public class StudentAttendanceRepositoryImpl implements StudentAttendanceReposit
     }
 
     @Override
-    public StudentAttendance save(StudentAttendance attendance) {
-        StudentAttendanceEntity entity = toEntity(attendance);
-        StudentAttendanceEntity saved = jpaRepository.save(entity);
-        return toDomain(saved);
-    }
-
-    @Override
     public void deleteById(Long id) {
         jpaRepository.deleteById(id);
     }
 
     @Override
-    public List<StudentAttendance> findByStudentId(String studentId) {
-        return jpaRepository.findByStudentId(studentId).stream().map(this::toDomain).collect(Collectors.toList());
-    }
-
-    @Override
     public List<StudentAttendance> findByGroupId(Long groupId) {
-        return jpaRepository.findByGroupId(groupId).stream().map(this::toDomain).collect(Collectors.toList());
+        return jpaRepository.findByAttendance_GroupId(groupId).stream().map(this::toDomain).collect(Collectors.toList());
     }
 
     @Override
     public List<StudentAttendance> findByCourseId(Long courseId) {
-        return jpaRepository.findByCourseId(courseId).stream().map(this::toDomain).collect(Collectors.toList());
+        return jpaRepository.findByAttendance_CourseId(courseId).stream().map(this::toDomain).collect(Collectors.toList());
     }
 
     @Override
     public List<StudentAttendance> findByStudentIdAndDate(String studentId, java.time.LocalDate date) {
-        return jpaRepository.findByStudentIdAndDate(studentId, date).stream().map(this::toDomain).collect(Collectors.toList());
+        return jpaRepository.findByStudentIdAndAttendance_Date(studentId, date).stream().map(this::toDomain).collect(Collectors.toList());
+    }
+
+    @Override
+    public List<StudentAttendance> findByStudentIdAndCourseId(String studentId, Long courseId) {
+        return jpaRepository.findByStudentIdAndCourseId(studentId, courseId).stream()
+                .map(this::toDomain)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<com.application.sisacadepcc.domain.model.dto.StudentAttendanceDTO> findDTOByStudentIdAndCourseId(String studentId, Long courseId) {
+        return jpaRepository.findDTOByStudentIdAndCourseId(studentId, courseId);
     }
 
     private StudentAttendance toDomain(StudentAttendanceEntity e) {
         return new StudentAttendance(
-                e.getAttendanceId(),
+                e.getId(),
+                e.getAttendance().getAttendanceId(),
                 e.getStudentId(),
-                e.getCourseId(),
-                e.getGroupId(),
-                e.getStatus(),
-                e.getTimestamp(),
-                e.getLocation(),
-                e.getDate()
+                e.getStatus()
         );
     }
 
     private StudentAttendanceEntity toEntity(StudentAttendance a) {
+        AttendanceEntity attendance = attendanceJpaRepository.findById(a.getAttendanceId())
+                .orElseThrow(() -> new RuntimeException("Attendance session not found: " + a.getAttendanceId()));
+
+        Double latitude = null;
+        Double longitude = null;
+        if (attendance.getLocation() != null) {
+            latitude = attendance.getLocation().latitude();
+            longitude = attendance.getLocation().longitude();
+        }
+
         return new StudentAttendanceEntity(
+                attendance,
                 a.getStudentId(),
-                a.getCourseId(),
-                a.getGroupId(),
                 a.getStatus(),
-                a.getTimestamp(),
-                a.getLocation(),
-                a.getDate()
+                attendance.getCourseId(),
+                attendance.getGroupId(),
+                attendance.getDate(),
+                attendance.getTimestamp(),
+                latitude,
+                longitude
         );
     }
 }

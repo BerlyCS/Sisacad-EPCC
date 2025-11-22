@@ -1,8 +1,11 @@
 package com.application.sisacadepcc.service;
 
+import com.application.sisacadepcc.domain.model.Attendance;
 import com.application.sisacadepcc.domain.model.StudentAttendance;
 import com.application.sisacadepcc.domain.model.valueobject.AttendanceStatus;
+import com.application.sisacadepcc.domain.model.valueobject.ClassType;
 import com.application.sisacadepcc.domain.model.valueobject.GeoLocation;
+import com.application.sisacadepcc.domain.repository.AttendanceRepository;
 import com.application.sisacadepcc.domain.repository.StudentAttendanceRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -15,9 +18,11 @@ import java.util.List;
 public class StudentAttendanceService {
 
     private final StudentAttendanceRepository repository;
+    private final AttendanceRepository attendanceRepository;
 
-    public StudentAttendanceService(StudentAttendanceRepository repository) {
+    public StudentAttendanceService(StudentAttendanceRepository repository, AttendanceRepository attendanceRepository) {
         this.repository = repository;
+        this.attendanceRepository = attendanceRepository;
     }
 
     public List<StudentAttendance> getAll() { return repository.findAll(); }
@@ -38,10 +43,26 @@ public class StudentAttendanceService {
     public StudentAttendance markAttendance(String studentId, Long courseId, Long groupId,
                                             AttendanceStatus status, GeoLocation location,
                                             LocalDateTime timestamp, LocalDate date) {
-        StudentAttendance attendance = new StudentAttendance(
-                null, studentId, courseId, groupId, status,
+        // Create a session for this single attendance
+        Attendance session = new Attendance(
+                null,
+                0L, // No professor ID available in this legacy call
+                courseId,
+                groupId,
+                AttendanceStatus.PRESENT, // Session is present
                 timestamp != null ? timestamp : LocalDateTime.now(),
-                location, date != null ? date : LocalDate.now()
+                location,
+                date != null ? date : LocalDate.now(),
+                ClassType.THEORY, // Default
+                "Legacy single attendance"
+        );
+        Attendance savedSession = attendanceRepository.save(session);
+
+        StudentAttendance attendance = new StudentAttendance(
+                null,
+                savedSession.getAttendanceId(),
+                studentId,
+                status
         );
         return repository.save(attendance);
     }

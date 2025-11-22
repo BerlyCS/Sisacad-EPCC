@@ -1,6 +1,7 @@
 package com.application.sisacadepcc.infrastructure.repository.jpa;
 
 import com.application.sisacadepcc.domain.model.valueobject.AttendanceStatus;
+import com.application.sisacadepcc.domain.model.valueobject.ClassType;
 import com.application.sisacadepcc.domain.model.valueobject.GeoLocation;
 import jakarta.persistence.AttributeOverride;
 import jakarta.persistence.AttributeOverrides;
@@ -51,11 +52,19 @@ public class AttendanceEntity {
     @Column(nullable = false)
     private LocalDate date;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "class_type")
+    private ClassType classType;
+
+    @Column(name = "todo")
+    private String todo;
+
     public AttendanceEntity() {}
 
     public AttendanceEntity(Long professorId, Long courseId, Long groupId,
                             AttendanceStatus status, LocalDateTime timestamp,
-                            GeoLocation location, LocalDate date) {
+                            GeoLocation location, LocalDate date,
+                            ClassType classType, String todo) {
         this.professorId = professorId;
         this.courseId = courseId;
         this.groupId = groupId;
@@ -63,6 +72,8 @@ public class AttendanceEntity {
         this.timestamp = timestamp;
         this.location = location;
         this.date = date;
+        this.classType = classType;
+        this.todo = todo;
     }
 
     public Long getAttendanceId() { return attendanceId; }
@@ -80,5 +91,9 @@ public class AttendanceEntity {
     public void setLocation(GeoLocation location) { this.location = location; }
     public LocalDate getDate() { return date; }
     public void setDate(LocalDate date) { this.date = date; }
+    public ClassType getClassType() { return classType; }
+    public void setClassType(ClassType classType) { this.classType = classType; }
+    public String getTodo() { return todo; }
+    public void setTodo(String todo) { this.todo = todo; }
 }
 
