@@ -1,13 +1,21 @@
 <template>
-  <div class="flex items-center justify-center min-h-screen bg-blueEPCC px-4">
-    <div class="w-full max-w-[400px] p-6 bg-white shadow-lg rounded-md text-center space-y-6 text-gray-900">
+  <div class="relative min-h-screen">
+    <div
+      class="absolute inset-0 bg-cover bg-center transition duration-800 filter"
+      :class="{ 'blur-sm': isHoveringButton }"
+      :style="backgroundStyle"
+      aria-hidden="true"
+    ></div>
+
+    <div class="relative flex items-center justify-center min-h-screen px-4 z-10 group">
+      <div class="w-full max-w-[400px] p-6 bg-white shadow-lg rounded-md text-center space-y-6 text-gray-900">
 
       <!-- TÍTULO -->
       <h2 class="text-3xl font-bold">SISACAD - EPCC</h2>
 
       <!-- ÍCONO DE USUARIO -->
-      <div class="flex items-center">
-        <UserCircleIcon class="h-25 w-25 text-gray-400 mx-auto" />
+      <div class="flex items-center justify-center mb-6">
+        <img :src="csImage" alt="Logo CS UNSA" class="h-50 w-80 object-contain" />
       </div>
 
       <!-- TEXTO -->
@@ -26,13 +34,15 @@
       <!-- BOTÓN PRINCIPAL - Ahora abre popup de Google -->
       <button
         @click="initiateGoogleAuth"
+        @mouseenter="isHoveringButton = true"
+        @mouseleave="isHoveringButton = false"
         :disabled="loading"
         class="w-full flex items-center justify-center space-x-3 px-4 py-2 bg-red-700 text-white font-semibold rounded hover:bg-red-800 transition disabled:opacity-50 disabled:cursor-not-allowed"
       >
         <img
-          src="../assets/logo_unsa.png"
-          alt="Icono UNSA"
-          class="h-6 max-w-[20px] object-contain"
+          src="https://upload.wikimedia.org/wikipedia/commons/thumb/c/c1/Google_%22G%22_logo.svg/768px-Google_%22G%22_logo.svg.png"
+          alt="Google Logo"
+          class="h-6 w-6"
         />
         <span v-if="!loading">Ingresar con Correo UNSA</span>
         <span v-else>Verificando...</span>
@@ -86,6 +96,7 @@
       </div>
 
     </div>
+    </div>
   </div>
 </template>
 
@@ -94,6 +105,8 @@ import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '../stores/auth'
 import { authService } from '../services/authService'
+import csImg from '../assets/csunsa.jpg'
+import compImg from '../assets/comp.jpg'
 
 import { UserCircleIcon } from '@heroicons/vue/16/solid'
 
@@ -105,6 +118,7 @@ const errorMessage = ref('')
 const successMessage = ref('')
 const showEmailModal = ref(false)
 const manualEmail = ref('')
+const isHoveringButton = ref(false)
 
 const demoLoginEnabled = import.meta.env.VITE_ENABLE_DEMO_LOGIN !== 'false'
 const demoProfiles = [
@@ -113,6 +127,9 @@ const demoProfiles = [
   { key: 'admin', label: 'Ingresar como Administrador', role: 'ADMIN' },
   { key: 'secretary', label: 'Ingresar como Secretaria', role: 'SECRETARY' }
 ]
+
+const csImage = csImg
+const backgroundStyle = { backgroundImage: `url(${compImg})` }
 
 // Verificar si ya estamos autenticados al cargar la página
 onMounted(async () => {
