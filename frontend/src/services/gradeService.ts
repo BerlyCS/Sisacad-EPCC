@@ -30,6 +30,64 @@ export interface ProfessorCourseSummary {
   creditNumber: number | null
 }
 
+export interface CourseGroupSummary {
+  courseId: number
+  courseCode: string
+  courseName: string
+  groupLetter: string
+  courseType: 'THEORY' | 'LAB'
+  canGrade: boolean
+  studentCount: number
+  maxCapacity: number
+}
+
+export interface CourseRosterEntry {
+  studentDocumentoIdentidad: string
+  studentCui: string
+  fullName: string
+  email: string
+  courseId: number
+  courseCode: string
+  groupLetter: string
+  courseType: 'THEORY' | 'LAB'
+  canGrade: boolean
+  continuousGrades: number[]
+  examGrades: number[]
+  finalGrade: number | null
+  submissionStatus: string
+}
+
+export interface CourseRosterPage {
+  students: CourseRosterEntry[]
+  total: number
+  page: number
+  size: number
+}
+
+export interface GradingRubric {
+  courseId: number
+  courseCode: string
+  continuousWeights: number[]
+  examWeights: number[]
+}
+
+export interface GradeSubmissionPayload {
+  continuousGrades: number[]
+  examGrades: number[]
+  status?: string
+  feedback?: string
+}
+
+export interface GradeSubmissionResponse {
+  courseId: number
+  courseCode: string
+  studentDocumentoIdentidad: string
+  continuousGrades: number[]
+  examGrades: number[]
+  finalGrade: number | null
+  status: string
+}
+
 const toNumber = (value: unknown): number | null => {
   const parsed = typeof value === 'string' ? Number(value) : value as number
   return typeof parsed === 'number' && Number.isFinite(parsed) ? parsed : null
@@ -85,20 +143,38 @@ const requestJson = async (url: string) => {
   const response = await fetch(url, { credentials: 'include' })
 
   if (!response.ok) {
-    let message = 'Error en la solicitud'
-    try {
-      const parsed = await response.clone().json()
-      message = parsed?.message ?? parsed?.error ?? message
-    } catch {
-      message = (await response.text().catch(() => message)) || message
-    }
-
-    const error = new Error(message)
-    ;(error as Error & { status?: number }).status = response.status
-    throw error
+    throw await buildHttpError(response)
   }
 
   return response.json()
+}
+
+const requestJsonWithBody = async (url: string, method: string, body: unknown) => {
+  const response = await fetch(url, {
+    method,
+    credentials: 'include',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body)
+  })
+
+  if (!response.ok) {
+    throw await buildHttpError(response)
+  }
+  return response.json()
+}
+
+const buildHttpError = async (response: Response) => {
+  let message = 'Error en la solicitud'
+  try {
+    const parsed = await response.clone().json()
+    message = parsed?.message ?? parsed?.error ?? message
+  } catch {
+    message = (await response.text().catch(() => message)) || message
+  }
+
+  const error = new Error(`${message} (HTTP ${response.status})`)
+  ;(error as Error & { status?: number }).status = response.status
+  return error
 }
 
 export const gradeService = {
@@ -136,5 +212,120 @@ export const gradeService = {
   async fetchProfessorCourseSummaries(): Promise<ProfessorCourseSummary[]> {
     const courses = await requestJson(`${API_BASE_URL}/professors/me/courses`)
     return Array.isArray(courses) ? courses.map(mapProfessorCourseSummary) : []
+  },
+
+  async fetchCourseGroups(courseId: number): Promise<CourseGroupSummary[]> {
+    if (!courseId) {
+      return []
+    }
+    try {
+      const data = await requestJson(`${API_BASE_URL}/grades/courses/${courseId}/groups`)
+      return Array.isArray(data) ? data.map(mapCourseGroupSummary) : []
+    } catch (error) {
+      if ((error as Error & { status?: number }).status === 404) {
+        return []
+      }
+      throw error
+    }
+  },
+
+  async fetchCourseRoster(courseId: number, options?: { groupIds?: number[]; page?: number; size?: number }): Promise<CourseRosterPage> {
+    if (!courseId) {
+      return { students: [], total: 0, page: 0, size: 0 }
+    }
+
+    const params = new URLSearchParams()
+    options?.groupIds?.forEach(id => params.append('groupIds', String(id)))
+    params.set('page', String(options?.page ?? 0))
+    params.set('size', String(options?.size ?? 150))
+
+    const url = `${API_BASE_URL}/grades/courses/${courseId}/students?${params.toString()}`
+    try {
+      const data = await requestJson(url)
+      return mapCourseRosterPage(data)
+    } catch (error) {
+      if ((error as Error & { status?: number }).status === 404) {
+        return { students: [], total: 0, page: 0, size: options?.size ?? 150 }
+      }
+      throw error
+    }
+  },
+
+  async fetchCourseRubric(courseId: number): Promise<GradingRubric> {
+    if (!courseId) {
+      throw new Error('Curso inválido para la rúbrica')
+    }
+    const data = await requestJson(`${API_BASE_URL}/grades/courses/${courseId}/rubric`)
+    return mapRubric(data)
+  },
+
+  async submitGrade(courseId: number, studentDocumento: string, groupId: number, payload: GradeSubmissionPayload): Promise<GradeSubmissionResponse> {
+    if (!courseId || !studentDocumento || !groupId) {
+      throw new Error('Datos incompletos para registrar la nota')
+    }
+
+    const url = `${API_BASE_URL}/grades/courses/${courseId}/students/${encodeURIComponent(studentDocumento)}/groups/${groupId}`
+    const data = await requestJsonWithBody(url, 'POST', payload)
+    return mapGradeSubmissionResponse(data)
   }
 }
+
+const toNumberArray = (source: unknown): number[] => {
+  if (!Array.isArray(source)) {
+    return []
+  }
+  return source
+    .map(item => toNumber(item))
+    .filter((value): value is number => typeof value === 'number')
+}
+
+const mapCourseGroupSummary = (payload: any): CourseGroupSummary => ({
+  courseId: Number(payload.courseId ?? payload.courseID ?? 0),
+  courseCode: String(payload.courseCode ?? payload.courseId ?? ''),
+  courseName: payload.courseName ?? payload.name ?? 'Curso',
+  groupLetter: String(payload.groupLetter ?? '').trim() || '-',
+  courseType: ((payload.courseType ?? 'THEORY').toString().toUpperCase()) as 'THEORY' | 'LAB',
+  canGrade: Boolean(payload.canGrade ?? false),
+  studentCount: Number(payload.studentCount ?? 0),
+  maxCapacity: Number(payload.maxCapacity ?? 150)
+})
+
+const mapCourseRosterEntry = (payload: any): CourseRosterEntry => ({
+  studentDocumentoIdentidad: payload.studentDocumentoIdentidad ?? '',
+  studentCui: payload.studentCui ?? '',
+  fullName: payload.fullName ?? 'Estudiante',
+  email: payload.email ?? '',
+  courseId: Number(payload.courseId ?? 0),
+  courseCode: String(payload.courseCode ?? ''),
+  groupLetter: String(payload.groupLetter ?? '').trim() || '-',
+  courseType: ((payload.courseType ?? 'THEORY').toString().toUpperCase()) as 'THEORY' | 'LAB',
+  canGrade: Boolean(payload.canGrade ?? false),
+  continuousGrades: toNumberArray(payload.continuousGrades ?? []),
+  examGrades: toNumberArray(payload.examGrades ?? []),
+  finalGrade: toNumber(payload.finalGrade),
+  submissionStatus: payload.submissionStatus ?? 'PENDING'
+})
+
+const mapCourseRosterPage = (payload: any): CourseRosterPage => ({
+  students: Array.isArray(payload?.students) ? payload.students.map(mapCourseRosterEntry) : [],
+  total: Number(payload?.total ?? 0),
+  page: Number(payload?.page ?? 0),
+  size: Number(payload?.size ?? 0)
+})
+
+const mapRubric = (payload: any): GradingRubric => ({
+  courseId: Number(payload.courseId ?? 0),
+  courseCode: String(payload.courseCode ?? ''),
+  continuousWeights: toNumberArray(payload.continuousWeights ?? []),
+  examWeights: toNumberArray(payload.examWeights ?? [])
+})
+
+const mapGradeSubmissionResponse = (payload: any): GradeSubmissionResponse => ({
+  courseId: Number(payload.courseId ?? 0),
+  courseCode: String(payload.courseCode ?? ''),
+  studentDocumentoIdentidad: payload.studentDocumentoIdentidad ?? '',
+  continuousGrades: toNumberArray(payload.continuousGrades ?? []),
+  examGrades: toNumberArray(payload.examGrades ?? []),
+  finalGrade: toNumber(payload.finalGrade),
+  status: payload.status ?? 'SUBMITTED'
+})

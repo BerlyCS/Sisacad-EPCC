@@ -1,6 +1,13 @@
 import { computed, ref } from 'vue'
 import { defineStore } from 'pinia'
-import type { CourseGradeStats, ProfessorCourseSummary, StudentGrade } from '@/services/gradeService'
+import type {
+  CourseGradeStats,
+  CourseGroupSummary,
+  CourseRosterEntry,
+  GradingRubric,
+  ProfessorCourseSummary,
+  StudentGrade
+} from '@/services/gradeService'
 import { gradeService } from '@/services/gradeService'
 
 export const useGradeStore = defineStore('grades', () => {
@@ -17,6 +24,26 @@ export const useGradeStore = defineStore('grades', () => {
   const statsError = ref('')
 
   const selectedCourseCode = ref('')
+  const selectedCourseId = ref<number | null>(null)
+
+  const courseGroups = ref<CourseGroupSummary[]>([])
+  const courseGroupsLoading = ref(false)
+  const courseGroupsError = ref('')
+
+  const selectedGroupIds = ref<number[]>([])
+
+  const rosterEntries = ref<CourseRosterEntry[]>([])
+  const rosterLoading = ref(false)
+  const rosterError = ref('')
+
+  const selectedRosterStudent = ref<CourseRosterEntry | null>(null)
+
+  const courseRubric = ref<GradingRubric | null>(null)
+  const rubricLoading = ref(false)
+  const rubricError = ref('')
+
+  const gradeMutationLoading = ref(false)
+  const gradeMutationError = ref('')
 
   const sortedStudentGrades = computed(() => {
     return [...studentGrades.value].sort((a, b) => {
@@ -34,6 +61,8 @@ export const useGradeStore = defineStore('grades', () => {
     }
     return professorCourses.value.find(course => course.courseCode === selectedCourseCode.value) ?? null
   })
+
+  const activeCourseId = computed(() => selectedCourseId.value)
 
   const selectedCourseStats = computed(() => {
     if (!selectedCourseCode.value) {
@@ -73,10 +102,18 @@ export const useGradeStore = defineStore('grades', () => {
 
   const setSelectedCourse = (courseCode: string) => {
     selectedCourseCode.value = courseCode
+    const found = professorCourses.value.find(course => course.courseCode === courseCode)
+    selectedCourseId.value = found?.courseId ?? null
   }
 
   const clearSelectedCourse = () => {
     selectedCourseCode.value = ''
+    selectedCourseId.value = null
+    courseGroups.value = []
+    selectedGroupIds.value = []
+    rosterEntries.value = []
+    selectedRosterStudent.value = null
+    courseRubric.value = null
   }
 
   const loadStudentGrades = async (studentDocumento: string) => {
@@ -161,6 +198,166 @@ export const useGradeStore = defineStore('grades', () => {
     }
   }
 
+  const loadCourseGroups = async (courseId: number) => {
+    if (!courseId) {
+      courseGroups.value = []
+      return
+    }
+
+    courseGroupsLoading.value = true
+    courseGroupsError.value = ''
+    try {
+      courseGroups.value = await gradeService.fetchCourseGroups(courseId)
+      const sanitizedSelection = selectedGroupIds.value.filter(groupId =>
+        courseGroups.value.some(group => group.courseId === groupId)
+      )
+      if (sanitizedSelection.length) {
+        selectedGroupIds.value = sanitizedSelection
+      } else if (courseGroups.value.length) {
+        const preferred = courseGroups.value.find(group => group.canGrade) ??
+          courseGroups.value.find(group => group.courseId === courseId) ??
+          courseGroups.value[0]
+        selectedGroupIds.value = preferred ? [preferred.courseId] : []
+      } else {
+        selectedGroupIds.value = []
+      }
+    } catch (error) {
+      console.error('Error while loading course groups', error)
+      courseGroupsError.value = error instanceof Error ? error.message : 'No se pudieron cargar los grupos'
+      courseGroups.value = []
+      selectedGroupIds.value = []
+    } finally {
+      courseGroupsLoading.value = false
+    }
+  }
+
+  const loadCourseRubric = async (courseId: number) => {
+    if (!courseId) {
+      courseRubric.value = null
+      return
+    }
+
+    rubricLoading.value = true
+    rubricError.value = ''
+    try {
+      courseRubric.value = await gradeService.fetchCourseRubric(courseId)
+    } catch (error) {
+      console.error('Error while loading course rubric', error)
+      rubricError.value = error instanceof Error ? error.message : 'No se pudo cargar la rúbrica'
+      courseRubric.value = null
+    } finally {
+      rubricLoading.value = false
+    }
+  }
+
+  const loadCourseRoster = async (courseId: number, groupIds?: number[]) => {
+    if (!courseId) {
+      rosterEntries.value = []
+      return
+    }
+
+    rosterLoading.value = true
+    rosterError.value = ''
+    try {
+      const response = await gradeService.fetchCourseRoster(courseId, {
+        groupIds: groupIds && groupIds.length ? groupIds : undefined
+      })
+      rosterEntries.value = response.students
+      if (selectedRosterStudent.value) {
+        const refreshed = response.students.find(
+          entry => entry.studentDocumentoIdentidad === selectedRosterStudent.value?.studentDocumentoIdentidad &&
+            entry.courseId === selectedRosterStudent.value?.courseId
+        )
+        selectedRosterStudent.value = refreshed ?? (response.students[0] ?? null)
+      } else if (response.students.length) {
+        selectedRosterStudent.value = response.students[0] ?? null
+      } else {
+        selectedRosterStudent.value = null
+      }
+    } catch (error) {
+      console.error('Error while loading roster', error)
+      rosterError.value = error instanceof Error ? error.message : 'No se pudieron cargar los estudiantes'
+      rosterEntries.value = []
+      selectedRosterStudent.value = null
+    } finally {
+      rosterLoading.value = false
+    }
+  }
+
+  const initializeCourseWorkspace = async (courseId: number) => {
+    if (!courseId) {
+      return
+    }
+    selectedGroupIds.value = []
+    selectedRosterStudent.value = null
+    await loadCourseGroups(courseId)
+    await Promise.all([loadCourseRubric(courseId), loadCourseRoster(courseId, selectedGroupIds.value)])
+  }
+
+  const updateSelectedGroups = async (groupIds: number[]) => {
+    selectedGroupIds.value = groupIds
+    if (activeCourseId.value) {
+      await loadCourseRoster(activeCourseId.value, selectedGroupIds.value)
+    }
+  }
+
+  const refreshCourseRoster = async () => {
+    if (!activeCourseId.value) {
+      return
+    }
+    await loadCourseRoster(activeCourseId.value, selectedGroupIds.value)
+  }
+
+  const selectRosterStudent = (entry: CourseRosterEntry | null) => {
+    selectedRosterStudent.value = entry
+  }
+
+  const submitRosterGrade = async (payload: { studentDocumentoIdentidad: string; groupId: number; continuousGrades: number[]; examGrades: number[]; status?: string }) => {
+    if (!activeCourseId.value) {
+      throw new Error('No hay un curso activo seleccionado')
+    }
+
+    gradeMutationLoading.value = true
+    gradeMutationError.value = ''
+
+    try {
+      const response = await gradeService.submitGrade(
+        activeCourseId.value,
+        payload.studentDocumentoIdentidad,
+        payload.groupId,
+        {
+          continuousGrades: payload.continuousGrades,
+          examGrades: payload.examGrades,
+          status: payload.status ?? 'SUBMITTED'
+        }
+      )
+
+      rosterEntries.value = rosterEntries.value.map(entry => {
+        if (entry.studentDocumentoIdentidad === response.studentDocumentoIdentidad && entry.courseId === payload.groupId) {
+          const updated: CourseRosterEntry = {
+            ...entry,
+            continuousGrades: response.continuousGrades,
+            examGrades: response.examGrades,
+            finalGrade: response.finalGrade,
+            submissionStatus: response.status
+          }
+          if (selectedRosterStudent.value?.studentDocumentoIdentidad === updated.studentDocumentoIdentidad &&
+            selectedRosterStudent.value?.courseId === updated.courseId) {
+            selectedRosterStudent.value = updated
+          }
+          return updated
+        }
+        return entry
+      })
+    } catch (error) {
+      console.error('Error while submitting grade', error)
+      gradeMutationError.value = error instanceof Error ? error.message : 'No se pudo registrar la nota'
+      throw error
+    } finally {
+      gradeMutationLoading.value = false
+    }
+  }
+
   return {
     // state
     studentGrades,
@@ -173,6 +370,20 @@ export const useGradeStore = defineStore('grades', () => {
     statsLoading,
     statsError,
     selectedCourseCode,
+    selectedCourseId,
+    courseGroups,
+    courseGroupsLoading,
+    courseGroupsError,
+    selectedGroupIds,
+    rosterEntries,
+    rosterLoading,
+    rosterError,
+    selectedRosterStudent,
+    courseRubric,
+    rubricLoading,
+    rubricError,
+    gradeMutationLoading,
+    gradeMutationError,
 
     // getters
     sortedStudentGrades,
@@ -182,6 +393,7 @@ export const useGradeStore = defineStore('grades', () => {
     pendingCourses,
     sortedProfessorCourses,
     selectedCourse,
+    activeCourseId,
     selectedCourseStats,
 
     // actions
@@ -189,6 +401,14 @@ export const useGradeStore = defineStore('grades', () => {
     clearSelectedCourse,
     loadStudentGrades,
     loadProfessorCourses,
-    loadCourseStats
+    loadCourseStats,
+    loadCourseGroups,
+    loadCourseRoster,
+    loadCourseRubric,
+    initializeCourseWorkspace,
+    updateSelectedGroups,
+    refreshCourseRoster,
+    selectRosterStudent,
+    submitRosterGrade
   }
 })

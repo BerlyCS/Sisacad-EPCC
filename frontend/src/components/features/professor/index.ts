@@ -1,2 +1,5 @@
 export { default as ProfessorCourseList } from './ProfessorCourseList.vue'
 export { default as ProfessorGradeStatsDrawer } from './ProfessorGradeStatsDrawer.vue'
+export { default as GroupFilterTabs } from './GroupFilterTabs.vue'
+export { default as GradeRosterTable } from './GradeRosterTable.vue'
+export { default as GradeEditorPanel } from './GradeEditorPanel.vue'
