@@ -7,11 +7,13 @@ import com.application.sisacadepcc.presentation.dto.UpdateLabCapacityRequest;
 import com.application.sisacadepcc.service.AuthorizationService;
 import com.application.sisacadepcc.service.CourseService;
 import com.application.sisacadepcc.service.UserRole;
+import com.application.sisacadepcc.service.ExcelScheduleService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/courses")
@@ -19,11 +21,14 @@ public class CourseController {
 
     private final CourseService service;
     private final AuthorizationService authorizationService;
+    private final ExcelScheduleService excelScheduleService;
 
     public CourseController(CourseService service,
-                           AuthorizationService authorizationService) {
+                            AuthorizationService authorizationService,
+                            ExcelScheduleService excelScheduleService) {
         this.service = service;
         this.authorizationService = authorizationService;
+        this.excelScheduleService = excelScheduleService;
     }
 
     @GetMapping
@@ -102,5 +107,10 @@ public class CourseController {
         return service.removeProfessorFromCourse(courseId, professorId)
                 .map(ResponseEntity::ok)
                 .orElseGet(() -> ResponseEntity.notFound().build());
+    }
+
+    @GetMapping("/timeslots")
+    public ResponseEntity<List<Map<String, String>>> getTimeSlots() {
+        return ResponseEntity.ok(excelScheduleService.getTimeSlots());
     }
 }
