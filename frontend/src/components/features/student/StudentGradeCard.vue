@@ -65,7 +65,7 @@ const percentageLabel = (weight: number | null): string => {
   if (weight == null) {
     return 'sin peso'
   }
-  return `${Math.round(weight * 100)}%`
+  return `${Math.round(weight)}%`
 }
 
 const buildBreakdown = (values: number[], weights: number[], labelPrefix: string) => {
@@ -91,7 +91,7 @@ const finalGradeClass = computed(() => {
   if (props.grade.finalGrade == null) {
     return 'text-gray-400'
   }
-  return props.grade.finalGrade >= 11 ? 'text-green-600' : 'text-red-500'
+  return props.grade.finalGrade >= 10.5 ? 'text-green-600' : 'text-red-500'
 })
 
 const continuousBreakdown = computed(() => buildBreakdown(props.grade.continuousGrades, props.grade.continuousWeights, 'Continuo'))
@@ -101,6 +101,6 @@ const totalWeight = (weights: number[]) => {
   return weights.reduce((acc, value) => acc + (Number.isFinite(value) ? value : 0), 0)
 }
 
-const continuousWeightLabel = computed(() => `${Math.round(totalWeight(props.grade.continuousWeights) * 100)}% del curso`)
-const examWeightLabel = computed(() => `${Math.round(totalWeight(props.grade.examWeights) * 100)}% del curso`)
+const continuousWeightLabel = computed(() => `${Math.round(totalWeight(props.grade.continuousWeights))}% del curso`)
+const examWeightLabel = computed(() => `${Math.round(totalWeight(props.grade.examWeights))}% del curso`)
 </script>

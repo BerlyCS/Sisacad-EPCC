@@ -15,6 +15,8 @@ public class GradeComputationService {
 
     private static final int EXPECTED_COMPONENTS = 3;
     private static final int SCALE = 2;
+    private static final int WEIGHT_SCALE = 6;
+    private static final BigDecimal ONE_HUNDRED = BigDecimal.valueOf(100);
 
     public BigDecimal computeFinalGrade(Grade grade, Course course) {
         GradeWeightSnapshot weights = snapshotWeights(course);
@@ -48,20 +50,29 @@ public class GradeComputationService {
         BigDecimal total = sum(continuousWeights).add(sum(examWeights));
 
         if (total.compareTo(BigDecimal.ZERO) <= 0) {
-            BigDecimal equalWeight = BigDecimal.ONE
-                    .divide(BigDecimal.valueOf(EXPECTED_COMPONENTS * 2L), SCALE + 2, RoundingMode.HALF_UP);
+            BigDecimal equalShare = ONE_HUNDRED
+                    .divide(BigDecimal.valueOf(EXPECTED_COMPONENTS * 2L), WEIGHT_SCALE, RoundingMode.HALF_UP);
             for (int i = 0; i < EXPECTED_COMPONENTS; i++) {
-                continuousWeights.set(i, equalWeight);
-                examWeights.set(i, equalWeight);
+                continuousWeights.set(i, equalShare);
+                examWeights.set(i, equalShare);
             }
-            total = equalWeight.multiply(BigDecimal.valueOf(EXPECTED_COMPONENTS * 2L));
+            adjustRemainder(continuousWeights, examWeights);
+            return;
         }
 
-        BigDecimal normalizer = BigDecimal.ONE.divide(total, SCALE + 2, RoundingMode.HALF_UP);
-        for (int i = 0; i < EXPECTED_COMPONENTS; i++) {
-            continuousWeights.set(i, continuousWeights.get(i).multiply(normalizer));
-            examWeights.set(i, examWeights.get(i).multiply(normalizer));
+        if (total.compareTo(ONE_HUNDRED) != 0) {
+            BigDecimal scalingFactor = ONE_HUNDRED.divide(total, WEIGHT_SCALE, RoundingMode.HALF_UP);
+            for (int i = 0; i < EXPECTED_COMPONENTS; i++) {
+                continuousWeights.set(i, continuousWeights.get(i)
+                        .multiply(scalingFactor)
+                        .setScale(WEIGHT_SCALE, RoundingMode.HALF_UP));
+                examWeights.set(i, examWeights.get(i)
+                        .multiply(scalingFactor)
+                        .setScale(WEIGHT_SCALE, RoundingMode.HALF_UP));
+            }
         }
+
+        adjustRemainder(continuousWeights, examWeights);
     }
 
     private BigDecimal sum(List<BigDecimal> weights) {
@@ -78,9 +89,35 @@ public class GradeComputationService {
                     gradeValue = BigDecimal.valueOf(grade);
                 }
             }
-            result = result.add(gradeValue.multiply(weights.get(i)));
+            BigDecimal weightPercent = (weights != null && i < weights.size() && weights.get(i) != null)
+                    ? weights.get(i).divide(ONE_HUNDRED, WEIGHT_SCALE, RoundingMode.HALF_UP)
+                    : BigDecimal.ZERO;
+            result = result.add(gradeValue.multiply(weightPercent));
         }
         return result;
     }
+
+    private void adjustRemainder(List<BigDecimal> continuousWeights, List<BigDecimal> examWeights) {
+        BigDecimal combined = sum(continuousWeights).add(sum(examWeights));
+        BigDecimal delta = ONE_HUNDRED.subtract(combined).setScale(WEIGHT_SCALE, RoundingMode.HALF_UP);
+        if (delta.compareTo(BigDecimal.ZERO) == 0) {
+            return;
+        }
+        if (!applyDelta(examWeights, delta)) {
+            applyDelta(continuousWeights, delta);
+        }
+    }
+
+    private boolean applyDelta(List<BigDecimal> weights, BigDecimal delta) {
+        for (int i = EXPECTED_COMPONENTS - 1; i >= 0; i--) {
+            BigDecimal current = weights.get(i);
+            if (current != null) {
+                weights.set(i, current.add(delta).setScale(WEIGHT_SCALE, RoundingMode.HALF_UP));
+                return true;
+            }
+        }
+        return false;
+    }
+
     public record GradeWeightSnapshot(List<BigDecimal> continuousWeights, List<BigDecimal> examWeights) {}
 }

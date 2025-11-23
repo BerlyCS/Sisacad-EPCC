@@ -35,7 +35,7 @@
         <div class="bg-white border border-gray-100 rounded-2xl p-5 shadow-sm">
           <p class="text-sm text-gray-500">Estado</p>
           <p class="text-2xl font-semibold mt-2" :class="statusClass">{{ performanceStatus }}</p>
-          <p class="text-xs text-gray-400 mt-1">Promedio mínimo para aprobar: 11.00</p>
+          <p class="text-xs text-gray-400 mt-1">Promedio mínimo para aprobar: 10.50</p>
         </div>
         <div class="bg-white border border-gray-100 rounded-2xl p-5 shadow-sm">
           <p class="text-sm text-gray-500">Resumen</p>

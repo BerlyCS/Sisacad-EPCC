@@ -93,8 +93,8 @@ public class GradeRepositoryImpl implements GradeRepository {
         entity.setStudentDocumentoIdentidad(domain.getStudentDocumentoIdentidad());
         entity.setCourseCode(domain.getCourseCode());
         entity.setProfessorID(domain.getProfessorID());
-        entity.setContinuousGrades(domain.getContinuousGrades());
-        entity.setExamGrades(domain.getExamGrades());
+        entity.setContinuousGrades(new java.util.ArrayList<>(domain.getContinuousGrades()));
+        entity.setExamGrades(new java.util.ArrayList<>(domain.getExamGrades()));
         return entity;
     }
 }

@@ -73,8 +73,8 @@ export const useGradeStore = defineStore('grades', () => {
     return statsByCourse.value[selectedCourseCode.value] ?? null
   })
 
-  const passedCourses = computed(() => studentGrades.value.filter(grade => (grade.finalGrade ?? 0) >= 11).length)
-  const pendingCourses = computed(() => studentGrades.value.filter(grade => (grade.finalGrade ?? 0) < 11).length)
+  const passedCourses = computed(() => studentGrades.value.filter(grade => (grade.finalGrade ?? 0) >= 10.5).length)
+  const pendingCourses = computed(() => studentGrades.value.filter(grade => (grade.finalGrade ?? 0) < 10.5).length)
 
   const finalAverage = computed(() => {
     const validGrades = studentGrades.value
@@ -96,7 +96,7 @@ export const useGradeStore = defineStore('grades', () => {
     if (finalAverage.value >= 15) {
       return 'ALTO'
     }
-    if (finalAverage.value >= 11) {
+    if (finalAverage.value >= 10.5) {
       return 'REGULAR'
     }
     return 'EN RIESGO'
