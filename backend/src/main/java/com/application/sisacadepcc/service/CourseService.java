@@ -1,13 +1,13 @@
 package com.application.sisacadepcc.service;
 
 import com.application.sisacadepcc.domain.model.Course;
+import com.application.sisacadepcc.domain.model.CourseGroup;
 import com.application.sisacadepcc.domain.model.Student;
 import com.application.sisacadepcc.domain.model.StudentCourse;
 import com.application.sisacadepcc.domain.model.Syllabus;
 import com.application.sisacadepcc.domain.model.valueobject.CourseType;
 import com.application.sisacadepcc.domain.repository.CourseRepository;
 import com.application.sisacadepcc.domain.repository.ProfessorRepository;
-import com.application.sisacadepcc.domain.repository.StudentCourseRepository;
 import com.application.sisacadepcc.domain.repository.StudentRepository;
 import com.application.sisacadepcc.domain.repository.SyllabusRepository;
 import com.application.sisacadepcc.service.dto.CourseDetails;
@@ -23,18 +23,18 @@ import java.util.stream.Collectors;
 public class CourseService {
 
     private final CourseRepository repository;
-    private final StudentCourseRepository studentCourseRepository;
+    private final com.application.sisacadepcc.domain.repository.CourseGroupRepository courseGroupRepository;
     private final StudentRepository studentRepository;
     private final SyllabusRepository syllabusRepository;
     private final ProfessorRepository professorRepository;
 
     public CourseService(CourseRepository repository,
-                         StudentCourseRepository studentCourseRepository,
+                         com.application.sisacadepcc.domain.repository.CourseGroupRepository courseGroupRepository,
                          StudentRepository studentRepository,
                          SyllabusRepository syllabusRepository,
                          ProfessorRepository professorRepository) {
         this.repository = repository;
-        this.studentCourseRepository = studentCourseRepository;
+        this.courseGroupRepository = courseGroupRepository;
         this.studentRepository = studentRepository;
         this.syllabusRepository = syllabusRepository;
         this.professorRepository = professorRepository;
@@ -49,11 +49,10 @@ public class CourseService {
             return List.of();
         }
 
-        return repository.findAll().stream()
-                .filter(course -> course.getTeacherIDs() != null)
-                .filter(course -> course.getTeacherIDs().stream()
-                        .filter(Objects::nonNull)
-                        .anyMatch(id -> Objects.equals(id, professorId)))
+        return courseGroupRepository.findByTeacherId(professorId).stream()
+                .map(CourseGroup::getCourse)
+                .filter(Objects::nonNull)
+                .distinct()
                 .collect(Collectors.toList());
     }
 
@@ -75,6 +74,18 @@ public class CourseService {
 
     public Optional<Course> updateLabCapacity(Long courseId, Integer labCapacity) {
         return repository.updateLabCapacity(courseId, labCapacity);
+    }
+
+    /**
+     * Return all distinct teacher IDs assigned to course groups.
+     * Useful for administrative UIs and quick validation.
+     */
+    public java.util.List<Long> getAllGroupTeacherIds() {
+        return courseGroupRepository.findAll().stream()
+            .map(CourseGroup::getTeacherId)
+                .filter(java.util.Objects::nonNull)
+                .distinct()
+                .toList();
     }
 
     public Optional<Course> assignProfessorToCourse(Long courseId, Long professorId) {

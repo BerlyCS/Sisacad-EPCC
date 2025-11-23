@@ -28,7 +28,7 @@ public class StudentRepositoryImpl implements StudentRepository {
 
     @Override
     public Optional<Student> findByDocumentoIdentidad(String documentoIdentidad) {
-        return studentJpaRepository.findById(documentoIdentidad)
+        return studentJpaRepository.findByDocumentId(documentoIdentidad)
                 .map(this::mapToDomain);
     }
 

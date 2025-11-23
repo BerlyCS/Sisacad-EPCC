@@ -80,6 +80,7 @@ public class CourseRepositoryImpl implements CourseRepository {
             group.setType(groupEntity.getType());
             group.setMaxCapacity(groupEntity.getMaxCapacity());
             group.setAvailableCapacity(groupEntity.getAvailableCapacity());
+            group.setTeacherId(groupEntity.getTeacherId());
             group.setScheduleSlots(mapScheduleSlotsToDomain(groupEntity.getScheduleSlots()));
             groups.add(group);
         }

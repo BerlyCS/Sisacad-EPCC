@@ -113,4 +113,9 @@ public class CourseController {
     public ResponseEntity<List<Map<String, String>>> getTimeSlots() {
         return ResponseEntity.ok(excelScheduleService.getTimeSlots());
     }
+
+    @GetMapping("/teacher-ids")
+    public ResponseEntity<List<Long>> getTeacherIds() {
+        return ResponseEntity.ok(service.getAllGroupTeacherIds());
+    }
 }

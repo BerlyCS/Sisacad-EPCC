@@ -80,45 +80,4 @@ public abstract class User {
     public void setUserType(UserType userType) {
         this.userType = userType;
     }
-
-    // --- Legacy Spanish-named accessors kept for backwards compatibility ---
-    public String getDocumentoIdentidad() {
-        return getDocumentId();
-    }
-
-    public void setDocumentoIdentidad(String documentoIdentidad) {
-        setDocumentId(documentoIdentidad);
-    }
-
-    public String getApellidoPaterno() {
-        return getPaternalSurname();
-    }
-
-    public void setApellidoPaterno(String apellidoPaterno) {
-        setPaternalSurname(apellidoPaterno);
-    }
-
-    public String getApellidoMaterno() {
-        return getMaternalSurname();
-    }
-
-    public void setApellidoMaterno(String apellidoMaterno) {
-        setMaternalSurname(apellidoMaterno);
-    }
-
-    public String getNombres() {
-        return getFirstNames();
-    }
-
-    public void setNombres(String nombres) {
-        setFirstNames(nombres);
-    }
-
-    public String getCorreoInstitucional() {
-        return getInstitutionalEmail();
-    }
-
-    public void setCorreoInstitucional(String correoInstitucional) {
-        setInstitutionalEmail(correoInstitucional);
-    }
 }

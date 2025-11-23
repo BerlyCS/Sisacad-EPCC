@@ -28,6 +28,9 @@ public class CourseGroupEntity {
     @Column(name = "available_capacity", nullable = false)
     private int availableCapacity;
 
+    @Column(name = "teacher_id")
+    private Long teacherId;
+
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "course_id", nullable = false)
     private CourseEntity course;
@@ -80,6 +83,14 @@ public class CourseGroupEntity {
 
     public void setAvailableCapacity(int availableCapacity) {
         this.availableCapacity = availableCapacity;
+    }
+
+    public Long getTeacherId() {
+        return teacherId;
+    }
+
+    public void setTeacherId(Long teacherId) {
+        this.teacherId = teacherId;
     }
 
     public CourseEntity getCourse() {

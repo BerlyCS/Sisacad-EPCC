@@ -1,6 +1,7 @@
 package com.application.sisacadepcc.infrastructure.repository.jpa;
 
 import com.application.sisacadepcc.domain.model.CourseGroup;
+import com.application.sisacadepcc.domain.model.Course;
 import com.application.sisacadepcc.domain.model.valueobject.CourseSchedule;
 import com.application.sisacadepcc.domain.repository.CourseGroupRepository;
 import org.springframework.stereotype.Repository;
@@ -41,6 +42,14 @@ public class CourseGroupRepositoryImpl implements CourseGroupRepository {
     }
 
     @Override
+    public List<CourseGroup> findByTeacherId(Long teacherId) {
+        return jpaRepository.findByTeacherId(teacherId)
+                .stream()
+                .map(this::mapToDomain)
+                .toList();
+    }
+
+    @Override
     public CourseGroup save(CourseGroup courseGroup) {
         CourseGroupEntity entity = mapToEntity(courseGroup);
         CourseGroupEntity saved = jpaRepository.save(entity);
@@ -61,10 +70,25 @@ public class CourseGroupRepositoryImpl implements CourseGroupRepository {
         group.setType(entity.getType());
         group.setMaxCapacity(entity.getMaxCapacity());
         group.setAvailableCapacity(entity.getAvailableCapacity());
+        group.setTeacherId(entity.getTeacherId());
         group.setScheduleSlots(mapScheduleSlotsToDomain(entity.getScheduleSlots()));
         // Enrollments are lazy loaded, so set to empty list to avoid overhead
         group.setEnrollments(new ArrayList<>());
-        // Note: course reference may need to be set separately
+        // map the owning Course (keep a lightweight Course domain object)
+        if (entity.getCourse() != null) {
+            Course course = new Course();
+            course.setCourseId(entity.getCourse().getCourseId());
+            course.setCourseCode(entity.getCourse().getCourseCode());
+            course.setName(entity.getCourse().getName());
+            course.setCredits(entity.getCourse().getCredits());
+            course.setSyllabusId(entity.getCourse().getSyllabusId());
+            course.setLabHours(entity.getCourse().getLabHours());
+            course.setPracticeHours(entity.getCourse().getPracticeHours());
+            course.setTheoryHours(entity.getCourse().getTheoryHours());
+            course.setSemesterNumber(entity.getCourse().getSemesterNumber());
+            // groups will be loaded by CourseRepository when needed; leave empty here
+            group.setCourse(course);
+        }
         return group;
     }
 
@@ -93,7 +117,13 @@ public class CourseGroupRepositoryImpl implements CourseGroupRepository {
         entity.setMaxCapacity(courseGroup.getMaxCapacity());
         entity.setAvailableCapacity(courseGroup.getAvailableCapacity());
         entity.setScheduleSlots(mapScheduleSlotsToEmbeddable(courseGroup.getScheduleSlots()));
-        // Note: course reference needs to be set
+        entity.setTeacherId(courseGroup.getTeacherId());
+        // If the domain Course reference exists, set a lightweight CourseEntity reference by id
+        if (courseGroup.getCourse() != null && courseGroup.getCourse().getCourseId() != null) {
+            CourseEntity courseEntity = new CourseEntity();
+            courseEntity.setCourseId(courseGroup.getCourse().getCourseId());
+            entity.setCourse(courseEntity);
+        }
         return entity;
     }
 

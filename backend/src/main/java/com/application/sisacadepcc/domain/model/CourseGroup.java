@@ -10,6 +10,7 @@ public class CourseGroup {
 
     private Long id;
     private String letter;
+    private Long teacherId;
     private CourseType type;
     private int maxCapacity;
     private int availableCapacity;
@@ -24,6 +25,7 @@ public class CourseGroup {
 
     public CourseGroup(String letter, CourseType type, int maxCapacity, int availableCapacity, Course course) {
         this.letter = letter;
+        this.teacherId = null;
         this.type = type;
         this.maxCapacity = maxCapacity;
         this.availableCapacity = availableCapacity;
@@ -50,6 +52,14 @@ public class CourseGroup {
 
     public CourseType getType() {
         return type;
+    }
+
+    public Long getTeacherId() {
+        return teacherId;
+    }
+
+    public void setTeacherId(Long teacherId) {
+        this.teacherId = teacherId;
     }
 
     public void setType(CourseType type) {

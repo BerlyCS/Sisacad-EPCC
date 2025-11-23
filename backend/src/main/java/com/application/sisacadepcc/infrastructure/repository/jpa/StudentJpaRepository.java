@@ -7,7 +7,7 @@ import java.util.List;
 import java.util.Optional;
 
 @Repository
-public interface StudentJpaRepository extends JpaRepository<StudentEntity, String> {
+public interface StudentJpaRepository extends JpaRepository<StudentEntity, Long> {
 
     boolean existsByCorreoInstitucional(String correoInstitucional);
 
@@ -19,4 +19,6 @@ public interface StudentJpaRepository extends JpaRepository<StudentEntity, Strin
     Optional<StudentEntity> findByCui(String cui);
 
     List<StudentEntity> findByDocumentoIdentidadIn(List<String> documentoIdentidad);
+
+    Optional<StudentEntity> findByDocumentId(String documentId);
 }
