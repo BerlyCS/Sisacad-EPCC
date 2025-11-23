@@ -18,11 +18,15 @@ public class EnrollmentEntity {
     @JoinColumn(name = "course_group_id", nullable = false)
     private CourseGroupEntity courseGroup;
 
+    @Column(name = "enrollment_attempt", nullable = false)
+    private Integer attempt;
+
     public EnrollmentEntity() {}
 
     public EnrollmentEntity(StudentEntity student, CourseGroupEntity courseGroup) {
         this.student = student;
         this.courseGroup = courseGroup;
+        this.attempt = 1;
     }
 
     // Getters y setters
@@ -34,4 +38,7 @@ public class EnrollmentEntity {
 
     public CourseGroupEntity getCourseGroup() { return courseGroup; }
     public void setCourseGroup(CourseGroupEntity courseGroup) { this.courseGroup = courseGroup; }
+
+    public Integer getAttempt() { return attempt; }
+    public void setAttempt(Integer attempt) { this.attempt = attempt; }
 }

@@ -27,21 +27,12 @@ public class ProfessorRepositoryImpl implements ProfessorRepository {
 
     @Override
     public boolean existsByCorreo(String email) {
-        return jpaRepository.existsByInstitutionalEmail(email);
+        return email != null && jpaRepository.findByInstitutionalEmail(email).isPresent();
     }
 
     @Override
     public Optional<Professor> findByCorreo(String correo) {
         return jpaRepository.findByInstitutionalEmail(correo)
-                .map(this::mapToDomain);
-    }
-
-    @Override
-    public Optional<Professor> findById(Long id) {
-        if (id == null) {
-            return Optional.empty();
-        }
-        return jpaRepository.findById(id)
                 .map(this::mapToDomain);
     }
 

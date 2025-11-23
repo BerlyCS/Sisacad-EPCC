@@ -33,7 +33,7 @@ public record LabSectionResponse(
                 capacity,
                 (int) enrolledCount,
                 remaining,
-                course.getLabPrerequisiteCourseId(),
+                null,
                 typeLabel,
                 labGroup.getScheduleSlots()
         );

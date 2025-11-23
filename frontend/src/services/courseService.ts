@@ -12,16 +12,16 @@ const COURSE_TYPE_LABEL: Record<CourseType, string> = {
 
 export interface Course {
   courseId: number
-  courseCode: number
-  name: string
-  creditNumber: number
-  groupLetter: string
-  syllabusID: number | null
-  courseType: CourseType
-  labPrerequisiteCourseId: number | null
-  enrolledStudentIDs: number[]
-  teacherIDs: number[]
-  courseTypeLabel: string
+  courseCode: number | null
+  name: string | null
+  credits: number | null
+  syllabusId: number | null
+  labHours: number | null
+  practiceHours: number | null
+  theoryHours: number | null
+  semesterNumber: number | null
+  enrolledStudentIDs?: number[]
+  teacherIDs?: number[]
 }
 
 export interface CourseStudentSummary {
@@ -113,16 +113,16 @@ export const useCourseService = () => {
       const data: any[] = await response.json()
       courses.value = data.map(course => ({
         courseId: Number(course.courseId ?? course.courseID),
-        courseCode: Number(course.courseCode ?? course.courseID),
-        name: course.name ?? 'Curso',
-        creditNumber: Number(course.creditNumber ?? 0),
-        groupLetter: course.groupLetter ?? '',
-        syllabusID: course.syllabusID != null ? Number(course.syllabusID) : null,
-        courseType: (course.courseType ?? 'THEORY').toUpperCase() as CourseType,
-        labPrerequisiteCourseId: course.labPrerequisiteCourseId != null ? Number(course.labPrerequisiteCourseId) : null,
-        enrolledStudentIDs: Array.isArray(course.enrolledStudentIDs) ? course.enrolledStudentIDs : [],
-        teacherIDs: Array.isArray(course.teacherIDs) ? course.teacherIDs : [],
-        courseTypeLabel: COURSE_TYPE_LABEL[(course.courseType ?? 'THEORY').toUpperCase() as CourseType] ?? COURSE_TYPE_LABEL.THEORY
+        courseCode: course.courseCode != null ? Number(course.courseCode) : null,
+        name: course.name ?? null,
+        credits: course.credits != null ? Number(course.credits) : null,
+        syllabusId: course.syllabusId != null ? Number(course.syllabusId) : null,
+        labHours: course.labHours != null ? Number(course.labHours) : null,
+        practiceHours: course.practiceHours != null ? Number(course.practiceHours) : null,
+        theoryHours: course.theoryHours != null ? Number(course.theoryHours) : null,
+        semesterNumber: course.semesterNumber != null ? Number(course.semesterNumber) : null,
+        enrolledStudentIDs: [],
+        teacherIDs: []
       }))
     } catch (err) {
       error.value = 'No se pudieron cargar los cursos'
@@ -260,6 +260,25 @@ export const useCourseService = () => {
     return response.json()
   }
 
+  const createCourse = async (course: Omit<Course, 'courseId' | 'syllabusId'>): Promise<Course> => {
+    const response = await fetch(`${API_BASE_URL}/courses`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      credentials: 'include',
+      body: JSON.stringify(course)
+    })
+
+    if (!response.ok) {
+      const body = await response.json().catch(() => ({}))
+      const message = body?.message || body?.error || 'No se pudo crear el curso'
+      throw new Error(message)
+    }
+
+    return response.json()
+  }
+
   const removeProfessorFromCourse = async (courseId: number, professorId: number): Promise<Course> => {
     if (!courseId || !professorId) {
       throw new Error('Curso o docente inválido')
@@ -289,6 +308,7 @@ export const useCourseService = () => {
     courseDetailsError,
     fetchCourseDetails,
     assignProfessorToCourse,
-    removeProfessorFromCourse
+    removeProfessorFromCourse,
+    createCourse
   }
 }

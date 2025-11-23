@@ -119,6 +119,7 @@ defineEmits<{
 const formatTime = (time: string): string => {
   if (!time) return ''
   const parts = time.split(':')
+  if (parts.length < 2 || !parts[0] || !parts[1]) return time
   const hours = parts[0].padStart(2, '0')
   return `${hours}:${parts[1]}`
 }

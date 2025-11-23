@@ -1,14 +1,14 @@
 package com.application.sisacadepcc.domain.repository;
 
-import com.application.sisacadepcc.domain.model.StudentCourse;
+import com.application.sisacadepcc.infrastructure.repository.jpa.EnrollmentEntity;
 import java.util.List;
 
 public interface EnrollmentRepository {
-    List<StudentCourse> findAll();
-    List<StudentCourse> findByCourseGroupId(Long courseGroupId);
-    List<StudentCourse> findByStudentCui(String studentCui);
-    void save(StudentCourse studentCourse);
-    void saveAll(List<StudentCourse> studentCourses);
+    List<EnrollmentEntity> findAll();
+    List<EnrollmentEntity> findByCourseGroupId(Long courseGroupId);
+    List<EnrollmentEntity> findByStudentCui(String studentCui);
+    void save(EnrollmentEntity studentCourse);
+    void saveAll(List<EnrollmentEntity> studentCourses);
     void deleteAll();
     boolean existsByStudentAndCourseGroup(String studentCui, Long courseGroupId);
     long countByCourseGroupId(Long courseGroupId);

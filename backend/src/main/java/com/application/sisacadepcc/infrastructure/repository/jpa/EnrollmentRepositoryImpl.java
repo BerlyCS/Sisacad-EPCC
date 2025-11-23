@@ -1,6 +1,6 @@
 package com.application.sisacadepcc.infrastructure.repository.jpa;
 
-import com.application.sisacadepcc.domain.model.StudentCourse;
+import com.application.sisacadepcc.infrastructure.repository.jpa.EnrollmentEntity;
 import com.application.sisacadepcc.domain.repository.EnrollmentRepository;
 import org.springframework.stereotype.Repository;
 
@@ -17,38 +17,31 @@ public class EnrollmentRepositoryImpl implements EnrollmentRepository {
     }
 
     @Override
-    public List<StudentCourse> findAll() {
+    public List<EnrollmentEntity> findAll() {
         return jpaRepository.findAll().stream()
-                .map(this::toDomain)
                 .collect(Collectors.toList());
     }
 
     @Override
-    public List<StudentCourse> findByCourseGroupId(Long courseGroupId) {
+    public List<EnrollmentEntity> findByCourseGroupId(Long courseGroupId) {
         return jpaRepository.findByCourseGroup_Id(courseGroupId).stream()
-                .map(this::toDomain)
                 .collect(Collectors.toList());
     }
 
     @Override
-    public List<StudentCourse> findByStudentCui(String studentCui) {
+    public List<EnrollmentEntity> findByStudentCui(String studentCui) {
         return jpaRepository.findByStudent_Cui(studentCui).stream()
-                .map(this::toDomain)
                 .collect(Collectors.toList());
     }
 
     @Override
-    public void save(StudentCourse studentCourse) {
-        EnrollmentEntity entity = toEntity(studentCourse);
-        jpaRepository.save(entity);
+    public void save(EnrollmentEntity studentCourse) {
+        jpaRepository.save(studentCourse);
     }
 
     @Override
-    public void saveAll(List<StudentCourse> studentCourses) {
-        List<EnrollmentEntity> entities = studentCourses.stream()
-                .map(this::toEntity)
-                .collect(Collectors.toList());
-        jpaRepository.saveAll(entities);
+    public void saveAll(List<EnrollmentEntity> studentCourses) {
+        jpaRepository.saveAll(studentCourses);
     }
 
     @Override
@@ -67,21 +60,5 @@ public class EnrollmentRepositoryImpl implements EnrollmentRepository {
             return 0;
         }
         return jpaRepository.countByCourseGroup_Id(courseGroupId);
-    }
-
-    private StudentCourse toDomain(EnrollmentEntity entity) {
-        return new StudentCourse(
-                entity.getId(),
-                entity.getStudent().getCui(),
-                entity.getCourseGroup().getId()
-        );
-    }
-
-    private EnrollmentEntity toEntity(StudentCourse domain) {
-        // Assume student and courseGroup are fetched by IDs
-        // For now, create with null, to be set in service
-        EnrollmentEntity entity = new EnrollmentEntity(null, null);
-        entity.setId(domain.getId());
-        return entity;
     }
 }

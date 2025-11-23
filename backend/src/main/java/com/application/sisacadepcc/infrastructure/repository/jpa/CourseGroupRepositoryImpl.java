@@ -71,9 +71,9 @@ public class CourseGroupRepositoryImpl implements CourseGroupRepository {
         group.setMaxCapacity(entity.getMaxCapacity());
         group.setAvailableCapacity(entity.getAvailableCapacity());
         group.setTeacherId(entity.getTeacherId());
-        group.setScheduleSlots(mapScheduleSlotsToDomain(entity.getScheduleSlots()));
+        group.setScheduleSlots(mapScheduleSlotsToDomain(entity.getSchedules()));
         // Enrollments are lazy loaded, so set to empty list to avoid overhead
-        group.setEnrollments(new ArrayList<>());
+        // group.setEnrollments(new ArrayList<>());
         // map the owning Course (keep a lightweight Course domain object)
         if (entity.getCourse() != null) {
             Course course = new Course();
@@ -89,20 +89,21 @@ public class CourseGroupRepositoryImpl implements CourseGroupRepository {
             // groups will be loaded by CourseRepository when needed; leave empty here
             group.setCourse(course);
         }
+        group.setCourseId(entity.getCourseId());
         return group;
     }
 
-    private List<CourseSchedule> mapScheduleSlotsToDomain(List<CourseScheduleEmbeddable> embeddables) {
-        if (embeddables == null || embeddables.isEmpty()) {
+    private List<CourseSchedule> mapScheduleSlotsToDomain(List<ScheduleEntity> schedules) {
+        if (schedules == null || schedules.isEmpty()) {
             return new ArrayList<>();
         }
         List<CourseSchedule> slots = new ArrayList<>();
-        for (CourseScheduleEmbeddable embeddable : embeddables) {
+        for (ScheduleEntity schedule : schedules) {
             CourseSchedule slot = new CourseSchedule(
-                    embeddable.getClassroomName(),
-                    embeddable.getDayOfWeek(),
-                    embeddable.getStartTime(),
-                    embeddable.getEndTime()
+                    schedule.getClassroomName(),
+                    schedule.getDayOfWeek(),
+                    schedule.getStartTime(),
+                    schedule.getEndTime()
             );
             slots.add(slot);
         }
@@ -116,7 +117,7 @@ public class CourseGroupRepositoryImpl implements CourseGroupRepository {
         entity.setType(courseGroup.getType());
         entity.setMaxCapacity(courseGroup.getMaxCapacity());
         entity.setAvailableCapacity(courseGroup.getAvailableCapacity());
-        entity.setScheduleSlots(mapScheduleSlotsToEmbeddable(courseGroup.getScheduleSlots()));
+        entity.setSchedules(mapScheduleSlotsToEntity(courseGroup.getScheduleSlots(), entity));
         entity.setTeacherId(courseGroup.getTeacherId());
         // If the domain Course reference exists, set a lightweight CourseEntity reference by id
         if (courseGroup.getCourse() != null && courseGroup.getCourse().getCourseId() != null) {
@@ -127,19 +128,20 @@ public class CourseGroupRepositoryImpl implements CourseGroupRepository {
         return entity;
     }
 
-    private List<CourseScheduleEmbeddable> mapScheduleSlotsToEmbeddable(List<CourseSchedule> slots) {
-        List<CourseScheduleEmbeddable> embeddables = new ArrayList<>();
+    private List<ScheduleEntity> mapScheduleSlotsToEntity(List<CourseSchedule> slots, CourseGroupEntity courseGroupEntity) {
+        List<ScheduleEntity> entities = new ArrayList<>();
         if (slots == null) {
-            return embeddables;
+            return entities;
         }
         for (CourseSchedule slot : slots) {
-            CourseScheduleEmbeddable embeddable = new CourseScheduleEmbeddable();
-            embeddable.setClassroomName(slot.getClassroomName());
-            embeddable.setDayOfWeek(slot.getDayOfWeek());
-            embeddable.setStartTime(slot.getStartTime());
-            embeddable.setEndTime(slot.getEndTime());
-            embeddables.add(embeddable);
+            ScheduleEntity entity = new ScheduleEntity();
+            entity.setClassroomName(slot.getClassroomName());
+            entity.setDayOfWeek(slot.getDayOfWeek());
+            entity.setStartTime(slot.getStartTime());
+            entity.setEndTime(slot.getEndTime());
+            entity.setCourseGroup(courseGroupEntity);
+            entities.add(entity);
         }
-        return embeddables;
+        return entities;
     }
 }

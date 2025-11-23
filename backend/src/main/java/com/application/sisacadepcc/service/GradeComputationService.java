@@ -27,8 +27,8 @@ public class GradeComputationService {
     }
 
     public GradeWeightSnapshot snapshotWeights(Course course) {
-        List<BigDecimal> continuousWeights = sanitizeWeights(course != null ? course.getContinuousGradeWeights() : null);
-        List<BigDecimal> examWeights = sanitizeWeights(course != null ? course.getExamGradeWeights() : null);
+        List<BigDecimal> continuousWeights = sanitizeWeights(null); // continuousGradeWeights removed
+        List<BigDecimal> examWeights = sanitizeWeights(null); // examGradeWeights removed
         normalizeWeights(continuousWeights, examWeights);
         return new GradeWeightSnapshot(List.copyOf(continuousWeights), List.copyOf(examWeights));
     }

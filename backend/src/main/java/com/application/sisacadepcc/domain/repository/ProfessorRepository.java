@@ -9,5 +9,4 @@ public interface ProfessorRepository {
     List<Professor> findAll();
     boolean existsByCorreo(String email);
     Optional<Professor> findByCorreo(String correo);
-    Optional<Professor> findById(Long id);
 }

@@ -10,6 +10,10 @@
         <BookOpenIcon class="w-15 h-15 mx-auto mt-2 mb-4" />
         <h4 class="text-xl">Gestionar Cursos</h4>
       </PrincipalButton>
+      <PrincipalButton color="yellow" to="/admin/courses/add">
+        <PlusIcon class="w-15 h-15 mx-auto mt-2 mb-4" />
+        <h4 class="text-xl">Agregar Curso</h4>
+      </PrincipalButton>
       <PrincipalButton color="green" to="/admin/student-enrollment">
         <UserIcon class="w-15 h-15 mx-auto mt-2 mb-4" />
         <h4 class="text-xl">Matricular Estudiantes</h4>
@@ -24,5 +28,5 @@
 
 <script setup>
 import { PrincipalButton } from '@/components/ui'
-import { AcademicCapIcon, BookOpenIcon, UserIcon } from '@heroicons/vue/16/solid'
+import { AcademicCapIcon, BookOpenIcon, PlusIcon, UserIcon } from '@heroicons/vue/16/solid'
 </script>

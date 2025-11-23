@@ -81,27 +81,44 @@ public class CourseRepositoryImpl implements CourseRepository {
             group.setMaxCapacity(groupEntity.getMaxCapacity());
             group.setAvailableCapacity(groupEntity.getAvailableCapacity());
             group.setTeacherId(groupEntity.getTeacherId());
-            group.setScheduleSlots(mapScheduleSlotsToDomain(groupEntity.getScheduleSlots()));
+            group.setScheduleSlots(mapScheduleSlotsToDomain(groupEntity.getSchedules()));
             groups.add(group);
         }
         return groups;
     }
 
-    private List<CourseSchedule> mapScheduleSlotsToDomain(List<CourseScheduleEmbeddable> embeddables) {
-        if (embeddables == null || embeddables.isEmpty()) {
+    private List<CourseSchedule> mapScheduleSlotsToDomain(List<ScheduleEntity> entities) {
+        if (entities == null || entities.isEmpty()) {
             return new ArrayList<>();
         }
         List<CourseSchedule> slots = new ArrayList<>();
-        for (CourseScheduleEmbeddable embeddable : embeddables) {
+        for (ScheduleEntity entity : entities) {
             CourseSchedule slot = new CourseSchedule(
-                    embeddable.getClassroomName(),
-                    embeddable.getDayOfWeek(),
-                    embeddable.getStartTime(),
-                    embeddable.getEndTime()
+                    entity.getClassroomName(),
+                    entity.getDayOfWeek(),
+                    entity.getStartTime(),
+                    entity.getEndTime()
             );
             slots.add(slot);
         }
         return slots;
+    }
+
+    private List<ScheduleEntity> mapScheduleSlotsToEntity(List<CourseSchedule> schedules, CourseGroupEntity courseGroup) {
+        if (schedules == null || schedules.isEmpty()) {
+            return new ArrayList<>();
+        }
+        List<ScheduleEntity> entities = new ArrayList<>();
+        for (CourseSchedule schedule : schedules) {
+            ScheduleEntity entity = new ScheduleEntity();
+            entity.setClassroomName(schedule.getClassroomName());
+            entity.setDayOfWeek(schedule.getDayOfWeek());
+            entity.setStartTime(schedule.getStartTime());
+            entity.setEndTime(schedule.getEndTime());
+            entity.setCourseGroup(courseGroup);
+            entities.add(entity);
+        }
+        return entities;
     }
 
     private CourseEntity mapToEntity(Course course) {

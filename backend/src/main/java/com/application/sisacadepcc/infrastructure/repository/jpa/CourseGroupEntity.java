@@ -38,12 +38,8 @@ public class CourseGroupEntity {
     @Column(name = "course_id", insertable = false, updatable = false)
     private Long courseId;
 
-    @ElementCollection(fetch = FetchType.LAZY)
-    @CollectionTable(
-            name = "course_group_schedule_slots",
-            joinColumns = @JoinColumn(name = "group_id")
-    )
-    private List<CourseScheduleEmbeddable> scheduleSlots = new ArrayList<>();
+    @OneToMany(mappedBy = "courseGroup", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    private List<ScheduleEntity> schedules = new ArrayList<>();
 
     @OneToMany(mappedBy = "courseGroup", fetch = FetchType.LAZY)
     private List<EnrollmentEntity> enrollments = new ArrayList<>();
@@ -112,12 +108,12 @@ public class CourseGroupEntity {
         this.courseId = courseId;
     }
 
-    public List<CourseScheduleEmbeddable> getScheduleSlots() {
-        return scheduleSlots;
+    public List<ScheduleEntity> getSchedules() {
+        return schedules;
     }
 
-    public void setScheduleSlots(List<CourseScheduleEmbeddable> scheduleSlots) {
-        this.scheduleSlots = scheduleSlots;
+    public void setSchedules(List<ScheduleEntity> schedules) {
+        this.schedules = schedules;
     }
 
     public List<EnrollmentEntity> getEnrollments() {

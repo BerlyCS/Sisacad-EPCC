@@ -2,7 +2,6 @@ package com.application.sisacadepcc.service;
 
 import com.application.sisacadepcc.domain.model.Course;
 import com.application.sisacadepcc.domain.model.Grade;
-import com.application.sisacadepcc.domain.model.valueobject.CourseType;
 import com.application.sisacadepcc.domain.repository.CourseRepository;
 import com.application.sisacadepcc.domain.repository.GradeRepository;
 import com.application.sisacadepcc.presentation.dto.StudentGradeResponse;
@@ -46,7 +45,6 @@ public class GradeQueryService {
         }
 
         return courseRepository.findByCourseCode(Long.parseLong(grade.getCourseCode()))
-                .filter(course -> course.getCourseType() == CourseType.THEORY)
                 .filter(course -> course.getCourseId() != null)
                 .map(course -> toDto(grade, course));
     }

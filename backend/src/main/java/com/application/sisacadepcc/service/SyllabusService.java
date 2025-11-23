@@ -1,6 +1,7 @@
 package com.application.sisacadepcc.service;
 
 import com.application.sisacadepcc.domain.model.Course;
+import com.application.sisacadepcc.domain.model.CourseGroup;
 import com.application.sisacadepcc.domain.model.Professor;
 import com.application.sisacadepcc.domain.model.Syllabus;
 import com.application.sisacadepcc.domain.model.valueobject.Content;
@@ -83,12 +84,7 @@ public class SyllabusService {
         }
 
         Content content = storageService.storeFile(syllabusFile, courseId);
-        Syllabus syllabusToPersist = new Syllabus(
-                existing != null ? existing.getId() : null,
-                courseId,
-                content,
-                topicEntities
-        );
+        Syllabus syllabusToPersist = buildSyllabus(existing != null ? existing.getId() : null, courseId, content, topicEntities);
 
         return syllabusRepository.save(syllabusToPersist);
     }
@@ -103,12 +99,7 @@ public class SyllabusService {
                 .orElseThrow(() -> new SyllabusNotFoundException("No syllabus exists for this course"));
 
         List<Topic> topicEntities = mapTopics(topics);
-        Syllabus syllabusToPersist = new Syllabus(
-                existing.getId(),
-                courseId,
-                existing.getContent(),
-                topicEntities
-        );
+        Syllabus syllabusToPersist = buildSyllabus(existing.getId(), courseId, existing.getContent(), topicEntities);
 
         return syllabusRepository.save(syllabusToPersist);
     }
@@ -149,14 +140,14 @@ public class SyllabusService {
         }
 
         Long professorId = authorizationService.getAuthenticatedProfessor(authentication)
-                .map(Professor::getId)
+                .map(Professor::getUserId)
                 .orElse(null);
 
         if (professorId == null) {
             throw new SyllabusAccessDeniedException("Professor identification is required");
         }
 
-        List<Long> teacherIds = course.getTeacherIDs() != null ? course.getTeacherIDs() : List.of();
+        List<Long> teacherIds = course.getGroups().stream().map(CourseGroup::getTeacherId).filter(Objects::nonNull).distinct().toList();
         boolean isAssigned = teacherIds.stream().anyMatch(id -> Objects.equals(id, professorId));
         if (!isAssigned) {
             throw new SyllabusAccessDeniedException("You are not assigned to this course");
@@ -196,6 +187,10 @@ public class SyllabusService {
         }
         topics.sort(Comparator.comparing(Topic::getSessionDate));
         return topics;
+    }
+
+    private Syllabus buildSyllabus(Long id, Long courseId, Content content, List<Topic> topics) {
+        return new Syllabus(id, courseId, content, topics);
     }
 
     public record SyllabusFile(Resource resource, Content content) {}

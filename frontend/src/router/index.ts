@@ -34,6 +34,12 @@ const router = createRouter({
       component: CourseManagementView,
     },
     {
+      path: '/admin/courses/add',
+      name: 'add-course',
+      component: () => import('@/views/AddCourseView.vue'),
+      meta: { requiresAuth: true, allowedRoles: ['ADMIN', 'SECRETARY'] }
+    },
+    {
       path: '/admin/professors',
       name: 'professors',
       component: ProfessorManagementView,

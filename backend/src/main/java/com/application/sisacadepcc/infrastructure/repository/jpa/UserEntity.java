@@ -52,7 +52,7 @@ public abstract class UserEntity {
     public void setUserId(Long userId) {
         this.userId = userId;
     }
-
+    
     public String getDocumentId() {
         return documentId;
     }

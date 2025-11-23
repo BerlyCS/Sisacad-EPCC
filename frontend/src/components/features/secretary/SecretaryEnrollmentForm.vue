@@ -56,7 +56,7 @@
               :key="course.courseId"
               :value="course.courseId"
             >
-              {{ course.name }} - Grupo {{ course.groupLetter || '-' }} ({{ course.courseTypeLabel }})
+              {{ course.name }} (Código: {{ course.courseCode }})
             </option>
           </select>
           <!-- Icono de flecha para el dropdown -->

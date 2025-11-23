@@ -7,7 +7,17 @@
           <h2 class="text-xl font-semibold text-gray-800">Gestión de Cursos</h2>
           <p class="text-gray-600 mt-1">Administra los cursos y asigna docentes responsables.</p>
         </div>
-        <p v-if="professorsError" class="text-sm text-red-600">{{ professorsError }}</p>
+        <div v-if="canAddCourses" class="flex gap-2">
+          <button
+            @click="$router.push('/admin/courses/add')"
+            class="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700"
+          >
+            <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+            </svg>
+            Agregar Curso
+          </button>
+        </div>
       </div>
 
       <div class="p-6">
@@ -33,7 +43,6 @@
                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">ID</th>
                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Nombre</th>
                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Créditos</th>
-                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Grupo</th>
                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase"># Estudiantes</th>
                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Docentes asignados</th>
                 <th v-if="canAssignProfessors" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Acciones</th>
@@ -44,13 +53,10 @@
                 <td class="px-6 py-4 text-sm font-mono text-gray-900">{{ course.courseId }}</td>
                 <td class="px-6 py-4 text-sm text-gray-900">{{ course.name }}</td>
                 <td class="px-6 py-4 text-sm text-blue-700 font-semibold">
-                  {{ course.creditNumber }} créditos
-                </td>
-                <td class="px-6 py-4 text-sm text-purple-700">
-                  Grupo {{ course.groupLetter || '-' }}
+                  {{ course.credits }} créditos
                 </td>
                 <td class="px-6 py-4 text-sm text-gray-700">
-                  {{ course.enrolledStudentIDs.length }}
+                  {{ course.enrolledStudentIDs?.length || 0 }}
                 </td>
                 <td class="px-6 py-4 text-sm text-gray-700">
                   <div class="flex flex-wrap gap-2">
@@ -61,7 +67,7 @@
                     >
                       {{ resolveProfessorName(professorId) }}
                     </span>
-                    <span v-if="course.teacherIDs.length === 0" class="text-xs text-gray-400">Sin docentes asignados</span>
+                    <span v-if="(course.teacherIDs?.length || 0) === 0" class="text-xs text-gray-400">Sin docentes asignados</span>
                   </div>
                 </td>
                 <td v-if="canAssignProfessors" class="px-6 py-4 text-sm">
@@ -89,13 +95,13 @@
           <div class="bg-green-50 border border-green-200 rounded-lg p-6">
             <h3 class="text-lg font-semibold text-green-800">Créditos Totales</h3>
             <p class="text-3xl font-bold text-green-600 mt-2">
-              {{ courses.reduce((total, course) => total + (course.creditNumber || 0), 0) }}
+              {{ courses.reduce((total, course) => total + (course.credits || 0), 0) }}
             </p>
           </div>
           <div class="bg-purple-50 border border-purple-200 rounded-lg p-6">
             <h3 class="text-lg font-semibold text-purple-800">Total Estudiantes Inscritos</h3>
             <p class="text-3xl font-bold text-purple-600 mt-2">
-              {{ courses.reduce((total, course) => total + course.enrolledStudentIDs.length, 0) }}
+              {{ courses.reduce((total, course) => total + (course.enrolledStudentIDs?.length || 0), 0) }}
             </p>
           </div>
         </div>
@@ -112,7 +118,7 @@
             <p class="text-xs font-semibold uppercase tracking-wide text-blue-500">Gestión de docentes</p>
             <h3 class="text-xl font-semibold text-gray-900">{{ selectedCourse.name }}</h3>
             <p class="text-sm text-gray-500">
-              Grupo {{ selectedCourse.groupLetter || '-' }} · {{ selectedCourse.creditNumber }} créditos
+              {{ selectedCourse.credits }} créditos
             </p>
           </div>
           <button
@@ -239,7 +245,7 @@ const assignedProfessors = computed(() => {
   if (!selectedCourse.value) {
     return []
   }
-  return selectedCourse.value.teacherIDs
+  return (selectedCourse.value.teacherIDs || [])
     .map(id => professorDirectory.value.get(id))
     .filter((professor): professor is Professor => Boolean(professor))
 })
@@ -248,11 +254,12 @@ const availableProfessors = computed(() => {
   if (!selectedCourse.value) {
     return []
   }
-  const assignedIds = new Set(selectedCourse.value.teacherIDs)
+  const assignedIds = new Set(selectedCourse.value.teacherIDs || [])
   return professors.value.filter(professor => !assignedIds.has(professor.id))
 })
 
 const canAssignProfessors = computed(() => isAdmin.value || isSecretary.value)
+const canAddCourses = computed(() => isAdmin.value || isSecretary.value)
 
 const professorFullName = (professor: Professor) => {
   return [professor.nombres, professor.apellidoPaterno, professor.apellidoMaterno]

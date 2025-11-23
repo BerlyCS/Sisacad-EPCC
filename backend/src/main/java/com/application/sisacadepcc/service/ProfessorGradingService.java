@@ -3,7 +3,6 @@ package com.application.sisacadepcc.service;
 import com.application.sisacadepcc.domain.model.Course;
 import com.application.sisacadepcc.domain.model.Grade;
 import com.application.sisacadepcc.domain.model.Professor;
-import com.application.sisacadepcc.domain.model.valueobject.CourseType;
 import com.application.sisacadepcc.domain.repository.CourseRepository;
 import com.application.sisacadepcc.domain.repository.GradeRepository;
 import com.application.sisacadepcc.presentation.dto.CourseGroupSummaryResponse;
@@ -175,7 +174,7 @@ public class ProfessorGradingService {
             return;
         }
         Long professorId = resolveProfessorId(professor);
-        List<Long> teacherIds = Optional.ofNullable(course.getTeacherIDs()).orElse(List.of());
+        List<Long> teacherIds = List.of(); // teacherIDs removed from Course model
         boolean assigned = teacherIds.stream().filter(Objects::nonNull).anyMatch(id -> Objects.equals(id, professorId));
         if (!assigned) {
             throw new AccessDeniedException("No tienes acceso a este curso");
@@ -186,7 +185,6 @@ public class ProfessorGradingService {
         Long anchorCode = (long) anchorCourse.getCourseCode();
         return courseRepository.findAll().stream()
                 .filter(course -> Objects.equals(anchorCode, (long) course.getCourseCode()))
-                .sorted(Comparator.comparing(Course::getGroupLetter))
                 .toList();
     }
 
@@ -215,8 +213,8 @@ public class ProfessorGradingService {
                 course.getCourseId(),
                 String.valueOf(course.getCourseId()),
                 course.getName(),
-                String.valueOf(course.getGroupLetter()),
-                course.getCourseType().name(),
+                "-", // groupLetter removed
+                "THEORY", // default courseType
                 canGrade,
                 studentCount,
                 MAX_GROUP_CAPACITY
@@ -244,7 +242,7 @@ public class ProfessorGradingService {
     }
 
     private boolean isTheory(Course course) {
-        return course.getCourseType() == null || course.getCourseType() == CourseType.THEORY;
+        return true; // default to theory since courseType removed
     }
 
     private Long resolveProfessorId(Professor professor) {

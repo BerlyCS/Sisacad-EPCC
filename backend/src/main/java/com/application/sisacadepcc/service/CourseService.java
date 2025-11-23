@@ -2,11 +2,9 @@ package com.application.sisacadepcc.service;
 
 import com.application.sisacadepcc.domain.model.Course;
 import com.application.sisacadepcc.domain.model.CourseGroup;
-import com.application.sisacadepcc.domain.model.Student;
-import com.application.sisacadepcc.domain.model.Syllabus;
 import com.application.sisacadepcc.domain.model.valueobject.CourseType;
 import com.application.sisacadepcc.domain.repository.CourseRepository;
-import com.application.sisacadepcc.domain.repository.SyllabusRepository;
+import com.application.sisacadepcc.domain.repository.EnrollmentRepository;
 import com.application.sisacadepcc.service.dto.CourseDetails;
 import org.springframework.stereotype.Service;
 
@@ -20,18 +18,22 @@ public class CourseService {
 
     private final CourseRepository repository;
     private final com.application.sisacadepcc.domain.repository.CourseGroupRepository courseGroupRepository;
-    private final SyllabusRepository syllabusRepository;
+    private final EnrollmentRepository enrollmentRepository;
 
     public CourseService(CourseRepository repository,
                          com.application.sisacadepcc.domain.repository.CourseGroupRepository courseGroupRepository,
-                         SyllabusRepository syllabusRepository) {
+                         EnrollmentRepository enrollmentRepository) {
         this.repository = repository;
         this.courseGroupRepository = courseGroupRepository;
-        this.syllabusRepository = syllabusRepository;
+        this.enrollmentRepository = enrollmentRepository;
     }
 
     public List<Course> getAllCourses() {
         return repository.findAll();
+    }
+
+    public Course createCourse(Course course) {
+        return repository.save(course);
     }
 
     public List<Course> getCoursesForProfessor(Long professorId) {
@@ -71,7 +73,7 @@ public class CourseService {
         return courseGroupRepository.findById(groupId)
                 .map(group -> {
                     group.setMaxCapacity(capacity);
-                    int enrolled = group.getEnrollments() != null ? group.getEnrollments().size() : 0;
+                    int enrolled = (int) enrollmentRepository.countByCourseGroupId(group.getId());
                     group.setAvailableCapacity(Math.max(0, capacity - enrolled));
                     return courseGroupRepository.save(group);
                 });
@@ -100,21 +102,7 @@ public class CourseService {
     }
 
     private CourseDetails buildCourseDetails(CourseGroup group) {
-        Course course = group.getCourse();
-        // TODO: Implement enrollment fetching using EnrollmentRepository
-        List<Student> students = List.of(); // Placeholder until EnrollmentRepository is implemented
-
-        Course labCourse = null;
-        if (group.getType() == CourseType.THEORY && course.getLabPrerequisiteCourseId() != null) {
-            labCourse = repository.findById(course.getLabPrerequisiteCourseId()).orElse(null);
-        }
-
-        Syllabus syllabus = null;
-        if (course.getSyllabusId() != null) {
-            syllabus = syllabusRepository.findById(course.getSyllabusId()).orElse(null);
-        }
-
-        return new CourseDetails(group, students, labCourse, syllabus);
+        return new CourseDetails(group, List.of(), null, null);
     }
 
 }

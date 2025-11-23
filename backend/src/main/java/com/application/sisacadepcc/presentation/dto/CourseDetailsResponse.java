@@ -60,13 +60,13 @@ public record CourseDetailsResponse(
                 course.getCourseId(),
                 Long.valueOf(course.getCourseCode()),
                 course.getName(),
-                course.getCreditNumber(),
+                course.getCredits(),
                 groupLetter,
-                course.getAnio(),
+                null, // anio removed
                 type != null ? type.name() : null,
                 mapCourseTypeLabel(type),
-                course.getLabPrerequisiteCourseId(),
-                CourseType.LAB.equals(type) ? course.getLabCapacity() : null,
+                null, // labPrerequisiteCourseId removed
+                CourseType.LAB.equals(type) ? null : null, // labCapacity removed
                 labSummary,
                 course.getSyllabusId(),
                 syllabusSummary,
@@ -103,8 +103,8 @@ public record CourseDetailsResponse(
                     course.getCourseId(),
                     Long.valueOf(course.getCourseCode()),
                     course.getName(),
-                    CourseDetailsResponse.mapGroupLetter(course.getGroupLetter()),
-                    CourseDetailsResponse.mapCourseTypeLabel(course.getCourseType())
+                    "", // groupLetter removed
+                    "Teoría" // default courseTypeLabel
             );
         }
     }

@@ -5,6 +5,7 @@ import com.application.sisacadepcc.domain.model.Course;
 import com.application.sisacadepcc.domain.model.CourseGroup;
 import com.application.sisacadepcc.presentation.dto.CourseDetailsResponse;
 import com.application.sisacadepcc.presentation.dto.UpdateCapacityRequest;
+import com.application.sisacadepcc.domain.repository.EnrollmentRepository;
 import com.application.sisacadepcc.service.AuthorizationService;
 import com.application.sisacadepcc.service.CourseService;
 import com.application.sisacadepcc.service.UserRole;
@@ -21,11 +22,14 @@ public class CourseController {
 
     private final CourseService service;
     private final AuthorizationService authorizationService;
+    private final EnrollmentRepository enrollmentRepository;
 
     public CourseController(CourseService service,
-                            AuthorizationService authorizationService) {
+                            AuthorizationService authorizationService,
+                            EnrollmentRepository enrollmentRepository) {
         this.service = service;
         this.authorizationService = authorizationService;
+        this.enrollmentRepository = enrollmentRepository;
     }
 
     @GetMapping
@@ -42,10 +46,13 @@ public class CourseController {
     }
 
     @PostMapping
-    @RequiresAdministratorAccess
-    public ResponseEntity<Course> createCourse(@RequestBody Course course) {
-        // Lógica para crear curso
-        return ResponseEntity.ok(course);
+    public ResponseEntity<Course> createCourse(@RequestBody Course course, Authentication authentication) {
+        if (!authorizationService.hasAnyRole(authentication, UserRole.ADMIN, UserRole.SECRETARY)) {
+            return ResponseEntity.status(403).build();
+        }
+
+        Course created = service.createCourse(course);
+        return ResponseEntity.ok(created);
     }
 
     @PutMapping("/{id}")
@@ -78,7 +85,7 @@ public class CourseController {
         return service.updateGroupCapacity(groupId, newCapacity)
                 .map(group -> {
                     // Check if over-enrolled
-                    int enrolled = group.getEnrollments() != null ? group.getEnrollments().size() : 0;
+                    int enrolled = (int) enrollmentRepository.countByCourseGroupId(group.getId());
                     if (newCapacity != null && enrolled > newCapacity) {
                         // Still proceed, but add a warning header
                         return ResponseEntity.ok()
