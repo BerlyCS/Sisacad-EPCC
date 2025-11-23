@@ -52,6 +52,17 @@ public class ExcelScheduleService {
         loadScheduleData();
     }
 
+    public List<Map<String, String>> getTimeSlots() {
+        return TIME_SLOTS.values().stream()
+                .map(times -> Map.of(
+                        "startTime", times[0],
+                        "endTime", times[1]
+                ))
+                .distinct()
+                .sorted(Comparator.comparing(slot -> slot.get("startTime")))
+                .collect(Collectors.toList());
+    }
+
     public boolean isTimeSlotOccupied(String classroomName, String dayOfWeek, String startTime, String endTime) {
         String key = normalizeClassroomName(classroomName);
         List<OccupiedTimeSlot> occupiedSlots = scheduleData.get(key);

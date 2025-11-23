@@ -4,9 +4,9 @@ const API_BASE_URL = 'http://localhost:8080/api'
 
 type CourseType = 'THEORY' | 'LAB'
 
-const COURSE_TYPE_LABEL: Record<CourseType, string> = {
-  THEORY: 'Teoría',
-  LAB: 'Laboratorio'
+export interface TimeSlot {
+  startTime: string
+  endTime: string
 }
 
 export interface StudentScheduleEntry {
@@ -14,7 +14,6 @@ export interface StudentScheduleEntry {
   courseCode: number
   courseName: string
   courseType: CourseType
-  courseTypeLabel: string
   dayOfWeek: string
   startTime: string
   endTime: string
@@ -23,6 +22,7 @@ export interface StudentScheduleEntry {
 
 export const useStudentScheduleService = () => {
   const schedule = ref<StudentScheduleEntry[]>([])
+  const timeSlots = ref<TimeSlot[]>([])
   const loading = ref(false)
   const error = ref('')
 
@@ -31,32 +31,35 @@ export const useStudentScheduleService = () => {
     error.value = ''
 
     try {
-      const response = await fetch(`${API_BASE_URL}/students/my-schedule`, {
-        credentials: 'include'
-      })
+      const [slotsResponse, scheduleResponse] = await Promise.all([
+        fetch(`${API_BASE_URL}/courses/timeslots`, { credentials: 'include' }),
+        fetch(`${API_BASE_URL}/students/my-schedule`, { credentials: 'include' })
+      ])
 
-      if (!response.ok) {
-        const errorText = await response.text()
-        throw new Error(errorText || 'Error al cargar el horario')
+      if (!slotsResponse.ok) {
+        throw new Error('Error al cargar los horarios')
+      }
+      
+      if (!scheduleResponse.ok) {
+        throw new Error('Error al cargar el horario')
       }
 
-      const data: any[] = await response.json()
-      schedule.value = data.map(entry => {
-        const type = (entry.courseType as CourseType) || 'THEORY'
-        return {
-          courseId: entry.courseId,
-          courseCode: entry.courseCode ?? entry.courseId,
-          courseName: entry.courseName,
-          courseType: type,
-          courseTypeLabel: COURSE_TYPE_LABEL[type],
-          dayOfWeek: entry.dayOfWeek,
-          startTime: entry.startTime,
-          endTime: entry.endTime,
-          classroomName: entry.classroomName
-        }
-      })
+      const slotsData = await slotsResponse.json()
+      const scheduleData = await scheduleResponse.json()
+      
+      timeSlots.value = slotsData || []
+      schedule.value = scheduleData.map((entry: any) => ({
+        courseId: Number(entry.courseId ?? 0),
+        courseCode: Number(entry.courseCode ?? 0),
+        courseName: entry.courseName ?? 'Curso',
+        courseType: (entry.courseType || 'THEORY').toUpperCase() as CourseType,
+        dayOfWeek: entry.dayOfWeek ?? '',
+        startTime: entry.startTime ?? '',
+        endTime: entry.endTime ?? '',
+        classroomName: entry.classroomName ?? ''
+      }))
     } catch (err) {
-      console.error('Frontend: Error fetching student schedule:', err)
+      console.error('Frontend: Error fetching schedule:', err)
       error.value = 'No se pudo cargar el horario'
     } finally {
       loading.value = false
@@ -65,6 +68,7 @@ export const useStudentScheduleService = () => {
 
   return {
     schedule,
+    timeSlots,
     loading,
     error,
     fetchMySchedule
