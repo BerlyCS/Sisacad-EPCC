@@ -7,7 +7,6 @@ import com.application.sisacadepcc.domain.model.valueobject.CourseType;
 import com.application.sisacadepcc.domain.model.valueobject.OccupiedSchedule;
 import com.application.sisacadepcc.domain.repository.ClassroomRepository;
 import com.application.sisacadepcc.domain.repository.CourseRepository;
-import com.application.sisacadepcc.domain.repository.StudentCourseRepository;
 import com.application.sisacadepcc.presentation.dto.ClassroomOptionResponse;
 import com.application.sisacadepcc.presentation.dto.CreateLabSectionRequest;
 import com.application.sisacadepcc.presentation.dto.LabScheduleSlotDto;
@@ -39,18 +38,12 @@ public class SecretaryLabManagementService {
             .toFormatter(Locale.ROOT);
 
     private final CourseRepository courseRepository;
-    private final StudentCourseRepository studentCourseRepository;
     private final ClassroomRepository classroomRepository;
-    private final ExcelScheduleService excelScheduleService;
 
     public SecretaryLabManagementService(CourseRepository courseRepository,
-                                         StudentCourseRepository studentCourseRepository,
-                                         ClassroomRepository classroomRepository,
-                                         ExcelScheduleService excelScheduleService) {
+                                         ClassroomRepository classroomRepository) {
         this.courseRepository = courseRepository;
-        this.studentCourseRepository = studentCourseRepository;
         this.classroomRepository = classroomRepository;
-        this.excelScheduleService = excelScheduleService;
     }
 
     public List<Course> listTheoryCourses() {
@@ -75,7 +68,7 @@ public class SecretaryLabManagementService {
         if (theoryCourseId == null) {
             return List.of();
         }
-        return courseRepository.findByLabPrerequisiteCourseId(theoryCourseId).stream()
+        return courseRepository.findByCourseCode(theoryCourseId).stream()
                 .map(this::mapToResponse)
                 .toList();
     }
@@ -164,23 +157,8 @@ public class SecretaryLabManagementService {
     }
 
     public List<LabSlotSuggestionResponse> getSlotSuggestions(Long theoryCourseId) {
-        if (theoryCourseId == null) {
-            return List.of();
-        }
-
-        Course theoryCourse = courseRepository.findById(theoryCourseId)
-                .orElseThrow(() -> new IllegalArgumentException("Curso teórico no encontrado"));
-
-        return excelScheduleService.findByCourse(theoryCourse.getName(), null, CourseType.LAB).stream()
-                .map(slot -> new LabSlotSuggestionResponse(
-                        slot.getClassroomName(),
-                        slot.getDayOfWeek(),
-                        slot.getStartTime(),
-                        slot.getEndTime(),
-                        slot.getGroupLetter(),
-                        slot.getCourseName()
-                ))
-                .collect(Collectors.toCollection(ArrayList::new));
+        // Excel parser is disabled, so return empty suggestions
+        return List.of();
     }
 
     public LabSectionResponse mapToResponse(Course labCourse) {

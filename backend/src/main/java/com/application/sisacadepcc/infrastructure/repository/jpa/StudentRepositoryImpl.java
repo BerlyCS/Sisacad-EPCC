@@ -38,15 +38,15 @@ public class StudentRepositoryImpl implements StudentRepository {
             return List.of();
         }
 
-        return studentJpaRepository.findByDocumentoIdentidadIn(documentoIdentidades)
+        return studentJpaRepository.findByDocumentIdIn(documentoIdentidades)
                 .stream()
                 .map(this::mapToDomain)
                 .collect(Collectors.toList());
     }
 
     @Override
-    public List<Student> findByAnio(Integer anio) {
-        return studentJpaRepository.findByAnio(anio)
+    public List<Student> findByEnrollmentYear(Integer anio) {
+        return studentJpaRepository.findByEnrollmentYear(anio)
                 .stream()
                 .map(this::mapToDomain)
                 .collect(Collectors.toList());
@@ -54,12 +54,12 @@ public class StudentRepositoryImpl implements StudentRepository {
 
     @Override
     public boolean existsByCorreoInstitucional(String email) {
-        return studentJpaRepository.existsByCorreoInstitucional(email);
+        return studentJpaRepository.existsByInstitutionalEmail(email);
     }
 
     @Override
     public Optional<Student> findByCorreoInstitucional(String correoInstitucional) {
-        return studentJpaRepository.findByCorreoInstitucional(correoInstitucional)
+        return studentJpaRepository.findByInstitutionalEmail(correoInstitucional)
                 .map(this::mapToDomain);
     }
 

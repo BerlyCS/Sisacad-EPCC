@@ -1,6 +1,6 @@
 package com.application.sisacadepcc.presentation;
 
-import com.application.sisacadepcc.domain.model.Course;
+import com.application.sisacadepcc.domain.model.CourseGroup;
 import com.application.sisacadepcc.presentation.dto.LabEnrollmentRequest;
 import com.application.sisacadepcc.service.AuthorizationService;
 import com.application.sisacadepcc.service.CourseService;
@@ -35,13 +35,13 @@ public class LabEnrollmentController {
     }
 
     @GetMapping("/course/{theoryCourseId}")
-    public ResponseEntity<List<Course>> getLabSections(@PathVariable Long theoryCourseId,
-                                                       Authentication authentication) {
+    public ResponseEntity<List<CourseGroup>> getLabSections(@PathVariable Long theoryCourseId,
+                                                            Authentication authentication) {
         if (!authorizationService.hasAnyRole(authentication, UserRole.STUDENT, UserRole.ADMIN, UserRole.SECRETARY)) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         }
-        List<Course> labs = courseService.getLabSectionsForTheoryCourse(theoryCourseId);
-        return ResponseEntity.ok(labs);
+        List<CourseGroup> groups = courseService.getLabGroupsForCourse(theoryCourseId);
+        return ResponseEntity.ok(groups);
     }
 
     @PostMapping("/{labCourseId}/validate")
@@ -87,12 +87,12 @@ public class LabEnrollmentController {
 
         if (request != null && request.studentCui() != null && !request.studentCui().isBlank()) {
             return studentService.getStudentByCui(request.studentCui().trim())
-                    .map(student -> student.getDocumentoIdentidad() != null ? student.getDocumentoIdentidad().trim() : null)
+                    .map(student -> student.getDocumentId() != null ? student.getDocumentId().trim() : null)
                     .orElse(null);
         }
 
         return authorizationService.getAuthenticatedStudent(authentication)
-                .map(student -> student.getDocumentoIdentidad() != null ? student.getDocumentoIdentidad().trim() : null)
+                .map(student -> student.getDocumentId() != null ? student.getDocumentId().trim() : null)
                 .orElse(null);
     }
 }

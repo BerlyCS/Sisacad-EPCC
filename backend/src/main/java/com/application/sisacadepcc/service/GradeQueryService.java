@@ -3,8 +3,8 @@ package com.application.sisacadepcc.service;
 import com.application.sisacadepcc.domain.model.Course;
 import com.application.sisacadepcc.domain.model.Grade;
 import com.application.sisacadepcc.domain.model.valueobject.CourseType;
+import com.application.sisacadepcc.domain.repository.CourseRepository;
 import com.application.sisacadepcc.domain.repository.GradeRepository;
-import com.application.sisacadepcc.domain.repository.StudentCourseRepository;
 import com.application.sisacadepcc.presentation.dto.StudentGradeResponse;
 import org.springframework.stereotype.Service;
 
@@ -16,17 +16,14 @@ import java.util.stream.Collectors;
 public class GradeQueryService {
 
     private final GradeRepository gradeRepository;
-    private final StudentCourseRepository studentCourseRepository;
-    private final CourseLookupService courseLookupService;
+    private final CourseRepository courseRepository;
     private final GradeComputationService gradeComputationService;
 
     public GradeQueryService(GradeRepository gradeRepository,
-                             StudentCourseRepository studentCourseRepository,
-                             CourseLookupService courseLookupService,
+                             CourseRepository courseRepository,
                              GradeComputationService gradeComputationService) {
         this.gradeRepository = gradeRepository;
-        this.studentCourseRepository = studentCourseRepository;
-        this.courseLookupService = courseLookupService;
+        this.courseRepository = courseRepository;
         this.gradeComputationService = gradeComputationService;
     }
 
@@ -48,10 +45,9 @@ public class GradeQueryService {
             return Optional.empty();
         }
 
-        return courseLookupService.findByCode(grade.getCourseCode())
+        return courseRepository.findByCourseCode(Long.parseLong(grade.getCourseCode()))
                 .filter(course -> course.getCourseType() == CourseType.THEORY)
                 .filter(course -> course.getCourseId() != null)
-                .filter(course -> studentCourseRepository.existsByStudentAndCourse(studentDocumentoIdentidad, course.getCourseId()))
                 .map(course -> toDto(grade, course));
     }
 

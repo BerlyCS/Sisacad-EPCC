@@ -35,6 +35,9 @@ public class CourseGroupEntity {
     @JoinColumn(name = "course_id", nullable = false)
     private CourseEntity course;
 
+    @Column(name = "course_id", insertable = false, updatable = false)
+    private Long courseId;
+
     @ElementCollection(fetch = FetchType.LAZY)
     @CollectionTable(
             name = "course_group_schedule_slots",
@@ -99,6 +102,14 @@ public class CourseGroupEntity {
 
     public void setCourse(CourseEntity course) {
         this.course = course;
+    }
+
+    public Long getCourseId() {
+        return courseId;
+    }
+
+    public void setCourseId(Long courseId) {
+        this.courseId = courseId;
     }
 
     public List<CourseScheduleEmbeddable> getScheduleSlots() {

@@ -1,6 +1,7 @@
 package com.application.sisacadepcc.presentation.dto;
 
 import com.application.sisacadepcc.domain.model.Course;
+import com.application.sisacadepcc.domain.model.CourseGroup;
 import com.application.sisacadepcc.domain.model.Student;
 import com.application.sisacadepcc.domain.model.Syllabus;
 import com.application.sisacadepcc.domain.model.valueobject.Content;
@@ -35,9 +36,10 @@ public record CourseDetailsResponse(
         }
 
         public static CourseDetailsResponse from(CourseDetails details, Clock clock) {
-        Course course = details.course();
-        String groupLetter = mapGroupLetter(course.getGroupLetter());
-        CourseType type = course.getCourseType();
+        CourseGroup courseGroup = details.courseGroup();
+        Course course = courseGroup.getCourse();
+        String groupLetter = courseGroup.getLetter() != null ? courseGroup.getLetter() : "";
+        CourseType type = courseGroup.getType();
 
         LabCourseSummary labSummary = details.associatedLabCourse() != null
                 ? LabCourseSummary.from(details.associatedLabCourse())
@@ -52,11 +54,11 @@ public record CourseDetailsResponse(
                 .map(StudentSummary::from)
                 .toList();
 
-        List<Long> teacherIds = course.getTeacherIDs() != null ? course.getTeacherIDs() : List.of();
+        List<Long> teacherIds = courseGroup.getTeacherId() != null ? List.of(courseGroup.getTeacherId()) : List.of();
 
         return new CourseDetailsResponse(
                 course.getCourseId(),
-                course.getCourseCode(),
+                Long.valueOf(course.getCourseCode()),
                 course.getName(),
                 course.getCreditNumber(),
                 groupLetter,
@@ -64,9 +66,9 @@ public record CourseDetailsResponse(
                 type != null ? type.name() : null,
                 mapCourseTypeLabel(type),
                 course.getLabPrerequisiteCourseId(),
-                CourseType.LAB.equals(course.getCourseType()) ? course.getLabCapacity() : null,
+                CourseType.LAB.equals(type) ? course.getLabCapacity() : null,
                 labSummary,
-                course.getSyllabusID(),
+                course.getSyllabusId(),
                 syllabusSummary,
                 students,
                 students.size(),
@@ -99,7 +101,7 @@ public record CourseDetailsResponse(
         private static LabCourseSummary from(Course course) {
             return new LabCourseSummary(
                     course.getCourseId(),
-                    course.getCourseCode(),
+                    Long.valueOf(course.getCourseCode()),
                     course.getName(),
                     CourseDetailsResponse.mapGroupLetter(course.getGroupLetter()),
                     CourseDetailsResponse.mapCourseTypeLabel(course.getCourseType())
@@ -179,13 +181,13 @@ public record CourseDetailsResponse(
     ) {
         private static StudentSummary from(Student student) {
             return new StudentSummary(
-                    student.getDocumentoIdentidad(),
+                    student.getDocumentId(),
                     student.getCui(),
-                    student.getNombres(),
-                    student.getApellidoPaterno(),
-                    student.getApellidoMaterno(),
-                    student.getCorreoInstitucional(),
-                    student.getAnio()
+                    student.getFirstNames(),
+                    student.getPaternalSurname(),
+                    student.getMaternalSurname(),
+                    student.getInstitutionalEmail(),
+                    student.getEnrollmentYear()
             );
         }
     }

@@ -47,7 +47,7 @@ public class UserController {
                 try {
                     Optional<Student> student = authorizationService.getAuthenticatedStudent(authentication);
                     if (student.isPresent()) {
-                        documentoIdentidad = student.get().getDocumentoIdentidad();
+                        documentoIdentidad = student.get().getDocumentId();
                         cui = student.get().getCui();
                     } else if (principal instanceof OAuth2User oauth2User) {
                         documentoIdentidad = oauth2User.getAttribute("documentoIdentidad");

@@ -1,11 +1,11 @@
 package com.application.sisacadepcc.presentation.dto;
 
 import com.application.sisacadepcc.domain.model.Course;
-import com.application.sisacadepcc.domain.model.valueobject.CourseScheduleSlot;
+import com.application.sisacadepcc.domain.model.CourseGroup;
+import com.application.sisacadepcc.domain.model.valueobject.CourseSchedule;
 import com.application.sisacadepcc.domain.model.valueobject.CourseType;
 
 import java.util.List;
-import java.util.Optional;
 
 public record LabSectionResponse(
         Long courseId,
@@ -16,27 +16,26 @@ public record LabSectionResponse(
         Integer remainingSeats,
         Long theoryCourseId,
         String courseTypeLabel,
-        List<CourseScheduleSlot> scheduleSlots
+        List<CourseSchedule> scheduleSlots
 ) {
-    public static LabSectionResponse from(Course labCourse, long enrolledCount) {
-        int capacity = Optional.ofNullable(labCourse.getLabCapacity()).orElse(labCourse.getEffectiveLabCapacity());
+    public static LabSectionResponse from(CourseGroup labGroup, long enrolledCount) {
+        Course course = labGroup.getCourse();
+        int capacity = labGroup.getMaxCapacity();
         int remaining = Math.max(capacity - (int) enrolledCount, 0);
-        String typeLabel = mapCourseType(labCourse.getCourseType());
+        String typeLabel = mapCourseType(labGroup.getType());
 
-        String groupLetter = labCourse.getGroupLetter() == 0
-            ? null
-            : String.valueOf(labCourse.getGroupLetter());
+        String groupLetter = labGroup.getLetter() != null ? labGroup.getLetter() : null;
 
         return new LabSectionResponse(
-            labCourse.getCourseId(),
-            labCourse.getName(),
+            course.getCourseId(),
+            course.getName(),
             groupLetter,
                 capacity,
                 (int) enrolledCount,
                 remaining,
-                labCourse.getLabPrerequisiteCourseId(),
+                course.getLabPrerequisiteCourseId(),
                 typeLabel,
-                labCourse.getScheduleSlots()
+                labGroup.getScheduleSlots()
         );
     }
 

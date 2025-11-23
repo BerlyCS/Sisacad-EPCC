@@ -9,16 +9,16 @@ import java.util.Optional;
 @Repository
 public interface StudentJpaRepository extends JpaRepository<StudentEntity, Long> {
 
-    boolean existsByCorreoInstitucional(String correoInstitucional);
+    boolean existsByInstitutionalEmail(String institutionalEmail);
 
-    List<StudentEntity> findByAnio(Integer anio);
+    List<StudentEntity> findByEnrollmentYear(Integer anio);
 
     // Agrega este método
-    Optional<StudentEntity> findByCorreoInstitucional(String correoInstitucional);
+    Optional<StudentEntity> findByInstitutionalEmail(String institutionalEmail);
 
     Optional<StudentEntity> findByCui(String cui);
 
-    List<StudentEntity> findByDocumentoIdentidadIn(List<String> documentoIdentidad);
+    List<StudentEntity> findByDocumentIdIn(List<String> documentIds);
 
     Optional<StudentEntity> findByDocumentId(String documentId);
 }

@@ -90,7 +90,7 @@ public class StudentCourseController {
         }
 
         return studentService.getStudentByCui(request.studentCui().trim())
-                .map(Student::getDocumentoIdentidad)
+                .map(Student::getDocumentId)
                 .orElse(null);
     }
 }

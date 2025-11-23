@@ -29,7 +29,6 @@ public class StudentCourseService {
     private final StudentCourseRepository studentCourseRepository;
     private final StudentRepository studentRepository;
     private final CourseRepository courseRepository;
-    private final ExcelScheduleService excelScheduleService;
     private static final DateTimeFormatter TIME_FORMATTER = DateTimeFormatter.ofPattern("H:mm");
     private static final Map<String, Integer> DAY_POSITION = Map.of(
             "LUNES", 1,
@@ -43,12 +42,10 @@ public class StudentCourseService {
 
     public StudentCourseService(StudentCourseRepository studentCourseRepository,
                                 StudentRepository studentRepository,
-                                CourseRepository courseRepository,
-                                ExcelScheduleService excelScheduleService) {
+                                CourseRepository courseRepository) {
         this.studentCourseRepository = studentCourseRepository;
         this.studentRepository = studentRepository;
         this.courseRepository = courseRepository;
-        this.excelScheduleService = excelScheduleService;
     }
 
     public List<Student> getStudentsByCourse(Long courseId) {
@@ -57,7 +54,7 @@ public class StudentCourseService {
 
         // Crear un mapa de estudiantes por documento de identidad para busqueda rapida
         java.util.Map<String, Student> studentMap = allStudents.stream()
-                .collect(Collectors.toMap(Student::getDocumentoIdentidad, student -> student));
+                .collect(Collectors.toMap(Student::getDocumentId, student -> student));
 
         // Filtrar estudiantes matriculados en el curso
     return enrollments.stream()
@@ -140,38 +137,8 @@ public class StudentCourseService {
     }
 
     public List<StudentScheduleEntry> getScheduleForStudent(String studentDocumentoIdentidad) {
-        List<Course> courses = getCoursesByStudent(studentDocumentoIdentidad);
-        if (courses.isEmpty()) {
-            return List.of();
-        }
-
-        List<StudentScheduleEntry> entries = new ArrayList<>();
-
-        for (Course course : courses) {
-            String group = (course.getGroupLetter() == '\0') ? null : String.valueOf(course.getGroupLetter());
-            List<ExcelScheduleService.OccupiedTimeSlot> slots = excelScheduleService
-                .findByCourse(course.getName(), group, course.getCourseType());
-            for (ExcelScheduleService.OccupiedTimeSlot slot : slots) {
-                entries.add(new StudentScheduleEntry(
-                        course.getCourseId(),
-                        course.getCourseCode(),
-                        course.getName(),
-                        course.getCourseType(),
-                        slot.getDayOfWeek(),
-                        slot.getStartTime(),
-                        slot.getEndTime(),
-                        slot.getClassroomName()
-                ));
-            }
-        }
-
-        Comparator<StudentScheduleEntry> comparator = Comparator
-                .comparing((StudentScheduleEntry entry) -> DAY_POSITION.getOrDefault(entry.getDayOfWeek().toUpperCase(Locale.ROOT), Integer.MAX_VALUE))
-                .thenComparing(StudentScheduleEntry::getStartTime)
-                .thenComparing(StudentScheduleEntry::getCourseName);
-
-        entries.sort(comparator);
-        return entries;
+        // Excel parser is disabled, so return empty schedule
+        return List.of();
     }
 
     private void ensureNoScheduleConflict(String studentDocumentoIdentidad, Course course) {
@@ -182,32 +149,7 @@ public class StudentCourseService {
     }
 
     private java.util.Optional<String> detectScheduleConflict(String studentDocumentoIdentidad, Course course) {
-        List<StudentScheduleEntry> currentSchedule = getScheduleForStudent(studentDocumentoIdentidad);
-        if (currentSchedule.isEmpty()) {
-            return java.util.Optional.empty();
-        }
-
-        String group = (course.getGroupLetter() == '\0') ? null : String.valueOf(course.getGroupLetter());
-        List<ExcelScheduleService.OccupiedTimeSlot> targetSlots = excelScheduleService
-                .findByCourse(course.getName(), group, course.getCourseType());
-        if (targetSlots == null || targetSlots.isEmpty()) {
-            return java.util.Optional.empty();
-        }
-
-        for (ExcelScheduleService.OccupiedTimeSlot slot : targetSlots) {
-            for (StudentScheduleEntry entry : currentSchedule) {
-                if (isSameDay(slot.getDayOfWeek(), entry.getDayOfWeek()) &&
-                        hasTimeOverlap(slot.getStartTime(), slot.getEndTime(), entry.getStartTime(), entry.getEndTime())) {
-                    String message = String.format(
-                            "El horario del curso %s (%s-%s) se superpone con %s (%s-%s)",
-                            course.getName(), slot.getStartTime(), slot.getEndTime(),
-                            entry.getCourseName(), entry.getStartTime(), entry.getEndTime()
-                    );
-                    return java.util.Optional.of(message);
-                }
-            }
-        }
-
+        // Excel parser is disabled, so no schedule conflicts to detect
         return java.util.Optional.empty();
     }
 

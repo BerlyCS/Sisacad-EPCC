@@ -7,6 +7,6 @@ import java.util.Optional;
 
 @Repository
 public interface ProfessorJpaRepository extends JpaRepository<ProfessorEntity, Long> {
-    boolean existsByCorreo(String correo);
-    Optional<ProfessorEntity> findByCorreo(String correo);
+    boolean existsByInstitutionalEmail(String institutionalEmail);
+    Optional<ProfessorEntity> findByInstitutionalEmail(String institutionalEmail);
 }

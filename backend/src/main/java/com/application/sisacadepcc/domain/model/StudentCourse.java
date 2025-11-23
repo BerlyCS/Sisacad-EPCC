@@ -36,11 +36,19 @@ public class StudentCourse {
         this.studentCui = studentCui;
     }
 
-    public Long getCourseGroupId() {
+    public String getStudentDocumentoIdentidad() {
+        return studentCui;
+    }
+
+    public void setStudentDocumentoIdentidad(String studentDocumentoIdentidad) {
+        this.studentCui = studentDocumentoIdentidad;
+    }
+
+    public Long getCourseId() {
         return courseGroupId;
     }
 
-    public void setCourseGroupId(Long courseGroupId) {
-        this.courseGroupId = courseGroupId;
+    public void setCourseId(Long courseId) {
+        this.courseGroupId = courseId;
     }
 }

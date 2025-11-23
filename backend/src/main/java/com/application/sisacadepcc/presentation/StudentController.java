@@ -3,7 +3,6 @@ package com.application.sisacadepcc.presentation;
 import com.application.sisacadepcc.config.security.RequiresAdministratorAccess;
 import com.application.sisacadepcc.domain.model.Student;
 import com.application.sisacadepcc.domain.model.Course;
-import com.application.sisacadepcc.presentation.dto.StudentProfileResponse;
 import com.application.sisacadepcc.presentation.dto.StudentScheduleEntry;
 import com.application.sisacadepcc.service.StudentService;
 import com.application.sisacadepcc.service.StudentCourseService;
@@ -70,7 +69,7 @@ public class StudentController {
                 return ResponseEntity.notFound().build();
             }
 
-            String studentDocumentoIdentidad = student.get().getDocumentoIdentidad();
+            String studentDocumentoIdentidad = student.get().getDocumentId();
             List<Course> courses = studentCourseService.getCoursesByStudent(studentDocumentoIdentidad);
             return ResponseEntity.ok(courses);
 
@@ -96,7 +95,7 @@ public class StudentController {
                 return ResponseEntity.notFound().build();
             }
 
-                String studentDocumentoIdentidad = student.get().getDocumentoIdentidad();
+                String studentDocumentoIdentidad = student.get().getDocumentId();
                 List<StudentScheduleEntry> schedule = studentCourseService.getScheduleForStudent(studentDocumentoIdentidad);
                 String scheduleDump = schedule.stream()
                     .map(entry -> String.format("{courseId=%d, courseCode=%d, name=%s, type=%s, day=%s, start=%s, end=%s, room=%s}",
@@ -222,7 +221,7 @@ public class StudentController {
             }
         }
 
-        List<Course> courses = studentCourseService.getCoursesByStudent(student.getDocumentoIdentidad());
+        List<Course> courses = studentCourseService.getCoursesByStudent(student.getDocumentId());
         return ResponseEntity.ok(courses);
     }
 
@@ -248,7 +247,7 @@ public class StudentController {
             }
         }
 
-        List<StudentScheduleEntry> schedule = studentCourseService.getScheduleForStudent(student.getDocumentoIdentidad());
+        List<StudentScheduleEntry> schedule = studentCourseService.getScheduleForStudent(student.getDocumentId());
         return ResponseEntity.ok(schedule);
     }
 }

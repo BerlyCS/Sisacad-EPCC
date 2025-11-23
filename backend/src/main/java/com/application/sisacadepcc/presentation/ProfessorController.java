@@ -77,7 +77,7 @@ public class ProfessorController {
         }
 
         return authorizationService.getAuthenticatedProfessor(authentication)
-                .map(professor -> ResponseEntity.ok(courseService.getCoursesForProfessor(professor.getId())))
+                .map(professor -> ResponseEntity.ok(courseService.getCoursesForProfessor(professor.getUserId())))
                 .orElseGet(() -> ResponseEntity.status(404).build());
     }
 }

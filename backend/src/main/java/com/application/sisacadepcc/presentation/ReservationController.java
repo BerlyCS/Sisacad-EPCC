@@ -3,7 +3,6 @@ package com.application.sisacadepcc.presentation;
 import com.application.sisacadepcc.domain.model.Reservation;
 import com.application.sisacadepcc.domain.model.valueobject.OccupiedSchedule;
 import com.application.sisacadepcc.service.ReservationService;
-import com.application.sisacadepcc.service.ExcelScheduleService;
 import com.application.sisacadepcc.presentation.dto.CreateReservationRequest;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -18,12 +17,9 @@ import java.util.Map;
 public class ReservationController {
 
     private final ReservationService reservationService;
-    private final ExcelScheduleService excelScheduleService;
 
-    public ReservationController(ReservationService reservationService,
-                                 ExcelScheduleService excelScheduleService) {
+    public ReservationController(ReservationService reservationService) {
         this.reservationService = reservationService;
-        this.excelScheduleService = excelScheduleService;
     }
 
     @GetMapping
@@ -127,17 +123,24 @@ public class ReservationController {
 
     @GetMapping("/classrooms")
     public List<String> getAvailableClassrooms() {
-        return excelScheduleService.getAvailableClassrooms();
+        // Excel parser disabled, return static list
+        return List.of("AULA 101", "AULA 201", "AULA 202", "AULA 203", "AULA 301", "LAB 01", "LAB 02", "LAB 04");
     }
 
     @GetMapping("/schedule/{classroomName}")
     public Map<String, Object> getClassroomSchedule(@PathVariable String classroomName) {
-        Map<String, List<ExcelScheduleService.OccupiedTimeSlot>> schedule =
-                excelScheduleService.getClassroomSchedule(classroomName);
+        // Excel parser disabled, return empty schedule
+        Map<String, List<?>> emptySchedule = Map.of(
+                "LUNES", List.of(),
+                "MARTES", List.of(),
+                "MIERCOLES", List.of(),
+                "JUEVES", List.of(),
+                "VIERNES", List.of()
+        );
 
         return Map.of(
                 "classroomName", classroomName,
-                "schedule", schedule
+                "schedule", emptySchedule
         );
     }
 

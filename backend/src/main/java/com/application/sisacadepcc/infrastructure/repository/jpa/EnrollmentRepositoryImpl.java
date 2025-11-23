@@ -25,14 +25,14 @@ public class EnrollmentRepositoryImpl implements EnrollmentRepository {
 
     @Override
     public List<StudentCourse> findByCourseGroupId(Long courseGroupId) {
-        return jpaRepository.findByCourseGroupId(courseGroupId).stream()
+        return jpaRepository.findByCourseGroup_Id(courseGroupId).stream()
                 .map(this::toDomain)
                 .collect(Collectors.toList());
     }
 
     @Override
     public List<StudentCourse> findByStudentCui(String studentCui) {
-        return jpaRepository.findByStudentCui(studentCui).stream()
+        return jpaRepository.findByStudent_Cui(studentCui).stream()
                 .map(this::toDomain)
                 .collect(Collectors.toList());
     }
@@ -58,7 +58,7 @@ public class EnrollmentRepositoryImpl implements EnrollmentRepository {
 
     @Override
     public boolean existsByStudentAndCourseGroup(String studentCui, Long courseGroupId) {
-        return !jpaRepository.findByStudentAndCourseGroup(studentCui, courseGroupId).isEmpty();
+        return jpaRepository.existsByStudent_CuiAndCourseGroup_Id(studentCui, courseGroupId);
     }
 
     @Override
@@ -66,7 +66,7 @@ public class EnrollmentRepositoryImpl implements EnrollmentRepository {
         if (courseGroupId == null) {
             return 0;
         }
-        return jpaRepository.countByCourseGroupId(courseGroupId);
+        return jpaRepository.countByCourseGroup_Id(courseGroupId);
     }
 
     private StudentCourse toDomain(EnrollmentEntity entity) {

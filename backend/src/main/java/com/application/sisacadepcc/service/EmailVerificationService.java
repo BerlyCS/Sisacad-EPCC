@@ -28,12 +28,11 @@ public class EmailVerificationService {
     public boolean verifyEmailExists(String email) {
         // Verificar en estudiantes
         boolean existsInStudents = studentRepository.findAll().stream()
-                .anyMatch(student -> email.equalsIgnoreCase(student.getCorreoInstitucional()));
+                .anyMatch(student -> email.equalsIgnoreCase(student.getInstitutionalEmail()));
 
         // Verificar en profesores
         boolean existsInProfessors = professorRepository.findAll().stream()
-                .anyMatch(professor -> email.equalsIgnoreCase(professor.getCorreo()));
-
+                .anyMatch(professor -> email.equalsIgnoreCase(professor.getInstitutionalEmail()));
         // Verificar en administradores
         boolean existsInAdministrators = administratorRepository.findAll().stream()
                 .anyMatch(admin -> email.equalsIgnoreCase(admin.getInstitutionalEmail()));

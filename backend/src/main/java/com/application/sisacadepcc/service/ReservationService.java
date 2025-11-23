@@ -15,14 +15,11 @@ import java.util.Optional;
 public class ReservationService {
 
     private final ReservationRepository reservationRepository;
-    private final ExcelScheduleService excelScheduleService;
     private final AuthorizationService authorizationService;
 
     public ReservationService(ReservationRepository reservationRepository,
-                              ExcelScheduleService excelScheduleService,
                               AuthorizationService authorizationService) {
         this.reservationRepository = reservationRepository;
-        this.excelScheduleService = excelScheduleService;
         this.authorizationService = authorizationService;
     }
 
@@ -49,15 +46,6 @@ public class ReservationService {
         }
 
         OccupiedSchedule schedule = reservation.getSchedule();
-
-        // Verificar que el horario no esté ocupado en el Excel (horarios recurrentes)
-        if (excelScheduleService.isTimeSlotOccupied(
-                reservation.getClassroomName(),
-                schedule.getDayOfWeek(),
-                schedule.getStartTime(),  // CAMBIADO: usar getStartTime() directamente
-                schedule.getEndTime())) { // CAMBIADO: usar getEndTime() directamente
-            throw new IllegalArgumentException("El horario seleccionado ya está ocupado en el horario regular");
-        }
 
         // Verificar que no haya reservas existentes en el mismo horario
         if (hasExistingReservation(reservation.getClassroomName(), schedule)) {
@@ -103,11 +91,6 @@ public class ReservationService {
     }
 
     public boolean isTimeSlotAvailable(String classroomName, String dayOfWeek, String startTime, String endTime) {
-        // Verificar en el Excel (horarios recurrentes)
-        if (excelScheduleService.isTimeSlotOccupied(classroomName, dayOfWeek, startTime, endTime)) {
-            return false;
-        }
-
         // Verificar en las reservas existentes
         List<Reservation> classroomReservations = reservationRepository.findByClassroomName(classroomName);
         return classroomReservations.stream().noneMatch(reservation -> {

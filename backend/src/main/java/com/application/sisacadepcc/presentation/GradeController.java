@@ -197,7 +197,7 @@ public class GradeController {
 
     private boolean ownsStudentRecord(String studentId, Authentication authentication) {
         return authorizationService.getAuthenticatedStudent(authentication)
-                .map(student -> student.getDocumentoIdentidad().equalsIgnoreCase(studentId))
+                .map(student -> student.getDocumentId().equalsIgnoreCase(studentId))
                 .orElse(false);
     }
 }

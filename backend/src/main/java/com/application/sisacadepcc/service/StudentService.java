@@ -29,24 +29,24 @@ public class StudentService {
 
         Comparator<Student> comparator;
         if ("dni".equals(sortBy)) {
-            comparator = Comparator.comparing(Student::getDocumentoIdentidad, Comparator.nullsLast(String::compareTo));
+            comparator = Comparator.comparing(Student::getDocumentId, Comparator.nullsLast(String::compareTo));
         } else if ("cui".equals(sortBy)) {
             comparator = Comparator.comparing(Student::getCui, Comparator.nullsLast(String::compareTo));
         } else if ("name".equals(sortBy)) {
             comparator = Comparator.comparing(s -> {
-                String nombres = s.getNombres() != null ? s.getNombres() : "";
-                String apellidoP = s.getApellidoPaterno() != null ? s.getApellidoPaterno() : "";
-                String apellidoM = s.getApellidoMaterno() != null ? s.getApellidoMaterno() : "";
+                String nombres = s.getFirstNames() != null ? s.getFirstNames() : "";
+                String apellidoP = s.getPaternalSurname() != null ? s.getPaternalSurname() : "";
+                String apellidoM = s.getMaternalSurname() != null ? s.getMaternalSurname() : "";
                 return (nombres + " " + apellidoP + " " + apellidoM).trim();
             }, Comparator.nullsLast(String::compareTo));
         } else if ("apellidos".equals(sortBy)) {
             comparator = Comparator.comparing(s -> {
-                String apellidoP = s.getApellidoPaterno() != null ? s.getApellidoPaterno() : "";
-                String apellidoM = s.getApellidoMaterno() != null ? s.getApellidoMaterno() : "";
+                String apellidoP = s.getPaternalSurname() != null ? s.getPaternalSurname() : "";
+                String apellidoM = s.getMaternalSurname() != null ? s.getMaternalSurname() : "";
                 return (apellidoP + " " + apellidoM).trim();
             }, Comparator.nullsLast(String::compareTo));
         } else {
-            comparator = Comparator.comparing(Student::getDocumentoIdentidad, Comparator.nullsLast(String::compareTo));
+            comparator = Comparator.comparing(Student::getDocumentId, Comparator.nullsLast(String::compareTo));
         }
 
         if ("desc".equalsIgnoreCase(direction)) {

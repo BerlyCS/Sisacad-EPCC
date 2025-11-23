@@ -2,12 +2,12 @@ package com.application.sisacadepcc.presentation;
 
 import com.application.sisacadepcc.config.security.RequiresAdministratorAccess;
 import com.application.sisacadepcc.domain.model.Course;
+import com.application.sisacadepcc.domain.model.CourseGroup;
 import com.application.sisacadepcc.presentation.dto.CourseDetailsResponse;
-import com.application.sisacadepcc.presentation.dto.UpdateLabCapacityRequest;
+import com.application.sisacadepcc.presentation.dto.UpdateCapacityRequest;
 import com.application.sisacadepcc.service.AuthorizationService;
 import com.application.sisacadepcc.service.CourseService;
 import com.application.sisacadepcc.service.UserRole;
-import com.application.sisacadepcc.service.ExcelScheduleService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
@@ -21,14 +21,11 @@ public class CourseController {
 
     private final CourseService service;
     private final AuthorizationService authorizationService;
-    private final ExcelScheduleService excelScheduleService;
 
     public CourseController(CourseService service,
-                            AuthorizationService authorizationService,
-                            ExcelScheduleService excelScheduleService) {
+                            AuthorizationService authorizationService) {
         this.service = service;
         this.authorizationService = authorizationService;
-        this.excelScheduleService = excelScheduleService;
     }
 
     @GetMapping
@@ -65,21 +62,31 @@ public class CourseController {
         return ResponseEntity.noContent().build();
     }
 
-    @PatchMapping("/{courseId}/lab-capacity")
-    public ResponseEntity<Course> updateLabCapacity(@PathVariable Long courseId,
-                                                    @RequestBody UpdateLabCapacityRequest request,
-                                                    Authentication authentication) {
+    @PatchMapping("/groups/{groupId}/capacity")
+    public ResponseEntity<CourseGroup> updateGroupCapacity(@PathVariable Long groupId,
+                                                           @RequestBody UpdateCapacityRequest request,
+                                                           Authentication authentication) {
         if (!authorizationService.hasAnyRole(authentication, UserRole.ADMIN, UserRole.SECRETARY)) {
             return ResponseEntity.status(403).build();
         }
 
-        Integer newCapacity = request != null ? request.labCapacity() : null;
+        Integer newCapacity = request != null ? request.capacity() : null;
         if (newCapacity != null && newCapacity < 0) {
             return ResponseEntity.badRequest().build();
         }
 
-        return service.updateLabCapacity(courseId, newCapacity)
-                .map(ResponseEntity::ok)
+        return service.updateGroupCapacity(groupId, newCapacity)
+                .map(group -> {
+                    // Check if over-enrolled
+                    int enrolled = group.getEnrollments() != null ? group.getEnrollments().size() : 0;
+                    if (newCapacity != null && enrolled > newCapacity) {
+                        // Still proceed, but add a warning header
+                        return ResponseEntity.ok()
+                                .header("X-Warning", "Group is over-enrolled: " + enrolled + " students for capacity " + newCapacity)
+                                .body(group);
+                    }
+                    return ResponseEntity.ok(group);
+                })
                 .orElseGet(() -> ResponseEntity.notFound().build());
     }
 
@@ -111,7 +118,25 @@ public class CourseController {
 
     @GetMapping("/timeslots")
     public ResponseEntity<List<Map<String, String>>> getTimeSlots() {
-        return ResponseEntity.ok(excelScheduleService.getTimeSlots());
+        // Excel parser disabled, return static time slots
+        List<Map<String, String>> timeSlots = List.of(
+                Map.of("startTime", "07:00", "endTime", "07:50"),
+                Map.of("startTime", "07:50", "endTime", "08:40"),
+                Map.of("startTime", "08:50", "endTime", "09:40"),
+                Map.of("startTime", "09:40", "endTime", "10:30"),
+                Map.of("startTime", "10:40", "endTime", "11:30"),
+                Map.of("startTime", "11:30", "endTime", "12:20"),
+                Map.of("startTime", "12:20", "endTime", "13:10"),
+                Map.of("startTime", "13:10", "endTime", "14:00"),
+                Map.of("startTime", "14:00", "endTime", "14:50"),
+                Map.of("startTime", "14:50", "endTime", "15:40"),
+                Map.of("startTime", "15:50", "endTime", "16:40"),
+                Map.of("startTime", "16:40", "endTime", "17:30"),
+                Map.of("startTime", "17:40", "endTime", "18:30"),
+                Map.of("startTime", "18:30", "endTime", "19:20"),
+                Map.of("startTime", "19:20", "endTime", "20:10")
+        );
+        return ResponseEntity.ok(timeSlots);
     }
 
     @GetMapping("/teacher-ids")

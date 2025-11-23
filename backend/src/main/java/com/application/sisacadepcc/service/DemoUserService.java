@@ -113,17 +113,17 @@ public class DemoUserService {
         if (profile == null) {
             return;
         }
-        if (studentJpaRepository.existsByCorreoInstitucional(profile.email())) {
+        if (studentJpaRepository.existsByInstitutionalEmail(profile.email())) {
             return;
         }
         StudentEntity entity = new StudentEntity();
-        entity.setDocumentoIdentidad(profile.documentoIdentidad() != null ? profile.documentoIdentidad() : "11111111");
+        entity.setDocumentId(profile.documentoIdentidad() != null ? profile.documentoIdentidad() : "11111111");
         entity.setCui(profile.cui() != null ? profile.cui() : "20250001");
-        entity.setApellidoPaterno("Demo");
-        entity.setApellidoMaterno("Student");
-        entity.setNombres("Estudiante");
-        entity.setCorreoInstitucional(profile.email());
-        entity.setAnio(2025);
+        entity.setPaternalSurname("Demo");
+        entity.setMaternalSurname("Student");
+        entity.setFirstNames("Estudiante");
+        entity.setInstitutionalEmail(profile.email());
+        entity.setEnrollmentYear(2025);
         studentJpaRepository.save(entity);
     }
 
@@ -132,15 +132,16 @@ public class DemoUserService {
         if (profile == null) {
             return;
         }
-        if (professorJpaRepository.existsByCorreo(profile.email())) {
+        if (professorJpaRepository.existsByInstitutionalEmail(profile.email())) {
             return;
         }
 
         ProfessorEntity entity = new ProfessorEntity();
-        entity.setApellidoPaterno("Demo");
-        entity.setApellidoMaterno("Professor");
-        entity.setNombres("Profesor");
-        entity.setCorreo(profile.email());
+        entity.setDocumentId("22222222");
+        entity.setPaternalSurname("Demo");
+        entity.setMaternalSurname("Professor");
+        entity.setFirstNames("Profesor");
+        entity.setInstitutionalEmail(profile.email());
 
         try {
             professorJpaRepository.save(entity);
@@ -158,10 +159,10 @@ public class DemoUserService {
             return;
         }
         AdministratorEntity entity = new AdministratorEntity();
-        entity.setDni("33333333");
+        entity.setDocumentId("33333333");
         entity.setPaternalSurname("Demo");
         entity.setMaternalSurname("Admin");
-        entity.setName("Administrador");
+        entity.setFirstNames("Administrador");
         entity.setInstitutionalEmail(profile.email());
         administratorJpaRepository.save(entity);
     }
@@ -175,10 +176,10 @@ public class DemoUserService {
             return;
         }
         SecretaryEntity entity = new SecretaryEntity();
-        entity.setDni("44444444");
+        entity.setDocumentId("44444444");
         entity.setPaternalSurname("Demo");
         entity.setMaternalSurname("Secretary");
-        entity.setName("Secretaria");
+        entity.setFirstNames("Secretaria");
         entity.setInstitutionalEmail(profile.email());
         secretaryJpaRepository.save(entity);
     }

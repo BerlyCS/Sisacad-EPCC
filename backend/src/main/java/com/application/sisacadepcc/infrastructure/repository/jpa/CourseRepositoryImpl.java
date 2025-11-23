@@ -41,7 +41,7 @@ public class CourseRepositoryImpl implements CourseRepository {
     }
 
     @Override
-    public Optional<Course> findByCourseCode(int courseCode) {
+    public Optional<Course> findByCourseCode(Long courseCode) {
         return jpaRepository.findByCourseCode(courseCode)
                 .map(this::mapToDomain);
     }
@@ -56,14 +56,14 @@ public class CourseRepositoryImpl implements CourseRepository {
     private Course mapToDomain(CourseEntity entity) {
         Course course = new Course();
         course.setCourseId(entity.getCourseId());
-        course.setCourseCode(entity.getCourseCode());
+        course.setCourseCode(entity.getCourseCode() != null ? entity.getCourseCode() : 0);
         course.setName(entity.getName());
-        course.setCredits(entity.getCredits());
+        course.setCredits(entity.getCredits() != null ? entity.getCredits() : 0);
         course.setSyllabusId(entity.getSyllabusId());
-        course.setLabHours(entity.getLabHours());
-        course.setPracticeHours(entity.getPracticeHours());
-        course.setTheoryHours(entity.getTheoryHours());
-        course.setSemesterNumber(entity.getSemesterNumber());
+        course.setLabHours(entity.getLabHours() != null ? entity.getLabHours() : 0);
+        course.setPracticeHours(entity.getPracticeHours() != null ? entity.getPracticeHours() : 0);
+        course.setTheoryHours(entity.getTheoryHours() != null ? entity.getTheoryHours() : 0);
+        course.setSemesterNumber(entity.getSemesterNumber() != null ? entity.getSemesterNumber() : 0);
         course.setGroups(mapGroupsToDomain(entity.getGroups()));
         return course;
     }

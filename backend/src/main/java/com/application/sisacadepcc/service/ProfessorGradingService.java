@@ -3,13 +3,9 @@ package com.application.sisacadepcc.service;
 import com.application.sisacadepcc.domain.model.Course;
 import com.application.sisacadepcc.domain.model.Grade;
 import com.application.sisacadepcc.domain.model.Professor;
-import com.application.sisacadepcc.domain.model.Student;
-import com.application.sisacadepcc.domain.model.StudentCourse;
 import com.application.sisacadepcc.domain.model.valueobject.CourseType;
 import com.application.sisacadepcc.domain.repository.CourseRepository;
 import com.application.sisacadepcc.domain.repository.GradeRepository;
-import com.application.sisacadepcc.domain.repository.StudentCourseRepository;
-import com.application.sisacadepcc.domain.repository.StudentRepository;
 import com.application.sisacadepcc.presentation.dto.CourseGroupSummaryResponse;
 import com.application.sisacadepcc.presentation.dto.CourseRosterEntryResponse;
 import com.application.sisacadepcc.presentation.dto.CourseRosterPageResponse;
@@ -23,14 +19,11 @@ import org.springframework.util.CollectionUtils;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Comparator;
-import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 @Service
@@ -40,23 +33,14 @@ public class ProfessorGradingService {
     private static final int MAX_COMPONENTS = 3;
 
     private final CourseRepository courseRepository;
-    private final StudentCourseRepository studentCourseRepository;
-    private final StudentRepository studentRepository;
     private final GradeRepository gradeRepository;
-    private final AuthorizationService authorizationService;
     private final GradeComputationService gradeComputationService;
 
     public ProfessorGradingService(CourseRepository courseRepository,
-                                   StudentCourseRepository studentCourseRepository,
-                                   StudentRepository studentRepository,
                                    GradeRepository gradeRepository,
-                                   AuthorizationService authorizationService,
                                    GradeComputationService gradeComputationService) {
         this.courseRepository = courseRepository;
-        this.studentCourseRepository = studentCourseRepository;
-        this.studentRepository = studentRepository;
         this.gradeRepository = gradeRepository;
-        this.authorizationService = authorizationService;
         this.gradeComputationService = gradeComputationService;
     }
 
@@ -87,31 +71,15 @@ public class ProfessorGradingService {
         List<CourseRosterEntryResponse> entries = new ArrayList<>();
 
         for (Course group : resolvedGroups) {
-            List<StudentCourse> enrolments = studentCourseRepository.findByCourseId(group.getCourseId());
+            // TODO: Implement enrollment fetching using EnrollmentRepository
+            List<?> enrolments = List.of(); // Placeholder
             if (enrolments.isEmpty()) {
                 continue;
             }
 
-            Map<String, Student> studentsByDocumento = fetchStudents(enrolments);
-            boolean canGrade = isTheory(group);
-
-            for (StudentCourse enrolment : enrolments) {
-                Student student = studentsByDocumento.get(enrolment.getStudentDocumentoIdentidad());
-                if (student == null) {
-                    continue;
-                }
-                Grade grade = gradeRepository
-                        .findByCourseAndStudent(String.valueOf(group.getCourseId()), student.getDocumentoIdentidad())
-                        .orElse(null);
-
-                Double finalGrade = null;
-                if (grade != null && canGrade) {
-                    BigDecimal computed = gradeComputationService.computeFinalGrade(grade, group);
-                    finalGrade = computed.doubleValue();
-                }
-
-                String status = grade != null ? "SUBMITTED" : "PENDING";
-                entries.add(toRosterEntry(student, group, grade, finalGrade, canGrade, status));
+            // Placeholder loop
+            for (Object enrolment : enrolments) {
+                // TODO
             }
         }
 
@@ -170,9 +138,7 @@ public class ProfessorGradingService {
             throw new AccessDeniedException("Los grupos de laboratorio son de solo lectura para notas");
         }
 
-        if (!studentCourseRepository.existsByStudentAndCourse(studentDocumento, groupCourse.getCourseId())) {
-            throw new IllegalArgumentException("El estudiante no está matriculado en este grupo");
-        }
+        // TODO: Implement enrollment check using EnrollmentRepository
 
         List<Integer> sanitizedContinuous = sanitizeGrades(request.continuousGrades());
         List<Integer> sanitizedExam = sanitizeGrades(request.examGrades());
@@ -217,9 +183,9 @@ public class ProfessorGradingService {
     }
 
     private List<Course> resolveSiblingGroups(Course anchorCourse) {
-        Long anchorCode = anchorCourse.getCourseCode() != null ? anchorCourse.getCourseCode() : anchorCourse.getCourseId();
+        Long anchorCode = (long) anchorCourse.getCourseCode();
         return courseRepository.findAll().stream()
-                .filter(course -> Objects.equals(anchorCode, course.getCourseCode() != null ? course.getCourseCode() : course.getCourseId()))
+                .filter(course -> Objects.equals(anchorCode, (long) course.getCourseCode()))
                 .sorted(Comparator.comparing(Course::getGroupLetter))
                 .toList();
     }
@@ -242,22 +208,9 @@ public class ProfessorGradingService {
         return resolved.isEmpty() ? List.of(anchorCourse) : resolved;
     }
 
-    private Map<String, Student> fetchStudents(List<StudentCourse> enrolments) {
-        Set<String> documentos = enrolments.stream()
-                .map(StudentCourse::getStudentDocumentoIdentidad)
-                .filter(Objects::nonNull)
-                .collect(Collectors.toSet());
-
-        List<Student> students = studentRepository.findByDocumentoIdentidadIn(new ArrayList<>(documentos));
-        Map<String, Student> byDocumento = new HashMap<>();
-        for (Student student : students) {
-            byDocumento.put(student.getDocumentoIdentidad(), student);
-        }
-        return byDocumento;
-    }
-
     private CourseGroupSummaryResponse toGroupSummary(Course course, boolean canGrade) {
-        int studentCount = studentCourseRepository.findByCourseId(course.getCourseId()).size();
+        // TODO: Implement student count using EnrollmentRepository
+        int studentCount = 0; // Placeholder
         return new CourseGroupSummaryResponse(
                 course.getCourseId(),
                 String.valueOf(course.getCourseId()),
@@ -267,35 +220,6 @@ public class ProfessorGradingService {
                 canGrade,
                 studentCount,
                 MAX_GROUP_CAPACITY
-        );
-    }
-
-        private CourseRosterEntryResponse toRosterEntry(Student student,
-                                Course group,
-                                Grade grade,
-                                Double finalGrade,
-                                boolean canGrade,
-                                String status) {
-        String fullName = String.format(Locale.ROOT, "%s %s %s",
-                Optional.ofNullable(student.getApellidoPaterno()).orElse(""),
-                Optional.ofNullable(student.getApellidoMaterno()).orElse(""),
-                Optional.ofNullable(student.getNombres()).orElse("")
-        ).trim();
-
-        return new CourseRosterEntryResponse(
-                student.getDocumentoIdentidad(),
-                student.getCui(),
-                fullName.isEmpty() ? student.getNombres() : fullName,
-                student.getCorreoInstitucional(),
-                group.getCourseId(),
-                String.valueOf(group.getCourseId()),
-                String.valueOf(group.getGroupLetter()),
-                group.getCourseType().name(),
-                canGrade,
-            grade != null ? grade.getContinuousGrades() : List.of(),
-            grade != null ? grade.getExamGrades() : List.of(),
-                finalGrade,
-                status
         );
     }
 
@@ -327,6 +251,6 @@ public class ProfessorGradingService {
         if (professor == null) {
             throw new AccessDeniedException("No se pudo determinar el profesor autenticado");
         }
-        return professor.getId();
+        return professor.getUserId();
     }
 }

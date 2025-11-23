@@ -3,17 +3,13 @@ package com.application.sisacadepcc.service;
 import com.application.sisacadepcc.domain.model.Course;
 import com.application.sisacadepcc.domain.model.CourseGroup;
 import com.application.sisacadepcc.domain.model.Student;
-import com.application.sisacadepcc.domain.model.StudentCourse;
 import com.application.sisacadepcc.domain.model.Syllabus;
 import com.application.sisacadepcc.domain.model.valueobject.CourseType;
 import com.application.sisacadepcc.domain.repository.CourseRepository;
-import com.application.sisacadepcc.domain.repository.ProfessorRepository;
-import com.application.sisacadepcc.domain.repository.StudentRepository;
 import com.application.sisacadepcc.domain.repository.SyllabusRepository;
 import com.application.sisacadepcc.service.dto.CourseDetails;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -24,20 +20,14 @@ public class CourseService {
 
     private final CourseRepository repository;
     private final com.application.sisacadepcc.domain.repository.CourseGroupRepository courseGroupRepository;
-    private final StudentRepository studentRepository;
     private final SyllabusRepository syllabusRepository;
-    private final ProfessorRepository professorRepository;
 
     public CourseService(CourseRepository repository,
                          com.application.sisacadepcc.domain.repository.CourseGroupRepository courseGroupRepository,
-                         StudentRepository studentRepository,
-                         SyllabusRepository syllabusRepository,
-                         ProfessorRepository professorRepository) {
+                         SyllabusRepository syllabusRepository) {
         this.repository = repository;
         this.courseGroupRepository = courseGroupRepository;
-        this.studentRepository = studentRepository;
         this.syllabusRepository = syllabusRepository;
-        this.professorRepository = professorRepository;
     }
 
     public List<Course> getAllCourses() {
@@ -56,24 +46,35 @@ public class CourseService {
                 .collect(Collectors.toList());
     }
 
-    public Optional<CourseDetails> getCourseDetails(Long courseId) {
-        if (courseId == null) {
+    public Optional<CourseDetails> getCourseDetails(Long groupId) {
+        if (groupId == null) {
             return Optional.empty();
         }
 
-        return repository.findById(courseId)
+        return courseGroupRepository.findById(groupId)
                 .map(this::buildCourseDetails);
     }
 
-    public List<Course> getLabSectionsForTheoryCourse(Long theoryCourseId) {
-        if (theoryCourseId == null) {
+    public List<CourseGroup> getLabGroupsForCourse(Long courseId) {
+        if (courseId == null) {
             return List.of();
         }
-        return repository.findByLabPrerequisiteCourseId(theoryCourseId);
+        return courseGroupRepository.findByCourseId(courseId).stream()
+                .filter(group -> group.getType() == CourseType.LAB)
+                .collect(Collectors.toList());
     }
 
-    public Optional<Course> updateLabCapacity(Long courseId, Integer labCapacity) {
-        return repository.updateLabCapacity(courseId, labCapacity);
+    public Optional<CourseGroup> updateGroupCapacity(Long groupId, Integer capacity) {
+        if (groupId == null || capacity == null || capacity < 0) {
+            return Optional.empty();
+        }
+        return courseGroupRepository.findById(groupId)
+                .map(group -> {
+                    group.setMaxCapacity(capacity);
+                    int enrolled = group.getEnrollments() != null ? group.getEnrollments().size() : 0;
+                    group.setAvailableCapacity(Math.max(0, capacity - enrolled));
+                    return courseGroupRepository.save(group);
+                });
     }
 
     /**
@@ -89,66 +90,31 @@ public class CourseService {
     }
 
     public Optional<Course> assignProfessorToCourse(Long courseId, Long professorId) {
-        if (courseId == null || professorId == null) {
-            return Optional.empty();
-        }
-
-        if (professorRepository.findById(professorId).isEmpty()) {
-            return Optional.empty();
-        }
-
-        return repository.findById(courseId)
-                .flatMap(course -> {
-                    List<Long> teacherIds = new ArrayList<>(
-                            Optional.ofNullable(course.getTeacherIDs()).orElse(List.of())
-                    );
-                    if (teacherIds.contains(professorId)) {
-                        return Optional.of(course);
-                    }
-                    teacherIds.add(professorId);
-                    return repository.updateTeacherAssignments(courseId, teacherIds);
-                });
+        // TODO: Implement assignment logic using CourseGroupRepository
+        return Optional.empty();
     }
 
     public Optional<Course> removeProfessorFromCourse(Long courseId, Long professorId) {
-        if (courseId == null || professorId == null) {
-            return Optional.empty();
-        }
-
-        return repository.findById(courseId)
-                .flatMap(course -> {
-                    List<Long> teacherIds = new ArrayList<>(
-                            Optional.ofNullable(course.getTeacherIDs()).orElse(List.of())
-                    );
-                    boolean modified = teacherIds.removeIf(id -> Objects.equals(id, professorId));
-                    if (!modified) {
-                        return Optional.of(course);
-                    }
-                    return repository.updateTeacherAssignments(courseId, teacherIds);
-                });
+        // TODO: Implement removal logic using CourseGroupRepository
+        return Optional.empty();
     }
 
-    private CourseDetails buildCourseDetails(Course course) {
-        List<StudentCourse> enrolments = studentCourseRepository.findByCourseId(course.getCourseId());
-        List<String> studentIds = enrolments.stream()
-                .map(StudentCourse::getStudentDocumentoIdentidad)
-                .filter(Objects::nonNull)
-                .distinct()
-                .toList();
-
-        List<Student> students = studentRepository.findByDocumentoIdentidadIn(studentIds);
+    private CourseDetails buildCourseDetails(CourseGroup group) {
+        Course course = group.getCourse();
+        // TODO: Implement enrollment fetching using EnrollmentRepository
+        List<Student> students = List.of(); // Placeholder until EnrollmentRepository is implemented
 
         Course labCourse = null;
-        if (course.getCourseType() == CourseType.THEORY && course.getLabPrerequisiteCourseId() != null) {
+        if (group.getType() == CourseType.THEORY && course.getLabPrerequisiteCourseId() != null) {
             labCourse = repository.findById(course.getLabPrerequisiteCourseId()).orElse(null);
         }
 
         Syllabus syllabus = null;
-        if (course.getSyllabusID() != null) {
-            syllabus = syllabusRepository.findById(course.getSyllabusID()).orElse(null);
+        if (course.getSyllabusId() != null) {
+            syllabus = syllabusRepository.findById(course.getSyllabusId()).orElse(null);
         }
 
-        return new CourseDetails(course, students, labCourse, syllabus);
+        return new CourseDetails(group, students, labCourse, syllabus);
     }
 
 }

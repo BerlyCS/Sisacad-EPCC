@@ -5,7 +5,7 @@ import java.util.Optional;
 
 public interface CourseJpaRepository extends JpaRepository<CourseEntity, Long> {
 
-    Optional<CourseEntity> findByCourseCode(int courseCode);
+    Optional<CourseEntity> findByCourseCode(Long courseCode);
 
     // Add methods as needed for the new schema
 }
