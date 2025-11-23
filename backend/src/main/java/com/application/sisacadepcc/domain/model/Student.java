@@ -1,46 +1,38 @@
 package com.application.sisacadepcc.domain.model;
 
-public class Student {
-    private String documentoIdentidad;
+import com.application.sisacadepcc.domain.model.valueobject.UserType;
+
+public class Student extends User {
+
     private String cui;
-    private String apellidoPaterno;
-    private String apellidoMaterno;
-    private String nombres;
-    private String correoInstitucional;
-    private Integer anio; // Cambiado de año a anio
+    private Integer enrollmentYear;
 
-    public Student() {}
-
-    public Student(String documentoIdentidad, String cui, String apellidoPaterno,
-                   String apellidoMaterno, String nombres, String correoInstitucional, Integer anio) {
-        this.documentoIdentidad = documentoIdentidad;
-        this.cui = cui;
-        this.apellidoPaterno = apellidoPaterno;
-        this.apellidoMaterno = apellidoMaterno;
-        this.nombres = nombres;
-        this.correoInstitucional = correoInstitucional;
-        this.anio = anio;
+    public Student() {
+        super();
+        setUserType(UserType.STUDENT);
     }
 
-    // Getters y setters
-    public String getDocumentoIdentidad() { return documentoIdentidad; }
-    public void setDocumentoIdentidad(String documentoIdentidad) { this.documentoIdentidad = documentoIdentidad; }
+    public Student(String documentId, String paternalSurname, String maternalSurname,
+                   String firstNames, String institutionalEmail, String cui, Integer enrollmentYear) {
+        super(documentId, paternalSurname, maternalSurname, firstNames, institutionalEmail, UserType.STUDENT);
+        this.cui = cui;
+        this.enrollmentYear = enrollmentYear;
+    }
 
-    public String getCui() { return cui; }
-    public void setCui(String cui) { this.cui = cui; }
+    // Getters and setters
+    public String getCui() {
+        return cui;
+    }
 
-    public String getApellidoPaterno() { return apellidoPaterno; }
-    public void setApellidoPaterno(String apellidoPaterno) { this.apellidoPaterno = apellidoPaterno; }
+    public void setCui(String cui) {
+        this.cui = cui;
+    }
 
-    public String getApellidoMaterno() { return apellidoMaterno; }
-    public void setApellidoMaterno(String apellidoMaterno) { this.apellidoMaterno = apellidoMaterno; }
+    public Integer getEnrollmentYear() {
+        return enrollmentYear;
+    }
 
-    public String getNombres() { return nombres; }
-    public void setNombres(String nombres) { this.nombres = nombres; }
-
-    public String getCorreoInstitucional() { return correoInstitucional; }
-    public void setCorreoInstitucional(String correoInstitucional) { this.correoInstitucional = correoInstitucional; }
-
-    public Integer getAnio() { return anio; }
-    public void setAnio(Integer anio) { this.anio = anio; }
+    public void setEnrollmentYear(Integer enrollmentYear) {
+        this.enrollmentYear = enrollmentYear;
+    }
 }

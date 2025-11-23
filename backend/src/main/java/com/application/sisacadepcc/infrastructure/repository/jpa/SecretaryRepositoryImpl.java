@@ -25,13 +25,27 @@ public class SecretaryRepositoryImpl implements SecretaryRepository {
     }
 
     private Secretary mapToDomain(SecretaryEntity entity) {
-        return new Secretary(
-                entity.getDni(),
-                entity.getPaternalSurname(),
-                entity.getMaternalSurname(),
-                entity.getName(),
-                entity.getInstitutionalEmail()
-        );
+        Secretary secretary = new Secretary();
+        secretary.setUserId(entity.getUserId());
+        secretary.setDocumentId(entity.getDocumentId());
+        secretary.setPaternalSurname(entity.getPaternalSurname());
+        secretary.setMaternalSurname(entity.getMaternalSurname());
+        secretary.setFirstNames(entity.getFirstNames());
+        secretary.setInstitutionalEmail(entity.getInstitutionalEmail());
+        secretary.setUserType(entity.getUserType());
+        return secretary;
+    }
+
+    private SecretaryEntity mapToEntity(Secretary secretary) {
+        SecretaryEntity entity = new SecretaryEntity();
+        entity.setUserId(secretary.getUserId());
+        entity.setDocumentId(secretary.getDocumentId());
+        entity.setPaternalSurname(secretary.getPaternalSurname());
+        entity.setMaternalSurname(secretary.getMaternalSurname());
+        entity.setFirstNames(secretary.getFirstNames());
+        entity.setInstitutionalEmail(secretary.getInstitutionalEmail());
+        entity.setUserType(secretary.getUserType());
+        return entity;
     }
 
     @Override

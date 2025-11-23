@@ -1,9 +1,7 @@
 package com.application.sisacadepcc.infrastructure.repository.jpa;
 
-import com.application.sisacadepcc.domain.model.valueobject.CourseType;
 import jakarta.persistence.*;
 
-import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -16,121 +14,114 @@ public class CourseEntity {
     @Column(name = "course_id")
     private Long courseId;
 
+    @Column(name = "course_code", nullable = false, unique = true)
+    private int courseCode;
+
     @Column(name = "name", nullable = false)
     private String name;
 
-    @Column(name = "credit_number")
-    private int creditNumber;
-
-    @Column(name = "group_letter")
-    private char groupLetter;
+    @Column(name = "credits", nullable = false)
+    private int credits;
 
     @Column(name = "syllabus_id")
     private Long syllabusId;
 
-    @Column(name = "anio")
-    private Integer anio;
+    @Column(name = "lab_hours", nullable = false)
+    private int labHours;
 
-    @Enumerated(EnumType.STRING)
-    @Column(name = "course_type")
-    private CourseType courseType;
+    @Column(name = "practice_hours", nullable = false)
+    private int practiceHours;
 
-    @Column(name = "lab_prerequisite_course_id")
-    private Long labPrerequisiteCourseId;
+    @Column(name = "theory_hours", nullable = false)
+    private int theoryHours;
 
-    @Column(name = "lab_capacity")
-    private Integer labCapacity;
+    @Column(name = "semester_number", nullable = false)
+    private int semesterNumber;
 
-    @ElementCollection
-    @CollectionTable(
-            name = "course_enrolled_students",
-            joinColumns = @JoinColumn(name = "course_id")
-    )
-    @Column(name = "student_id")
-        private List<Long> enrolledStudentIDs = new ArrayList<>();
-
-    @ElementCollection
-    @CollectionTable(
-            name = "course_teachers",
-            joinColumns = @JoinColumn(name = "course_id")
-    )
-    @Column(name = "teacher_id")
-        private List<Long> teacherIDs = new ArrayList<>();
-
-
-        @ElementCollection
-        @CollectionTable(
-            name = "course_continuous_grade_weights",
-            joinColumns = @JoinColumn(name = "course_id")
-        )
-        @Column(name = "weight", precision = 5, scale = 2)
-        private List<BigDecimal> continuousGradeWeights = new ArrayList<>();
-
-        @ElementCollection
-        @CollectionTable(
-            name = "course_exam_grade_weights",
-            joinColumns = @JoinColumn(name = "course_id")
-        )
-        @Column(name = "weight", precision = 5, scale = 2)
-        private List<BigDecimal> examGradeWeights = new ArrayList<>();
-
-            @ElementCollection
-            @CollectionTable(
-                name = "course_schedule_slots",
-                joinColumns = @JoinColumn(name = "course_id")
-            )
-            private List<ScheduleSlotEmbeddable> scheduleSlots = new ArrayList<>();
+    @OneToMany(mappedBy = "course", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    private List<CourseGroupEntity> groups = new ArrayList<>();
 
     public CourseEntity() {
         // Required by JPA
     }
 
-    // Getters y setters
-    public Long getCourseId() { return courseId; }
-    public void setCourseId(Long courseId) { this.courseId = courseId; }
-
-    public String getName() { return name; }
-    public void setName(String name) { this.name = name; }
-
-    public int getCreditNumber() { return creditNumber; }
-    public void setCreditNumber(int creditNumber) { this.creditNumber = creditNumber; }
-
-    public char getGroupLetter() { return groupLetter; }
-    public void setGroupLetter(char groupLetter) { this.groupLetter = groupLetter; }
-
-    public Long getSyllabusId() { return syllabusId; }
-    public void setSyllabusId(Long syllabusId) { this.syllabusId = syllabusId; }
-
-    public Integer getAnio() { return anio; }
-    public void setAnio(Integer anio) { this.anio = anio; }
-
-    public CourseType getCourseType() { return courseType; }
-    public void setCourseType(CourseType courseType) { this.courseType = courseType; }
-
-    public Long getLabPrerequisiteCourseId() { return labPrerequisiteCourseId; }
-    public void setLabPrerequisiteCourseId(Long labPrerequisiteCourseId) {
-        this.labPrerequisiteCourseId = labPrerequisiteCourseId;
+    public Long getCourseId() {
+        return courseId;
     }
 
-    public Integer getLabCapacity() { return labCapacity; }
-    public void setLabCapacity(Integer labCapacity) { this.labCapacity = labCapacity; }
-
-    public List<Long> getEnrolledStudentIDs() { return enrolledStudentIDs; }
-    public void setEnrolledStudentIDs(List<Long> enrolledStudentIDs) { this.enrolledStudentIDs = enrolledStudentIDs; }
-
-    public List<Long> getTeacherIDs() { return teacherIDs; }
-    public void setTeacherIDs(List<Long> teacherIDs) { this.teacherIDs = teacherIDs; }
-
-    public List<BigDecimal> getContinuousGradeWeights() { return continuousGradeWeights; }
-    public void setContinuousGradeWeights(List<BigDecimal> continuousGradeWeights) {
-        this.continuousGradeWeights = continuousGradeWeights;
+    public void setCourseId(Long courseId) {
+        this.courseId = courseId;
     }
 
-    public List<BigDecimal> getExamGradeWeights() { return examGradeWeights; }
-    public void setExamGradeWeights(List<BigDecimal> examGradeWeights) {
-        this.examGradeWeights = examGradeWeights;
+    public int getCourseCode() {
+        return courseCode;
     }
 
-    public List<ScheduleSlotEmbeddable> getScheduleSlots() { return scheduleSlots; }
-    public void setScheduleSlots(List<ScheduleSlotEmbeddable> scheduleSlots) { this.scheduleSlots = scheduleSlots; }
+    public void setCourseCode(int courseCode) {
+        this.courseCode = courseCode;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public int getCredits() {
+        return credits;
+    }
+
+    public void setCredits(int credits) {
+        this.credits = credits;
+    }
+
+    public Long getSyllabusId() {
+        return syllabusId;
+    }
+
+    public void setSyllabusId(Long syllabusId) {
+        this.syllabusId = syllabusId;
+    }
+
+    public int getLabHours() {
+        return labHours;
+    }
+
+    public void setLabHours(int labHours) {
+        this.labHours = labHours;
+    }
+
+    public int getPracticeHours() {
+        return practiceHours;
+    }
+
+    public void setPracticeHours(int practiceHours) {
+        this.practiceHours = practiceHours;
+    }
+
+    public int getTheoryHours() {
+        return theoryHours;
+    }
+
+    public void setTheoryHours(int theoryHours) {
+        this.theoryHours = theoryHours;
+    }
+
+    public int getSemesterNumber() {
+        return semesterNumber;
+    }
+
+    public void setSemesterNumber(int semesterNumber) {
+        this.semesterNumber = semesterNumber;
+    }
+
+    public List<CourseGroupEntity> getGroups() {
+        return groups;
+    }
+
+    public void setGroups(List<CourseGroupEntity> groups) {
+        this.groups = groups;
+    }
 }

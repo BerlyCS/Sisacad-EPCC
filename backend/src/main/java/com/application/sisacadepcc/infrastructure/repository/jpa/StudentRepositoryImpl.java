@@ -1,6 +1,7 @@
 package com.application.sisacadepcc.infrastructure.repository.jpa;
 
 import com.application.sisacadepcc.domain.model.Student;
+import com.application.sisacadepcc.domain.model.valueobject.UserType;
 import com.application.sisacadepcc.domain.repository.StudentRepository;
 import org.springframework.stereotype.Repository;
 
@@ -69,14 +70,30 @@ public class StudentRepositoryImpl implements StudentRepository {
     }
 
     private Student mapToDomain(StudentEntity entity) {
-        return new Student(
-                entity.getDocumentoIdentidad(),
-                entity.getCui(),
-                entity.getApellidoPaterno(),
-                entity.getApellidoMaterno(),
-                entity.getNombres(),
-                entity.getCorreoInstitucional(),
-                entity.getAnio()
-        );
+        Student student = new Student();
+        student.setUserId(entity.getUserId());
+        student.setDocumentId(entity.getDocumentId());
+        student.setPaternalSurname(entity.getPaternalSurname());
+        student.setMaternalSurname(entity.getMaternalSurname());
+        student.setFirstNames(entity.getFirstNames());
+        student.setInstitutionalEmail(entity.getInstitutionalEmail());
+        student.setUserType(entity.getUserType());
+        student.setCui(entity.getCui());
+        student.setEnrollmentYear(entity.getEnrollmentYear());
+        return student;
+    }
+
+    private StudentEntity mapToEntity(Student student) {
+        StudentEntity entity = new StudentEntity();
+        entity.setUserId(student.getUserId());
+        entity.setDocumentId(student.getDocumentId());
+        entity.setPaternalSurname(student.getPaternalSurname());
+        entity.setMaternalSurname(student.getMaternalSurname());
+        entity.setFirstNames(student.getFirstNames());
+        entity.setInstitutionalEmail(student.getInstitutionalEmail());
+        entity.setUserType(student.getUserType());
+        entity.setCui(student.getCui());
+        entity.setEnrollmentYear(student.getEnrollmentYear());
+        return entity;
     }
 }

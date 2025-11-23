@@ -25,13 +25,27 @@ public class AdministratorRepositoryImpl implements AdministratorRepository {
     }
 
     private Administrator mapToDomain(AdministratorEntity entity) {
-        return new Administrator(
-                entity.getDni(),
-                entity.getPaternalSurname(),
-                entity.getMaternalSurname(),
-                entity.getName(),
-                entity.getInstitutionalEmail()
-        );
+        Administrator administrator = new Administrator();
+        administrator.setUserId(entity.getUserId());
+        administrator.setDocumentId(entity.getDocumentId());
+        administrator.setPaternalSurname(entity.getPaternalSurname());
+        administrator.setMaternalSurname(entity.getMaternalSurname());
+        administrator.setFirstNames(entity.getFirstNames());
+        administrator.setInstitutionalEmail(entity.getInstitutionalEmail());
+        administrator.setUserType(entity.getUserType());
+        return administrator;
+    }
+
+    private AdministratorEntity mapToEntity(Administrator administrator) {
+        AdministratorEntity entity = new AdministratorEntity();
+        entity.setUserId(administrator.getUserId());
+        entity.setDocumentId(administrator.getDocumentId());
+        entity.setPaternalSurname(administrator.getPaternalSurname());
+        entity.setMaternalSurname(administrator.getMaternalSurname());
+        entity.setFirstNames(administrator.getFirstNames());
+        entity.setInstitutionalEmail(administrator.getInstitutionalEmail());
+        entity.setUserType(administrator.getUserType());
+        return entity;
     }
 
     @Override

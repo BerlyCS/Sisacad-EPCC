@@ -4,7 +4,7 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Embeddable;
 
 @Embeddable
-public class ScheduleSlotEmbeddable {
+public class CourseScheduleEmbeddable {
 
     @Column(name = "classroom_name")
     private String classroomName;
@@ -17,6 +17,16 @@ public class ScheduleSlotEmbeddable {
 
     @Column(name = "end_time")
     private String endTime;
+
+    public CourseScheduleEmbeddable() {
+    }
+
+    public CourseScheduleEmbeddable(String classroomName, String dayOfWeek, String startTime, String endTime) {
+        this.classroomName = classroomName;
+        this.dayOfWeek = dayOfWeek;
+        this.startTime = startTime;
+        this.endTime = endTime;
+    }
 
     public String getClassroomName() {
         return classroomName;

@@ -5,16 +5,16 @@ package com.application.sisacadepcc.domain.model;
  * CourseGroup carries capacity and schedule details, so we only need to store
  * identifiers here to keep the aggregate lightweight for high-load operations.
  */
-public class StudentCourse {
+public class Enrollment {
 
     private Long id;
     private String studentCui;
     private Long courseGroupId;
 
-    public StudentCourse() {
+    public Enrollment() {
     }
 
-    public StudentCourse(Long id, String studentCui, Long courseGroupId) {
+    public Enrollment(Long id, String studentCui, Long courseGroupId) {
         this.id = id;
         this.studentCui = studentCui;
         this.courseGroupId = courseGroupId;

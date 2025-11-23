@@ -25,16 +25,6 @@ public class ProfessorRepositoryImpl implements ProfessorRepository {
                 .collect(Collectors.toList());
     }
 
-    private Professor mapToDomain(ProfessorEntity entity) {
-        return new Professor(
-                entity.getId(),
-                entity.getApellidoPaterno(),
-                entity.getApellidoMaterno(),
-                entity.getNombres(),
-                entity.getCorreo()
-        );
-    }
-
     @Override
     public boolean existsByCorreo(String email) {
         return jpaRepository.existsByCorreo(email);
@@ -53,5 +43,29 @@ public class ProfessorRepositoryImpl implements ProfessorRepository {
         }
         return jpaRepository.findById(id)
                 .map(this::mapToDomain);
+    }
+
+    private Professor mapToDomain(ProfessorEntity entity) {
+        Professor professor = new Professor();
+        professor.setUserId(entity.getUserId());
+        professor.setDocumentId(entity.getDocumentId());
+        professor.setPaternalSurname(entity.getPaternalSurname());
+        professor.setMaternalSurname(entity.getMaternalSurname());
+        professor.setFirstNames(entity.getFirstNames());
+        professor.setInstitutionalEmail(entity.getInstitutionalEmail());
+        professor.setUserType(entity.getUserType());
+        return professor;
+    }
+
+    private ProfessorEntity mapToEntity(Professor professor) {
+        ProfessorEntity entity = new ProfessorEntity();
+        entity.setUserId(professor.getUserId());
+        entity.setDocumentId(professor.getDocumentId());
+        entity.setPaternalSurname(professor.getPaternalSurname());
+        entity.setMaternalSurname(professor.getMaternalSurname());
+        entity.setFirstNames(professor.getFirstNames());
+        entity.setInstitutionalEmail(professor.getInstitutionalEmail());
+        entity.setUserType(professor.getUserType());
+        return entity;
     }
 }
