@@ -268,7 +268,6 @@
 
               <div class="space-y-2">
                 <div class="flex items-center justify-between">
-                  <p class="text-sm font-semibold text-gray-800">Sugerencias desde Excel</p>
                   <span v-if="slotSuggestionsLoading" class="text-xs text-gray-500">Cargando...</span>
                 </div>
                 <div class="flex flex-wrap gap-2">
@@ -282,7 +281,6 @@
                     {{ slot.dayOfWeek }} {{ slot.startTime }}-{{ slot.endTime }} · {{ slot.classroomName }}
                   </button>
                   <p v-if="!limitedSuggestions.length && !slotSuggestionsLoading" class="text-xs text-gray-500">
-                    Sin coincidencias en Excel para este curso.
                   </p>
                 </div>
               </div>

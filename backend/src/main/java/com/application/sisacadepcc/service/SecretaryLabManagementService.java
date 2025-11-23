@@ -27,7 +27,6 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -118,7 +117,7 @@ public class SecretaryLabManagementService {
         Objects.requireNonNull(request, "request");
 
         Course existing = courseRepository.findById(labCourseId)
-                .orElseThrow(() -> new IllegalArgumentException("Laboratorio no encontrado"));
+            .orElseThrow(() -> new IllegalArgumentException("Laboratorio no encontrado"));
 
         if (!CourseType.LAB.equals(existing.getCourseType())) {
             throw new IllegalStateException("Solo se pueden actualizar cursos de laboratorio");
@@ -153,8 +152,8 @@ public class SecretaryLabManagementService {
         if (labCourseId == null) {
             throw new IllegalArgumentException("Laboratorio inválido");
         }
-        Course existing = courseRepository.findById(labCourseId)
-                .orElseThrow(() -> new IllegalArgumentException("Laboratorio no encontrado"));
+        courseRepository.findById(labCourseId)
+            .orElseThrow(() -> new IllegalArgumentException("Laboratorio no encontrado"));
 
         long enrolled = studentCourseRepository.countByCourseId(labCourseId);
         if (enrolled > 0) {
@@ -240,24 +239,10 @@ public class SecretaryLabManagementService {
     }
 
     private void validateScheduleSlots(Course theoryCourse, List<CourseScheduleSlot> requestedSlots) {
-        List<ExcelScheduleService.OccupiedTimeSlot> availableSlots = excelScheduleService
-                .findByCourse(theoryCourse.getName(), null, CourseType.LAB);
-
-        if (availableSlots.isEmpty()) {
-            return; // No data available, skip validation but still allow creation
-        }
-
-        Set<String> availableKeys = availableSlots.stream()
-                .map(this::slotKey)
-                .collect(Collectors.toSet());
-
-        for (CourseScheduleSlot requested : requestedSlots) {
-            String key = slotKey(requested);
-            if (!availableKeys.contains(key)) {
-                throw new IllegalArgumentException("El horario " + requested.getDayOfWeek() + " "
-                        + requested.getStartTime() + "-" + requested.getEndTime()
-                        + " en " + requested.getClassroomName() + " no coincide con el Excel de horarios");
-            }
+        // Excel-based validation disabled: accept requested slots as long as they pass
+        // the classroom availability checks executed later in the pipeline.
+        if (requestedSlots == null || requestedSlots.isEmpty()) {
+            throw new IllegalArgumentException("Debes definir al menos un horario válido");
         }
     }
 
@@ -343,24 +328,6 @@ public class SecretaryLabManagementService {
                 slot.getStartTime(),
                 slot.getEndTime()
         ));
-    }
-
-    private String slotKey(ExcelScheduleService.OccupiedTimeSlot slot) {
-        CourseScheduleSlot mapped = new CourseScheduleSlot(
-                slot.getClassroomName(),
-                slot.getDayOfWeek(),
-                slot.getStartTime(),
-                slot.getEndTime()
-        );
-        return slotKey(mapped);
-    }
-
-    private String slotKey(CourseScheduleSlot slot) {
-        String classroom = normalizeString(slot.getClassroomName());
-        String day = normalizeDay(slot.getDayOfWeek());
-        LocalTime start = parseTime(slot.getStartTime());
-        LocalTime end = parseTime(slot.getEndTime());
-        return classroom + "|" + day + "|" + start + "|" + end;
     }
 
     private String safeName(String value) {

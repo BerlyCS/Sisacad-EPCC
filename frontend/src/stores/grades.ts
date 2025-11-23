@@ -9,8 +9,10 @@ import type {
   StudentGrade
 } from '@/services/gradeService'
 import { gradeService } from '@/services/gradeService'
+import { useAuthStore } from '@/stores/auth'
 
 export const useGradeStore = defineStore('grades', () => {
+  const authStore = useAuthStore()
   const studentGrades = ref<StudentGrade[]>([])
   const studentGradesLoading = ref(false)
   const studentGradesError = ref('')
@@ -120,14 +122,31 @@ export const useGradeStore = defineStore('grades', () => {
     studentGradesLoading.value = true
     studentGradesError.value = ''
 
-    try {
-      studentGrades.value = await gradeService.fetchStudentGrades(studentDocumento)
-    } catch (error) {
-      console.error('Error while loading student grades', error)
-      studentGradesError.value = error instanceof Error ? error.message : 'No se pudieron cargar las calificaciones'
-      studentGrades.value = []
-    } finally {
-      studentGradesLoading.value = false
+    const maxAttempts = 2
+    let attempt = 0
+
+    while (attempt < maxAttempts) {
+      try {
+        studentGrades.value = await gradeService.fetchStudentGrades(studentDocumento)
+        studentGradesLoading.value = false
+        return
+      } catch (error) {
+        const status = (error as Error & { status?: number }).status
+        const canRetry = status === 401 || status === 403
+        attempt += 1
+
+        if (canRetry && attempt < maxAttempts) {
+          console.warn('Student grades request was unauthorized, revalidating session and retrying...')
+          await authStore.initializeAuth(true)
+          continue
+        }
+
+        console.error('Error while loading student grades', error)
+        studentGradesError.value = error instanceof Error ? error.message : 'No se pudieron cargar las calificaciones'
+        studentGrades.value = []
+        studentGradesLoading.value = false
+        return
+      }
     }
   }
 

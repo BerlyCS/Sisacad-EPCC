@@ -16,12 +16,18 @@ import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/students")
 public class StudentController {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(StudentController.class);
 
     private final StudentService service;
     private final StudentCourseService studentCourseService;
@@ -90,8 +96,23 @@ public class StudentController {
                 return ResponseEntity.notFound().build();
             }
 
-            String studentDocumentoIdentidad = student.get().getDocumentoIdentidad();
-            List<StudentScheduleEntry> schedule = studentCourseService.getScheduleForStudent(studentDocumentoIdentidad);
+                String studentDocumentoIdentidad = student.get().getDocumentoIdentidad();
+                List<StudentScheduleEntry> schedule = studentCourseService.getScheduleForStudent(studentDocumentoIdentidad);
+                String scheduleDump = schedule.stream()
+                    .map(entry -> String.format("{courseId=%d, courseCode=%d, name=%s, type=%s, day=%s, start=%s, end=%s, room=%s}",
+                        entry.getCourseId(),
+                        entry.getCourseCode(),
+                        entry.getCourseName(),
+                        entry.getCourseType(),
+                        entry.getDayOfWeek(),
+                        entry.getStartTime(),
+                        entry.getEndTime(),
+                        entry.getClassroomName()))
+                    .collect(Collectors.joining(", "));
+                LOGGER.info("Student schedule response for {} ({} entries): [{}]",
+                    studentDocumentoIdentidad,
+                    schedule.size(),
+                    scheduleDump);
             return ResponseEntity.ok(schedule);
 
         } catch (Exception e) {
