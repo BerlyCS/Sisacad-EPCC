@@ -29,7 +29,7 @@ public class StudentService {
 
         Comparator<Student> comparator;
         if ("dni".equals(sortBy)) {
-            comparator = Comparator.comparing(Student::getDocumentId, Comparator.nullsLast(String::compareTo));
+            comparator = Comparator.comparing(Student::getUserId, Comparator.nullsLast(Long::compareTo));
         } else if ("cui".equals(sortBy)) {
             comparator = Comparator.comparing(Student::getCui, Comparator.nullsLast(String::compareTo));
         } else if ("name".equals(sortBy)) {
@@ -46,7 +46,7 @@ public class StudentService {
                 return (apellidoP + " " + apellidoM).trim();
             }, Comparator.nullsLast(String::compareTo));
         } else {
-            comparator = Comparator.comparing(Student::getDocumentId, Comparator.nullsLast(String::compareTo));
+            comparator = Comparator.comparing(Student::getUserId, Comparator.nullsLast(Long::compareTo));
         }
 
         if ("desc".equalsIgnoreCase(direction)) {

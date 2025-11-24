@@ -9,8 +9,8 @@ public class Secretary extends User {
         setUserType(UserType.SECRETARY);
     }
 
-    public Secretary(String documentId, String paternalSurname, String maternalSurname,
+    public Secretary(String paternalSurname, String maternalSurname,
                      String firstNames, String institutionalEmail) {
-        super(documentId, paternalSurname, maternalSurname, firstNames, institutionalEmail, UserType.SECRETARY);
+        super(paternalSurname, maternalSurname, firstNames, institutionalEmail, UserType.SECRETARY);
     }
 }

@@ -26,21 +26,21 @@ public class GradeQueryService {
         this.gradeComputationService = gradeComputationService;
     }
 
-    public List<StudentGradeResponse> getGradesForStudent(String studentDocumentoIdentidad) {
-        return gradeRepository.findByStudentDocumento(studentDocumentoIdentidad)
+    public List<StudentGradeResponse> getGradesForStudent(Long studentId) {
+        return gradeRepository.findByStudent(studentId)
                 .stream()
-                .map(grade -> mapIfAllowed(grade, studentDocumentoIdentidad))
+                .map(grade -> mapIfAllowed(grade, studentId))
                 .flatMap(Optional::stream)
                 .collect(Collectors.toList());
     }
 
-    public Optional<StudentGradeResponse> getGradeForCourse(String studentDocumentoIdentidad, String courseCode) {
-        return gradeRepository.findByCourseAndStudent(courseCode, studentDocumentoIdentidad)
-                .flatMap(grade -> mapIfAllowed(grade, studentDocumentoIdentidad));
+    public Optional<StudentGradeResponse> getGradeForCourse(Long studentId, String courseCode) {
+        return gradeRepository.findByCourseAndStudent(courseCode, studentId)
+                .flatMap(grade -> mapIfAllowed(grade, studentId));
     }
 
-    private Optional<StudentGradeResponse> mapIfAllowed(Grade grade, String studentDocumentoIdentidad) {
-        if (!studentDocumentoIdentidad.equalsIgnoreCase(grade.getStudentDocumentoIdentidad())) {
+    private Optional<StudentGradeResponse> mapIfAllowed(Grade grade, Long studentId) {
+        if (grade.getStudentId() == null || !grade.getStudentId().equals(studentId)) {
             return Optional.empty();
         }
 

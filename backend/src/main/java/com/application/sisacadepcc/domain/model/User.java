@@ -5,7 +5,6 @@ import com.application.sisacadepcc.domain.model.valueobject.UserType;
 public abstract class User {
 
     private Long userId;
-    private String documentId;
     private String paternalSurname;
     private String maternalSurname;
     private String firstNames;
@@ -14,9 +13,8 @@ public abstract class User {
 
     public User() {}
 
-    public User(String documentId, String paternalSurname, String maternalSurname,
+    public User(String paternalSurname, String maternalSurname,
                 String firstNames, String institutionalEmail, UserType userType) {
-        this.documentId = documentId;
         this.paternalSurname = paternalSurname;
         this.maternalSurname = maternalSurname;
         this.firstNames = firstNames;
@@ -31,14 +29,6 @@ public abstract class User {
 
     public void setUserId(Long userId) {
         this.userId = userId;
-    }
-
-    public String getDocumentId() {
-        return documentId;
-    }
-
-    public void setDocumentId(String documentId) {
-        this.documentId = documentId;
     }
 
     public String getPaternalSurname() {

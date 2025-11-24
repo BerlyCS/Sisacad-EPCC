@@ -5,7 +5,7 @@ import java.util.List;
 public record GradeSubmissionResponse(
         Long courseId,
         String courseCode,
-        String studentDocumentoIdentidad,
+        Long studentId,
         List<Integer> continuousGrades,
         List<Integer> examGrades,
         Double finalGrade,

@@ -23,12 +23,12 @@ public class GradeService {
         return repository.findById(gradeID);
     }
 
-    public Optional<Grade> findByCourseAndStudent(String courseCode, String studentDocumentoIdentidad) {
-        return repository.findByCourseAndStudent(courseCode, studentDocumentoIdentidad);
+    public Optional<Grade> findByCourseAndStudent(String courseCode, Long studentId) {
+        return repository.findByCourseAndStudent(courseCode, studentId);
     }
 
-    public List<Grade> findByStudentDocumento(String studentDocumentoIdentidad) {
-        return repository.findByStudentDocumento(studentDocumentoIdentidad);
+    public List<Grade> findByStudent(Long studentId) {
+        return repository.findByStudent(studentId);
     }
 
     public List<Grade> findByCourseCode(String courseCode) {

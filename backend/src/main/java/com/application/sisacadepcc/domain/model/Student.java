@@ -12,9 +12,9 @@ public class Student extends User {
         setUserType(UserType.STUDENT);
     }
 
-    public Student(String documentId, String paternalSurname, String maternalSurname,
+    public Student(String paternalSurname, String maternalSurname,
                    String firstNames, String institutionalEmail, String cui, Integer enrollmentYear) {
-        super(documentId, paternalSurname, maternalSurname, firstNames, institutionalEmail, UserType.STUDENT);
+        super(paternalSurname, maternalSurname, firstNames, institutionalEmail, UserType.STUDENT);
         this.cui = cui;
         this.enrollmentYear = enrollmentYear;
     }

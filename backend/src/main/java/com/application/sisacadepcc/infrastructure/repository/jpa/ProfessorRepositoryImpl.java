@@ -39,7 +39,6 @@ public class ProfessorRepositoryImpl implements ProfessorRepository {
     private Professor mapToDomain(ProfessorEntity entity) {
         Professor professor = new Professor();
         professor.setUserId(entity.getUserId());
-        professor.setDocumentId(entity.getDocumentId());
         professor.setPaternalSurname(entity.getPaternalSurname());
         professor.setMaternalSurname(entity.getMaternalSurname());
         professor.setFirstNames(entity.getFirstNames());
@@ -51,7 +50,6 @@ public class ProfessorRepositoryImpl implements ProfessorRepository {
     private ProfessorEntity mapToEntity(Professor professor) {
         ProfessorEntity entity = new ProfessorEntity();
         entity.setUserId(professor.getUserId());
-        entity.setDocumentId(professor.getDocumentId());
         entity.setPaternalSurname(professor.getPaternalSurname());
         entity.setMaternalSurname(professor.getMaternalSurname());
         entity.setFirstNames(professor.getFirstNames());

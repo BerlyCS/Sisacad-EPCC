@@ -38,13 +38,13 @@ public class StudentCourseController {
         return ResponseEntity.ok(students);
     }
 
-    @PostMapping("/enrollments/student/{studentDocumentoIdentidad}/course/{courseId}")
+    @PostMapping("/enrollments/student/{studentId}/course/{courseId}")
     @RequiresAdministratorAccess
     public ResponseEntity<String> enrollStudentInCourse(
-            @PathVariable String studentDocumentoIdentidad,
+            @PathVariable Long studentId,
             @PathVariable Long courseId) {
         try {
-            studentCourseService.enrollStudentInCourse(studentDocumentoIdentidad, courseId);
+            studentCourseService.enrollStudentInCourse(studentId, courseId);
             return ResponseEntity.ok("Estudiante matriculado exitosamente");
         } catch (IllegalArgumentException | IllegalStateException ex) {
             return ResponseEntity.badRequest().body(ex.getMessage());
@@ -65,24 +65,24 @@ public class StudentCourseController {
                     .body(EnrollmentResponse.failure("Debe proporcionar el identificador del estudiante y el curso", null, request != null ? request.courseId() : null));
         }
 
-        String studentDocumentId = resolveStudentDocumento(request);
-        if (studentDocumentId == null) {
+        Long studentId = resolveStudentId(request);
+        if (studentId == null) {
             return ResponseEntity.badRequest()
                     .body(EnrollmentResponse.failure("No se encontró al estudiante solicitado", null, request.courseId()));
         }
 
         try {
-            studentCourseService.enrollStudentInCourse(studentDocumentId, request.courseId());
-            return ResponseEntity.ok(EnrollmentResponse.success(studentDocumentId, request.courseId()));
+            studentCourseService.enrollStudentInCourse(studentId, request.courseId());
+            return ResponseEntity.ok(EnrollmentResponse.success(studentId, request.courseId()));
         } catch (IllegalArgumentException | IllegalStateException ex) {
             return ResponseEntity.badRequest()
-                    .body(EnrollmentResponse.failure(ex.getMessage(), studentDocumentId, request.courseId()));
+                    .body(EnrollmentResponse.failure(ex.getMessage(), studentId, request.courseId()));
         }
     }
 
-    private String resolveStudentDocumento(EnrollStudentRequest request) {
-        if (request.studentDocumentoIdentidad() != null && !request.studentDocumentoIdentidad().isBlank()) {
-            return request.studentDocumentoIdentidad().trim();
+    private Long resolveStudentId(EnrollStudentRequest request) {
+        if (request.studentId() != null) {
+            return request.studentId();
         }
 
         if (request.studentCui() == null || request.studentCui().isBlank()) {
@@ -90,7 +90,7 @@ public class StudentCourseController {
         }
 
         return studentService.getStudentByCui(request.studentCui().trim())
-                .map(Student::getDocumentId)
+                .map(Student::getUserId)
                 .orElse(null);
     }
 }

@@ -43,10 +43,10 @@ public class StudentController {
         this.authorizationService = authorizationService;
     }
 
-    @GetMapping("/document/{documentoIdentidad}/courses")
+    @GetMapping("/document/{studentId}/courses")
     @RequiresAdministratorAccess
-    public ResponseEntity<List<Course>> getCoursesByStudentDocument(@PathVariable String documentoIdentidad) {
-        List<Course> courses = studentCourseService.getCoursesByStudent(documentoIdentidad);
+    public ResponseEntity<List<Course>> getCoursesByStudentDocument(@PathVariable Long studentId) {
+        List<Course> courses = studentCourseService.getCoursesByStudent(studentId);
         return ResponseEntity.ok(courses);
     }
 
@@ -69,8 +69,8 @@ public class StudentController {
                 return ResponseEntity.notFound().build();
             }
 
-            String studentDocumentoIdentidad = student.get().getDocumentId();
-            List<Course> courses = studentCourseService.getCoursesByStudent(studentDocumentoIdentidad);
+            Long studentId = student.get().getUserId();
+            List<Course> courses = studentCourseService.getCoursesByStudent(studentId);
             return ResponseEntity.ok(courses);
 
         } catch (Exception e) {
@@ -95,8 +95,8 @@ public class StudentController {
                 return ResponseEntity.notFound().build();
             }
 
-                String studentDocumentoIdentidad = student.get().getDocumentId();
-                List<StudentScheduleEntry> schedule = studentCourseService.getScheduleForStudent(studentDocumentoIdentidad);
+                Long studentId = student.get().getUserId();
+                List<StudentScheduleEntry> schedule = studentCourseService.getScheduleForStudent(studentId);
                 String scheduleDump = schedule.stream()
                     .map(entry -> String.format("{courseId=%d, courseCode=%d, name=%s, type=%s, day=%s, start=%s, end=%s, room=%s}",
                         entry.getCourseId(),
@@ -109,7 +109,7 @@ public class StudentController {
                         entry.getClassroomName()))
                     .collect(Collectors.joining(", "));
                 LOGGER.info("Student schedule response for {} ({} entries): [{}]",
-                    studentDocumentoIdentidad,
+                    studentId,
                     schedule.size(),
                     scheduleDump);
             return ResponseEntity.ok(schedule);
@@ -221,7 +221,7 @@ public class StudentController {
             }
         }
 
-        List<Course> courses = studentCourseService.getCoursesByStudent(student.getDocumentId());
+        List<Course> courses = studentCourseService.getCoursesByStudent(student.getUserId());
         return ResponseEntity.ok(courses);
     }
 
@@ -247,7 +247,7 @@ public class StudentController {
             }
         }
 
-        List<StudentScheduleEntry> schedule = studentCourseService.getScheduleForStudent(student.getDocumentId());
+        List<StudentScheduleEntry> schedule = studentCourseService.getScheduleForStudent(student.getUserId());
         return ResponseEntity.ok(schedule);
     }
 }

@@ -7,7 +7,6 @@ import java.util.Optional;
 public interface ReservationRepository {
     List<Reservation> findAll();
     Optional<Reservation> findById(Long id);
-    List<Reservation> findByClassroomName(String classroomName);
     List<Reservation> findByReservedBy(String reservedBy);
     Reservation save(Reservation reservation);
     void deleteById(Long id);

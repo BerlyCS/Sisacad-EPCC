@@ -1,11 +1,10 @@
 package com.application.sisacadepcc.presentation.dto;
 
 public record LabEnrollmentRequest(
-        String studentDocumentoIdentidad,
+        Long studentId,
         String studentCui
 ) {
     public boolean hasExplicitIdentifier() {
-        return (studentDocumentoIdentidad != null && !studentDocumentoIdentidad.isBlank())
-                || (studentCui != null && !studentCui.isBlank());
+        return studentId != null || (studentCui != null && !studentCui.isBlank());
     }
 }

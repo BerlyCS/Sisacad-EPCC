@@ -21,15 +21,15 @@ public class ReservationRepositoryImpl implements ReservationRepository {
     private Reservation toDomain(ReservationEntity entity) {
         Reservation reservation = new Reservation();
         reservation.setId(entity.getId());
-        reservation.setClassroomName(entity.getClassroomName());
         reservation.setReservedBy(entity.getReservedBy());
         reservation.setPurpose(entity.getPurpose());
 
-        // Crear OccupiedSchedule desde los datos almacenados (usando strings directamente)
+        // Crear OccupiedSchedule desde el schedule referenciado
+        ScheduleEntity scheduleEntity = entity.getSchedule();
         OccupiedSchedule schedule = new OccupiedSchedule(
-                entity.getDayOfWeek(),
-                entity.getStartTime(), // Ya es string
-                entity.getEndTime()    // Ya es string
+                scheduleEntity.getDayOfWeek(),
+                scheduleEntity.getStartTime(),
+                scheduleEntity.getEndTime()
         );
         reservation.setSchedule(schedule);
 
@@ -42,15 +42,17 @@ public class ReservationRepositoryImpl implements ReservationRepository {
     private ReservationEntity toEntity(Reservation reservation) {
         ReservationEntity entity = new ReservationEntity();
         entity.setId(reservation.getId());
-        entity.setClassroomName(reservation.getClassroomName());
         entity.setReservedBy(reservation.getReservedBy());
         entity.setPurpose(reservation.getPurpose());
 
-        // Almacenar información del schedule
+        // Crear ScheduleEntity desde el OccupiedSchedule
         OccupiedSchedule schedule = reservation.getSchedule();
-        entity.setDayOfWeek(schedule.getDayOfWeek());
-        entity.setStartTime(schedule.getStartTime());
-        entity.setEndTime(schedule.getEndTime());
+        ScheduleEntity scheduleEntity = new ScheduleEntity();
+        scheduleEntity.setDayOfWeek(schedule.getDayOfWeek());
+        scheduleEntity.setStartTime(schedule.getStartTime());
+        scheduleEntity.setEndTime(schedule.getEndTime());
+        // classroom and courseGroup remain null for reservations
+        entity.setSchedule(scheduleEntity);
 
         // CORRECCIÓN: Asegurar que createdAt nunca sea null
         if (reservation.getCreatedAt() == null) {
@@ -79,13 +81,6 @@ public class ReservationRepositoryImpl implements ReservationRepository {
     @Override
     public Optional<Reservation> findById(Long id) {
         return jpaRepository.findById(id).map(this::toDomain);
-    }
-
-    @Override
-    public List<Reservation> findByClassroomName(String classroomName) {
-        return jpaRepository.findByClassroomName(classroomName).stream()
-                .map(this::toDomain)
-                .collect(Collectors.toList());
     }
 
     @Override

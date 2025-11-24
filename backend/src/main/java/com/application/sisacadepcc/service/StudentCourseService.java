@@ -25,17 +25,17 @@ public class StudentCourseService {
         return List.of();
     }
 
-    public List<Course> getCoursesByStudent(String studentDocumentoIdentidad) {
+    public List<Course> getCoursesByStudent(Long studentId) {
         // Enrollment functionality removed
         return List.of();
     }
 
     @Transactional
-    public void enrollStudentInCourse(String studentDocumentoIdentidad, Long courseId) {
+    public void enrollStudentInCourse(Long studentId, Long courseId) {
         // Enrollment functionality removed
     }
 
-    public EnrollmentValidationResult validateLabEnrollment(String studentDocumentoIdentidad, Long labCourseId) {
+    public EnrollmentValidationResult validateLabEnrollment(Long studentId, Long labCourseId) {
         if (labCourseId == null) {
             return EnrollmentValidationResult.failure("INVALID_COURSE", "Debe proporcionar un curso válido", null, null);
         }
@@ -51,22 +51,22 @@ public class StudentCourseService {
         //     return EnrollmentValidationResult.failure("NOT_A_LAB", "El curso seleccionado no es un laboratorio", labCourseId, null);
         // }
 
-        if (studentDocumentoIdentidad == null || studentDocumentoIdentidad.isBlank()) {
+        if (studentId == null) {
             return EnrollmentValidationResult.failure("INVALID_STUDENT", "No se pudo identificar al estudiante", labCourseId, null);
         }
 
-        return validateCourseEnrollment(studentDocumentoIdentidad.trim(), course);
+        return validateCourseEnrollment(studentId, course);
     }
 
     @Transactional
-    public EnrollmentValidationResult confirmLabEnrollment(String studentDocumentoIdentidad, Long labCourseId) {
-        EnrollmentValidationResult validation = validateLabEnrollment(studentDocumentoIdentidad, labCourseId);
+    public EnrollmentValidationResult confirmLabEnrollment(Long studentId, Long labCourseId) {
+        EnrollmentValidationResult validation = validateLabEnrollment(studentId, labCourseId);
         if (!validation.allowed()) {
             return validation;
         }
 
         try {
-            enrollStudentInCourse(studentDocumentoIdentidad, labCourseId);
+            enrollStudentInCourse(studentId, labCourseId);
         } catch (IllegalArgumentException | IllegalStateException ex) {
             return EnrollmentValidationResult.failure("ENROLLMENT_FAILED", ex.getMessage(), labCourseId, validation.remainingSeats());
         }
@@ -81,12 +81,12 @@ public class StudentCourseService {
         return List.of();
     }
 
-    public List<StudentScheduleEntry> getScheduleForStudent(String studentDocumentoIdentidad) {
+    public List<StudentScheduleEntry> getScheduleForStudent(Long studentId) {
         // Excel parser is disabled, so return empty schedule
         return List.of();
     }
 
-    private EnrollmentValidationResult validateCourseEnrollment(String studentDocumentoIdentidad, Course course) {
+    private EnrollmentValidationResult validateCourseEnrollment(Long studentId, Course course) {
         // Enrollment validation removed
         return EnrollmentValidationResult.success(course.getCourseId(), null);
     }

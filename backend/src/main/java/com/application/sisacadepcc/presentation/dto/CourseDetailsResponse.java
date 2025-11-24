@@ -171,7 +171,7 @@ public record CourseDetailsResponse(
     }
 
     public record StudentSummary(
-            String documentoIdentidad,
+            Long studentId,
             String cui,
             String nombres,
             String apellidoPaterno,
@@ -181,7 +181,7 @@ public record CourseDetailsResponse(
     ) {
         private static StudentSummary from(Student student) {
             return new StudentSummary(
-                    student.getDocumentId(),
+                    student.getUserId(),
                     student.getCui(),
                     student.getFirstNames(),
                     student.getPaternalSurname(),

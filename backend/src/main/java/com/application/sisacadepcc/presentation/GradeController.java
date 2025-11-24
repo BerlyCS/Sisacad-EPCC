@@ -60,7 +60,7 @@ public class GradeController {
 
     @GetMapping("/students/{studentId}")
     @RequiresStudentAccess
-    public ResponseEntity<List<StudentGradeResponse>> getGradesForStudent(@PathVariable String studentId,
+    public ResponseEntity<List<StudentGradeResponse>> getGradesForStudent(@PathVariable Long studentId,
                                                                           Authentication authentication) {
         if (!ownsStudentRecord(studentId, authentication)) {
             return ResponseEntity.status(403).build();
@@ -70,7 +70,7 @@ public class GradeController {
 
     @GetMapping("/students/{studentId}/courses/{courseCode}")
     @RequiresStudentAccess
-    public ResponseEntity<StudentGradeResponse> getGradeForCourse(@PathVariable String studentId,
+    public ResponseEntity<StudentGradeResponse> getGradeForCourse(@PathVariable Long studentId,
                                                                   @PathVariable String courseCode,
                                                                   Authentication authentication) {
         if (!ownsStudentRecord(studentId, authentication)) {
@@ -171,7 +171,7 @@ public class GradeController {
 
     @PostMapping("/courses/{courseId}/students/{studentId}/groups/{groupId}")
     public ResponseEntity<GradeSubmissionResponse> submitGrade(@PathVariable Long courseId,
-                                                               @PathVariable("studentId") String studentDocumento,
+                                                               @PathVariable("studentId") Long studentId,
                                                                @PathVariable Long groupId,
                                                                @RequestBody GradeSubmissionRequest request,
                                                                Authentication authentication) {
@@ -183,7 +183,7 @@ public class GradeController {
             GradeSubmissionResponse response = professorGradingService.submitGrade(
                     courseId,
                     groupId,
-                    studentDocumento,
+                    studentId,
                     request,
                     authorizationService.getAuthenticatedProfessor(authentication).orElse(null)
             );
@@ -195,9 +195,9 @@ public class GradeController {
         }
     }
 
-    private boolean ownsStudentRecord(String studentId, Authentication authentication) {
+    private boolean ownsStudentRecord(Long studentId, Authentication authentication) {
         return authorizationService.getAuthenticatedStudent(authentication)
-                .map(student -> student.getDocumentId().equalsIgnoreCase(studentId))
+                .map(student -> student.getUserId() != null && student.getUserId().equals(studentId))
                 .orElse(false);
     }
 }

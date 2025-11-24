@@ -41,16 +41,19 @@ public class UserController {
             String role = authorizationService.getUserRole(authentication);
 
             // Buscar información adicional si es estudiante
-            String documentoIdentidad = null;
+            Long userId = null;
             String cui = null;
             if ("STUDENT".equals(role)) {
                 try {
                     Optional<Student> student = authorizationService.getAuthenticatedStudent(authentication);
                     if (student.isPresent()) {
-                        documentoIdentidad = student.get().getDocumentId();
+                        userId = student.get().getUserId();
                         cui = student.get().getCui();
                     } else if (principal instanceof OAuth2User oauth2User) {
-                        documentoIdentidad = oauth2User.getAttribute("documentoIdentidad");
+                        Object oauthUserId = oauth2User.getAttribute("userId");
+                        if (oauthUserId instanceof Number number) {
+                            userId = number.longValue();
+                        }
                         cui = oauth2User.getAttribute("cui");
                     }
                 } catch (Exception e) {
@@ -67,8 +70,8 @@ public class UserController {
             response.put("role", role);
             response.put("isAdmin", "ADMIN".equals(role));
 
-            if (documentoIdentidad != null) {
-                response.put("documentoIdentidad", documentoIdentidad);
+            if (userId != null) {
+                response.put("userId", userId);
             }
 
             if (cui != null) {

@@ -9,8 +9,8 @@ public class Professor extends User {
         setUserType(UserType.PROFESSOR);
     }
 
-    public Professor(String documentId, String paternalSurname, String maternalSurname,
+    public Professor(String paternalSurname, String maternalSurname,
                      String firstNames, String institutionalEmail) {
-        super(documentId, paternalSurname, maternalSurname, firstNames, institutionalEmail, UserType.PROFESSOR);
+        super(paternalSurname, maternalSurname, firstNames, institutionalEmail, UserType.PROFESSOR);
     }
 }

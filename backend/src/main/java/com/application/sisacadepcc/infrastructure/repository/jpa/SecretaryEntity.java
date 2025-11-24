@@ -13,8 +13,8 @@ public class SecretaryEntity extends UserEntity {
         setUserType(UserType.SECRETARY);
     }
 
-    public SecretaryEntity(String documentId, String paternalSurname, String maternalSurname,
+    public SecretaryEntity(String paternalSurname, String maternalSurname,
                            String firstNames, String institutionalEmail) {
-        super(documentId, paternalSurname, maternalSurname, firstNames, institutionalEmail, UserType.SECRETARY);
+        super(paternalSurname, maternalSurname, firstNames, institutionalEmail, UserType.SECRETARY);
     }
 }

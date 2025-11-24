@@ -13,9 +13,6 @@ public abstract class UserEntity {
     @Column(name = "user_id")
     private Long userId;
 
-    @Column(name = "document_id", unique = true, nullable = false)
-    private String documentId;
-
     @Column(name = "paternal_surname", nullable = false)
     private String paternalSurname;
 
@@ -34,9 +31,8 @@ public abstract class UserEntity {
 
     public UserEntity() {}
 
-    public UserEntity(String documentId, String paternalSurname, String maternalSurname,
+    public UserEntity(String paternalSurname, String maternalSurname,
                       String firstNames, String institutionalEmail, UserType userType) {
-        this.documentId = documentId;
         this.paternalSurname = paternalSurname;
         this.maternalSurname = maternalSurname;
         this.firstNames = firstNames;
@@ -53,14 +49,6 @@ public abstract class UserEntity {
         this.userId = userId;
     }
     
-    public String getDocumentId() {
-        return documentId;
-    }
-
-    public void setDocumentId(String documentId) {
-        this.documentId = documentId;
-    }
-
     public String getPaternalSurname() {
         return paternalSurname;
     }

@@ -1,7 +1,7 @@
 package com.application.sisacadepcc.presentation.dto;
 
 public record CourseRosterEntryResponse(
-        String studentDocumentoIdentidad,
+        Long studentId,
         String studentCui,
         String fullName,
         String email,

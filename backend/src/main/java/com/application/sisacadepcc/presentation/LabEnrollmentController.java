@@ -1,6 +1,7 @@
 package com.application.sisacadepcc.presentation;
 
 import com.application.sisacadepcc.domain.model.CourseGroup;
+import com.application.sisacadepcc.domain.model.Student;
 import com.application.sisacadepcc.presentation.dto.LabEnrollmentRequest;
 import com.application.sisacadepcc.service.AuthorizationService;
 import com.application.sisacadepcc.service.CourseService;
@@ -52,13 +53,13 @@ public class LabEnrollmentController {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         }
 
-        String studentDocumento = resolveStudentDocumento(request, authentication);
-        if (studentDocumento == null) {
+        Long studentId = resolveStudentId(request, authentication);
+        if (studentId == null) {
             return ResponseEntity.badRequest()
                     .body(EnrollmentValidationResult.failure("INVALID_STUDENT", "No se pudo identificar al estudiante", labCourseId, null));
         }
 
-        EnrollmentValidationResult result = studentCourseService.validateLabEnrollment(studentDocumento, labCourseId);
+        EnrollmentValidationResult result = studentCourseService.validateLabEnrollment(studentId, labCourseId);
         return ResponseEntity.ok(result);
     }
 
@@ -70,29 +71,29 @@ public class LabEnrollmentController {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         }
 
-        String studentDocumento = resolveStudentDocumento(request, authentication);
-        if (studentDocumento == null) {
+        Long studentId = resolveStudentId(request, authentication);
+        if (studentId == null) {
             return ResponseEntity.badRequest()
                     .body(EnrollmentValidationResult.failure("INVALID_STUDENT", "No se pudo identificar al estudiante", labCourseId, null));
         }
 
-        EnrollmentValidationResult result = studentCourseService.confirmLabEnrollment(studentDocumento, labCourseId);
+        EnrollmentValidationResult result = studentCourseService.confirmLabEnrollment(studentId, labCourseId);
         return ResponseEntity.ok(result);
     }
 
-    private String resolveStudentDocumento(LabEnrollmentRequest request, Authentication authentication) {
-        if (request != null && request.studentDocumentoIdentidad() != null && !request.studentDocumentoIdentidad().isBlank()) {
-            return request.studentDocumentoIdentidad().trim();
+    private Long resolveStudentId(LabEnrollmentRequest request, Authentication authentication) {
+        if (request != null && request.studentId() != null) {
+            return request.studentId();
         }
 
         if (request != null && request.studentCui() != null && !request.studentCui().isBlank()) {
             return studentService.getStudentByCui(request.studentCui().trim())
-                    .map(student -> student.getDocumentId() != null ? student.getDocumentId().trim() : null)
+                    .map(Student::getUserId)
                     .orElse(null);
         }
 
         return authorizationService.getAuthenticatedStudent(authentication)
-                .map(student -> student.getDocumentId() != null ? student.getDocumentId().trim() : null)
+                .map(Student::getUserId)
                 .orElse(null);
     }
 }

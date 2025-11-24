@@ -110,7 +110,7 @@ public class ProfessorGradingService {
 
     public GradeSubmissionResponse submitGrade(Long courseId,
                                                Long groupId,
-                                               String studentDocumento,
+                                               Long studentId,
                                                GradeSubmissionRequest request,
                                                Professor professor) {
         if (professor == null) {
@@ -143,12 +143,12 @@ public class ProfessorGradingService {
         List<Integer> sanitizedExam = sanitizeGrades(request.examGrades());
 
         Grade persisted = gradeRepository
-                .findByCourseAndStudent(String.valueOf(groupCourse.getCourseId()), studentDocumento)
+            .findByCourseAndStudent(String.valueOf(groupCourse.getCourseId()), studentId)
                 .orElse(null);
 
         Grade grade = new Grade(
                 persisted != null ? persisted.getGradeID() : null,
-                studentDocumento,
+            studentId,
                 String.valueOf(groupCourse.getCourseId()),
                 resolveProfessorId(professor),
                 sanitizedContinuous,
@@ -161,7 +161,7 @@ public class ProfessorGradingService {
         return new GradeSubmissionResponse(
                 groupCourse.getCourseId(),
                 String.valueOf(groupCourse.getCourseId()),
-                studentDocumento,
+            studentId,
                 sanitizedContinuous,
                 sanitizedExam,
                 finalGrade.doubleValue(),

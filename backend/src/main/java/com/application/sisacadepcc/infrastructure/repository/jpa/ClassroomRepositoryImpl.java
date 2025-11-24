@@ -2,7 +2,6 @@ package com.application.sisacadepcc.infrastructure.repository.jpa;
 
 import com.application.sisacadepcc.domain.model.Classroom;
 import com.application.sisacadepcc.domain.model.valueobject.Place;
-import com.application.sisacadepcc.domain.model.valueobject.OccupiedSchedule;
 import com.application.sisacadepcc.domain.repository.ClassroomRepository;
 import org.springframework.stereotype.Repository;
 
@@ -29,8 +28,7 @@ public class ClassroomRepositoryImpl implements ClassroomRepository {
     private Classroom mapToDomain(ClassroomEntity entity) {
         return new Classroom(
                 entity.getClassroomId(),
-                entity.getPlace(),
-                entity.getOccupiedSchedules()
+                entity.getPlace()
         );
     }
 }

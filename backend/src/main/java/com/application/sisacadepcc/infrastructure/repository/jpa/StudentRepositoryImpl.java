@@ -27,24 +27,6 @@ public class StudentRepositoryImpl implements StudentRepository {
     }
 
     @Override
-    public Optional<Student> findByDocumentoIdentidad(String documentoIdentidad) {
-        return studentJpaRepository.findByDocumentId(documentoIdentidad)
-                .map(this::mapToDomain);
-    }
-
-    @Override
-    public List<Student> findByDocumentoIdentidadIn(List<String> documentoIdentidades) {
-        if (documentoIdentidades == null || documentoIdentidades.isEmpty()) {
-            return List.of();
-        }
-
-        return studentJpaRepository.findByDocumentIdIn(documentoIdentidades)
-                .stream()
-                .map(this::mapToDomain)
-                .collect(Collectors.toList());
-    }
-
-    @Override
     public List<Student> findByEnrollmentYear(Integer anio) {
         return studentJpaRepository.findByEnrollmentYear(anio)
                 .stream()
@@ -72,7 +54,6 @@ public class StudentRepositoryImpl implements StudentRepository {
     private Student mapToDomain(StudentEntity entity) {
         Student student = new Student();
         student.setUserId(entity.getUserId());
-        student.setDocumentId(entity.getDocumentId());
         student.setPaternalSurname(entity.getPaternalSurname());
         student.setMaternalSurname(entity.getMaternalSurname());
         student.setFirstNames(entity.getFirstNames());
@@ -86,7 +67,6 @@ public class StudentRepositoryImpl implements StudentRepository {
     private StudentEntity mapToEntity(Student student) {
         StudentEntity entity = new StudentEntity();
         entity.setUserId(student.getUserId());
-        entity.setDocumentId(student.getDocumentId());
         entity.setPaternalSurname(student.getPaternalSurname());
         entity.setMaternalSurname(student.getMaternalSurname());
         entity.setFirstNames(student.getFirstNames());

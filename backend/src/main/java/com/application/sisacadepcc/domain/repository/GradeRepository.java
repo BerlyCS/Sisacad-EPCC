@@ -11,9 +11,9 @@ public interface GradeRepository {
 
     Optional<Grade> findById(Long gradeID);
 
-    Optional<Grade> findByCourseAndStudent(String courseCode, String studentDocumentoIdentidad);
+    Optional<Grade> findByCourseAndStudent(String courseCode, Long studentId);
 
-    List<Grade> findByStudentDocumento(String studentDocumentoIdentidad);
+    List<Grade> findByStudent(Long studentId);
 
     List<Grade> findByCourseCode(String courseCode);
 

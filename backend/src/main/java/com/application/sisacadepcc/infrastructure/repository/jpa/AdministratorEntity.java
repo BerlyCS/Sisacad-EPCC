@@ -13,8 +13,8 @@ public class AdministratorEntity extends UserEntity {
         setUserType(UserType.ADMINISTRATOR);
     }
 
-    public AdministratorEntity(String documentId, String paternalSurname, String maternalSurname,
+    public AdministratorEntity(String paternalSurname, String maternalSurname,
                                String firstNames, String institutionalEmail) {
-        super(documentId, paternalSurname, maternalSurname, firstNames, institutionalEmail, UserType.ADMINISTRATOR);
+        super(paternalSurname, maternalSurname, firstNames, institutionalEmail, UserType.ADMINISTRATOR);
     }
 }

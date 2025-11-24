@@ -5,7 +5,7 @@ import java.time.LocalDateTime;
 
 public class Reservation {
     private Long id;
-    private String classroomName;
+    private Long classroomId;
     private String reservedBy; // Email del usuario que reserva
     private String purpose;
     private OccupiedSchedule schedule;
@@ -14,8 +14,8 @@ public class Reservation {
 
     public Reservation() {}
 
-    public Reservation(String classroomName, String reservedBy, String purpose, OccupiedSchedule schedule) {
-        this.classroomName = classroomName;
+    public Reservation(Long classroomId, String reservedBy, String purpose, OccupiedSchedule schedule) {
+        this.classroomId = classroomId;
         this.reservedBy = reservedBy;
         this.purpose = purpose;
         this.schedule = schedule;
@@ -26,8 +26,8 @@ public class Reservation {
     // Getters and Setters
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
-    public String getClassroomName() { return classroomName; }
-    public void setClassroomName(String classroomName) { this.classroomName = classroomName; }
+    public Long getClassroomId() { return classroomId; }
+    public void setClassroomId(Long classroomId) { this.classroomId = classroomId; }
     public String getReservedBy() { return reservedBy; }
     public void setReservedBy(String reservedBy) { this.reservedBy = reservedBy; }
     public String getPurpose() { return purpose; }

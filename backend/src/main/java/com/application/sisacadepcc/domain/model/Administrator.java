@@ -9,8 +9,8 @@ public class Administrator extends User {
         setUserType(UserType.ADMINISTRATOR);
     }
 
-    public Administrator(String documentId, String paternalSurname, String maternalSurname,
+    public Administrator(String paternalSurname, String maternalSurname,
                          String firstNames, String institutionalEmail) {
-        super(documentId, paternalSurname, maternalSurname, firstNames, institutionalEmail, UserType.ADMINISTRATOR);
+        super(paternalSurname, maternalSurname, firstNames, institutionalEmail, UserType.ADMINISTRATOR);
     }
 }

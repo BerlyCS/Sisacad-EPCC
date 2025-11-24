@@ -1,18 +1,19 @@
 package com.application.sisacadepcc.domain.model.valueobject;
 
+import java.time.LocalTime;
 import java.util.Objects;
 
 public class CourseSchedule {
 
     private String classroomName;
     private String dayOfWeek;
-    private String startTime;
-    private String endTime;
+    private LocalTime startTime;
+    private LocalTime endTime;
 
     public CourseSchedule() {
     }
 
-    public CourseSchedule(String classroomName, String dayOfWeek, String startTime, String endTime) {
+    public CourseSchedule(String classroomName, String dayOfWeek, LocalTime startTime, LocalTime endTime) {
         this.classroomName = classroomName;
         this.dayOfWeek = dayOfWeek;
         this.startTime = startTime;
@@ -35,27 +36,27 @@ public class CourseSchedule {
         this.dayOfWeek = dayOfWeek;
     }
 
-    public String getStartTime() {
+    public LocalTime getStartTime() {
         return startTime;
     }
 
-    public void setStartTime(String startTime) {
+    public void setStartTime(LocalTime startTime) {
         this.startTime = startTime;
     }
 
-    public String getEndTime() {
+    public LocalTime getEndTime() {
         return endTime;
     }
 
-    public void setEndTime(String endTime) {
+    public void setEndTime(LocalTime endTime) {
         this.endTime = endTime;
     }
 
     public boolean isComplete() {
         return classroomName != null && !classroomName.isBlank()
                 && dayOfWeek != null && !dayOfWeek.isBlank()
-                && startTime != null && !startTime.isBlank()
-                && endTime != null && !endTime.isBlank();
+                && startTime != null
+                && endTime != null;
     }
 
     @Override

@@ -244,14 +244,12 @@ public class AuthorizationService {
 
     private Optional<Student> buildStudentFromAttributes(OAuth2User oauth2User) {
         String email = firstNonBlankAttribute(oauth2User, "email", "correo", "mail");
-        String documentId = firstNonBlankAttribute(oauth2User, "documentId", "documentoIdentidad", "dni");
-        if (email == null && documentId == null) {
+        if (email == null) {
             return Optional.empty();
         }
 
         Student student = new Student();
         student.setInstitutionalEmail(email);
-        student.setDocumentId(documentId);
         student.setCui(firstNonBlankAttribute(oauth2User, "cui"));
         student.setFirstNames(firstNonBlankAttribute(oauth2User, "firstNames", "given_name", "name"));
         student.setPaternalSurname(firstNonBlankAttribute(oauth2User, "paternalSurname", "apellidoPaterno"));
@@ -267,7 +265,6 @@ public class AuthorizationService {
 
         Professor professor = new Professor();
         professor.setInstitutionalEmail(email);
-        professor.setDocumentId(firstNonBlankAttribute(oauth2User, "documentId", "dni"));
         professor.setFirstNames(firstNonBlankAttribute(oauth2User, "firstNames", "given_name", "name"));
         professor.setPaternalSurname(firstNonBlankAttribute(oauth2User, "paternalSurname", "apellidoPaterno"));
         professor.setMaternalSurname(firstNonBlankAttribute(oauth2User, "maternalSurname", "apellidoMaterno"));

@@ -18,7 +18,4 @@ public interface StudentJpaRepository extends JpaRepository<StudentEntity, Long>
 
     Optional<StudentEntity> findByCui(String cui);
 
-    List<StudentEntity> findByDocumentIdIn(List<String> documentIds);
-
-    Optional<StudentEntity> findByDocumentId(String documentId);
 }

@@ -21,7 +21,6 @@ interface RawClassroom {
     capacity: number
     classroomType: string
   }
-  occupiedSchedules: any[]
 }
 
 export const useClassroomService = () => {

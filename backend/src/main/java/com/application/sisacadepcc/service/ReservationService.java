@@ -3,11 +3,13 @@ package com.application.sisacadepcc.service;
 import com.application.sisacadepcc.domain.model.Reservation;
 import com.application.sisacadepcc.domain.model.valueobject.OccupiedSchedule;
 import com.application.sisacadepcc.domain.repository.ReservationRepository;
+import com.application.sisacadepcc.domain.repository.ScheduleRepository;
+import com.application.sisacadepcc.infrastructure.repository.jpa.ScheduleEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.stereotype.Service;
 
-import java.util.Date;
+import java.time.LocalTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -15,11 +17,14 @@ import java.util.Optional;
 public class ReservationService {
 
     private final ReservationRepository reservationRepository;
+    private final ScheduleRepository scheduleRepository;
     private final AuthorizationService authorizationService;
 
     public ReservationService(ReservationRepository reservationRepository,
+                              ScheduleRepository scheduleRepository,
                               AuthorizationService authorizationService) {
         this.reservationRepository = reservationRepository;
+        this.scheduleRepository = scheduleRepository;
         this.authorizationService = authorizationService;
     }
 
@@ -29,10 +34,6 @@ public class ReservationService {
 
     public Optional<Reservation> getReservationById(Long id) {
         return reservationRepository.findById(id);
-    }
-
-    public List<Reservation> getReservationsByClassroom(String classroomName) {
-        return reservationRepository.findByClassroomName(classroomName);
     }
 
     public List<Reservation> getReservationsByUser(String email) {
@@ -48,8 +49,13 @@ public class ReservationService {
         OccupiedSchedule schedule = reservation.getSchedule();
 
         // Verificar que no haya reservas existentes en el mismo horario
-        if (hasExistingReservation(reservation.getClassroomName(), schedule)) {
+        if (hasExistingReservation(reservation.getClassroomId(), schedule)) {
             throw new IllegalArgumentException("Ya existe una reserva en este horario");
+        }
+
+        // Verificar que el aula esté disponible (no ocupada por cursos)
+        if (!isClassroomAvailable(reservation.getClassroomId(), schedule)) {
+            throw new IllegalArgumentException("El aula no está disponible en este horario");
         }
 
         // Establecer el usuario que hace la reserva
@@ -90,36 +96,22 @@ public class ReservationService {
         }
     }
 
-    public boolean isTimeSlotAvailable(String classroomName, String dayOfWeek, String startTime, String endTime) {
+    public boolean isTimeSlotAvailable(Long classroomId, String dayOfWeek, LocalTime startTime, LocalTime endTime) {
         // Verificar en las reservas existentes
-        List<Reservation> classroomReservations = reservationRepository.findByClassroomName(classroomName);
-        return classroomReservations.stream().noneMatch(reservation -> {
+        List<Reservation> reservations = getReservationsByClassroomId(classroomId);
+        return reservations.stream().noneMatch(reservation -> {
             OccupiedSchedule reservationSchedule = reservation.getSchedule();
-            return reservationSchedule.occupiesTimeSlot(dayOfWeek, startTime, endTime) &&
+            return reservationSchedule.occupiesTimeSlot(dayOfWeek, startTime.toString(), endTime.toString()) &&
                     !"REJECTED".equals(reservation.getStatus());
         });
     }
 
-    // Método para obtener disponibilidad semanal
-    public boolean[][] getWeeklyAvailability(String classroomName) {
-        String[] days = {"LUNES", "MARTES", "MIERCOLES", "JUEVES", "VIERNES"};
-        String[] timeSlots = {
-                "07:00-07:50", "07:50-08:40", "08:50-09:40", "09:40-10:30",
-                "10:40-11:30", "11:30-12:20", "12:20-13:10", "13:10-14:00",
-                "14:00-14:50", "14:50-15:40", "15:50-16:40", "16:40-17:30",
-                "17:40-18:30", "18:30-19:20", "19:20-20:10"
-        };
-
-        boolean[][] availability = new boolean[days.length][timeSlots.length];
-
-        for (int i = 0; i < days.length; i++) {
-            for (int j = 0; j < timeSlots.length; j++) {
-                String[] times = timeSlots[j].split("-");
-                availability[i][j] = isTimeSlotAvailable(classroomName, days[i], times[0], times[1]);
-            }
-        }
-
-        return availability;
+    private List<Reservation> getReservationsByClassroomId(Long classroomId) {
+        // Since repository doesn't have findByClassroomId, we need to filter all or add method
+        // For now, return all and filter
+        return reservationRepository.findAll().stream()
+                .filter(r -> r.getClassroomId().equals(classroomId))
+                .toList();
     }
 
     private boolean canMakeReservation(Authentication authentication) {
@@ -136,33 +128,51 @@ public class ReservationService {
         throw new SecurityException("Usuario no autenticado");
     }
 
-    private boolean hasExistingReservation(String classroomName, OccupiedSchedule schedule) {
-        List<Reservation> reservations = reservationRepository.findByClassroomName(classroomName);
+    private boolean hasExistingReservation(Long classroomId, OccupiedSchedule schedule) {
+        List<Reservation> reservations = getReservationsByClassroomId(classroomId);
         return reservations.stream().anyMatch(reservation -> {
             OccupiedSchedule reservationSchedule = reservation.getSchedule();
             return reservationSchedule.occupiesTimeSlot(
                     schedule.getDayOfWeek(),
-                    schedule.getStartTime(),  // CAMBIADO: usar getStartTime() directamente
-                    schedule.getEndTime()     // CAMBIADO: usar getEndTime() directamente
+                    schedule.getStartTime().toString(),
+                    schedule.getEndTime().toString()
             ) && !"REJECTED".equals(reservation.getStatus());
         });
+    }
+
+    private boolean isClassroomAvailable(Long classroomId, OccupiedSchedule schedule) {
+        List<ScheduleEntity> existingSchedules = scheduleRepository.findByClassroomId(classroomId);
+        return existingSchedules.stream().noneMatch(existing -> overlaps(existing, schedule));
+    }
+
+    private boolean overlaps(ScheduleEntity existing, OccupiedSchedule requested) {
+        // Compare dayOfWeek or date
+        String existingDay = existing.getDayOfWeek();
+        String requestedDay = requested.getDayOfWeek();
+        if (!existingDay.equalsIgnoreCase(requestedDay)) {
+            return false;
+        }
+        // Compare times
+        LocalTime existingStart = existing.getStartTime();
+        LocalTime existingEnd = existing.getEndTime();
+        LocalTime requestedStart = requested.getStartTime();
+        LocalTime requestedEnd = requested.getEndTime();
+        return existingStart.isBefore(requestedEnd) && existingEnd.isAfter(requestedStart);
     }
 
     // Método helper para crear OccupiedSchedule desde strings
     public OccupiedSchedule createReservationSchedule(String dayOfWeek, String startTime, String endTime) {
         try {
-            // Usar strings directamente sin conversión a Time
-            return new OccupiedSchedule(dayOfWeek, startTime, endTime);
+            return new OccupiedSchedule(dayOfWeek, LocalTime.parse(startTime), LocalTime.parse(endTime));
         } catch (Exception e) {
             throw new IllegalArgumentException("Formato de hora inválido: " + e.getMessage());
         }
     }
 
     // Método helper para crear OccupiedSchedule con fecha específica
-    public OccupiedSchedule createSpecificDateSchedule(Date date, String startTime, String endTime) {
+    public OccupiedSchedule createSpecificDateSchedule(java.time.LocalDate date, String startTime, String endTime) {
         try {
-            // Usar strings directamente sin conversión a Time
-            return new OccupiedSchedule(date, startTime, endTime, null);
+            return new OccupiedSchedule(date, LocalTime.parse(startTime), LocalTime.parse(endTime), null);
         } catch (Exception e) {
             throw new IllegalArgumentException("Formato de hora inválido: " + e.getMessage());
         }

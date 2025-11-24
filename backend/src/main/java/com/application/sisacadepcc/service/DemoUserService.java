@@ -43,39 +43,39 @@ public class DemoUserService {
         this.professorJpaRepository = professorJpaRepository;
         this.administratorJpaRepository = administratorJpaRepository;
         this.secretaryJpaRepository = secretaryJpaRepository;
-        this.demoProfiles = Map.of(
-        "STUDENT", new DemoUserProfile(
-            "STUDENT",
-            "Estudiante Demo",
-            "student@example.org",
-            "https://i.pravatar.cc/150?img=12",
-            "11111111",
-            "20250001"
-        ),
-                "PROFESSOR", new DemoUserProfile(
-                        "PROFESSOR",
-                        "Profesor Demo",
-                        "professor@example.org",
-            "https://i.pravatar.cc/150?img=11",
-            null,
-            null
-                ),
-                "ADMIN", new DemoUserProfile(
-                        "ADMIN",
-                        "Administrador Demo",
-                        "admin@example.org",
-            "https://i.pravatar.cc/150?img=10",
-            null,
-            null
-                ),
-                "SECRETARY", new DemoUserProfile(
-                        "SECRETARY",
-                        "Secretaria Demo",
-                        "secretary@example.org",
-            "https://i.pravatar.cc/150?img=9",
-            null,
-            null
-                )
+        this.demoProfiles = Map.ofEntries(
+            Map.entry("STUDENT", new DemoUserProfile(
+                "STUDENT",
+                "Estudiante Demo",
+                "student@example.org",
+                "https://i.pravatar.cc/150?img=12",
+                1L,
+                "20250001"
+            )),
+            Map.entry("PROFESSOR", new DemoUserProfile(
+                "PROFESSOR",
+                "Profesor Demo",
+                "professor@example.org",
+                "https://i.pravatar.cc/150?img=11",
+                2L,
+                null
+            )),
+            Map.entry("ADMIN", new DemoUserProfile(
+                "ADMIN",
+                "Administrador Demo",
+                "admin@example.org",
+                "https://i.pravatar.cc/150?img=10",
+                3L,
+                null
+            )),
+            Map.entry("SECRETARY", new DemoUserProfile(
+                "SECRETARY",
+                "Secretaria Demo",
+                "secretary@example.org",
+                "https://i.pravatar.cc/150?img=9",
+                4L,
+                null
+            ))
         );
     }
 
@@ -117,7 +117,6 @@ public class DemoUserService {
             return;
         }
         StudentEntity entity = new StudentEntity();
-        entity.setDocumentId(profile.documentoIdentidad() != null ? profile.documentoIdentidad() : "11111111");
         entity.setCui(profile.cui() != null ? profile.cui() : "20250001");
         entity.setPaternalSurname("Demo");
         entity.setMaternalSurname("Student");
@@ -137,7 +136,6 @@ public class DemoUserService {
         }
 
         ProfessorEntity entity = new ProfessorEntity();
-        entity.setDocumentId("22222222");
         entity.setPaternalSurname("Demo");
         entity.setMaternalSurname("Professor");
         entity.setFirstNames("Profesor");
@@ -159,7 +157,6 @@ public class DemoUserService {
             return;
         }
         AdministratorEntity entity = new AdministratorEntity();
-        entity.setDocumentId("33333333");
         entity.setPaternalSurname("Demo");
         entity.setMaternalSurname("Admin");
         entity.setFirstNames("Administrador");
@@ -176,7 +173,6 @@ public class DemoUserService {
             return;
         }
         SecretaryEntity entity = new SecretaryEntity();
-        entity.setDocumentId("44444444");
         entity.setPaternalSurname("Demo");
         entity.setMaternalSurname("Secretary");
         entity.setFirstNames("Secretaria");
@@ -184,6 +180,6 @@ public class DemoUserService {
         secretaryJpaRepository.save(entity);
     }
 
-    public record DemoUserProfile(String role, String displayName, String email, String pictureUrl, String documentoIdentidad, String cui) {
+    public record DemoUserProfile(String role, String displayName, String email, String pictureUrl, Long userId, String cui) {
     }
 }

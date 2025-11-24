@@ -2,6 +2,8 @@ package com.application.sisacadepcc.infrastructure.repository.jpa;
 
 import jakarta.persistence.*;
 
+import java.time.LocalDate;
+import java.time.LocalTime;
 import java.util.Optional;
 
 import com.application.sisacadepcc.domain.model.valueobject.Place;
@@ -18,14 +20,17 @@ public class ScheduleEntity {
     @Column(name = "classroom_name")
     private String classroomName;
 
+    @Column(name = "date")
+    private LocalDate date;
+
     @Column(name = "day_of_week", nullable = false)
     private String dayOfWeek;
 
     @Column(name = "start_time", nullable = false)
-    private String startTime;
+    private LocalTime startTime;
 
     @Column(name = "end_time", nullable = false)
-    private String endTime;
+    private LocalTime endTime;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "course_group_id", nullable = false)
@@ -38,7 +43,7 @@ public class ScheduleEntity {
     // Constructors
     public ScheduleEntity() {}
 
-    public ScheduleEntity(String classroomName, String dayOfWeek, String startTime, String endTime, CourseGroupEntity courseGroup) {
+    public ScheduleEntity(String classroomName, String dayOfWeek, LocalTime startTime, LocalTime endTime, CourseGroupEntity courseGroup) {
         this.classroomName = classroomName;
         this.dayOfWeek = dayOfWeek;
         this.startTime = startTime;
@@ -46,7 +51,7 @@ public class ScheduleEntity {
         this.courseGroup = courseGroup;
     }
 
-    public ScheduleEntity(ClassroomEntity classroom, String dayOfWeek, String startTime, String endTime, CourseGroupEntity courseGroup) {
+    public ScheduleEntity(ClassroomEntity classroom, String dayOfWeek, LocalTime startTime, LocalTime endTime, CourseGroupEntity courseGroup) {
         this.classroom = classroom;
         this.classroomName = classroom != null ? buildDisplayName(classroom) : null;
         this.dayOfWeek = dayOfWeek;
@@ -75,6 +80,14 @@ public class ScheduleEntity {
         this.classroomName = classroomName;
     }
 
+    public LocalDate getDate() {
+        return date;
+    }
+
+    public void setDate(LocalDate date) {
+        this.date = date;
+    }
+
     public String getDayOfWeek() {
         return dayOfWeek;
     }
@@ -83,19 +96,19 @@ public class ScheduleEntity {
         this.dayOfWeek = dayOfWeek;
     }
 
-    public String getStartTime() {
+    public LocalTime getStartTime() {
         return startTime;
     }
 
-    public void setStartTime(String startTime) {
+    public void setStartTime(LocalTime startTime) {
         this.startTime = startTime;
     }
 
-    public String getEndTime() {
+    public LocalTime getEndTime() {
         return endTime;
     }
 
-    public void setEndTime(String endTime) {
+    public void setEndTime(LocalTime endTime) {
         this.endTime = endTime;
     }
 

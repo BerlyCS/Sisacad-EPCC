@@ -120,8 +120,8 @@ public class AuthController {
         attributes.put("picture", profile.pictureUrl());
         attributes.put("role", profile.role());
 
-        if (profile.documentoIdentidad() != null) {
-            attributes.put("documentoIdentidad", profile.documentoIdentidad());
+        if (profile.userId() != null) {
+            attributes.put("userId", profile.userId());
         }
 
         if (profile.cui() != null) {
@@ -147,8 +147,8 @@ public class AuthController {
         responseBody.put("isAdmin", "ADMIN".equals(profile.role()));
         responseBody.put("picture", profile.pictureUrl());
 
-        if (profile.documentoIdentidad() != null) {
-            responseBody.put("documentoIdentidad", profile.documentoIdentidad());
+        if (profile.userId() != null) {
+            responseBody.put("userId", profile.userId());
         }
 
         if (profile.cui() != null) {
