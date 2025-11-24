@@ -3,6 +3,8 @@ package com.application.sisacadepcc.presentation.dto;
 import com.application.sisacadepcc.domain.model.CourseGroup;
 import com.application.sisacadepcc.domain.model.valueobject.CourseType;
 
+import java.util.List;
+
 public record CourseGroupAssignmentResponse(
         Long groupId,
         Long courseId,
@@ -11,7 +13,8 @@ public record CourseGroupAssignmentResponse(
         String typeLabel,
         Integer maxCapacity,
         Integer availableCapacity,
-        Long teacherId
+        Long teacherId,
+        List<CourseScheduleSlotResponse> scheduleSlots
 ) {
     public static CourseGroupAssignmentResponse from(CourseGroup group) {
         if (group == null) {
@@ -26,7 +29,8 @@ public record CourseGroupAssignmentResponse(
                 label,
                 group.getMaxCapacity(),
                 group.getAvailableCapacity(),
-                group.getTeacherId()
+                group.getTeacherId(),
+                CourseScheduleSlotResponse.fromList(group.getCourseSchedules())
         );
     }
 }

@@ -5,6 +5,7 @@ import com.application.sisacadepcc.domain.model.Course;
 import com.application.sisacadepcc.domain.model.CourseGroup;
 import com.application.sisacadepcc.presentation.dto.CourseDetailsResponse;
 import com.application.sisacadepcc.presentation.dto.CourseGroupAssignmentResponse;
+import com.application.sisacadepcc.presentation.dto.CreateCourseGroupRequest;
 import com.application.sisacadepcc.presentation.dto.UpdateCapacityRequest;
 import com.application.sisacadepcc.domain.repository.EnrollmentRepository;
 import com.application.sisacadepcc.service.AuthorizationService;
@@ -45,6 +46,24 @@ public class CourseController {
                         .map(CourseGroupAssignmentResponse::from)
                         .toList()
         );
+    }
+
+    @PostMapping("/{courseId}/groups")
+    public ResponseEntity<CourseGroupAssignmentResponse> createCourseGroup(@PathVariable Long courseId,
+                                                                          @RequestBody CreateCourseGroupRequest request,
+                                                                          Authentication authentication) {
+        if (!authorizationService.hasAnyRole(authentication, UserRole.ADMIN, UserRole.SECRETARY)) {
+            return ResponseEntity.status(403).build();
+        }
+
+        try {
+            return service.createCourseGroup(courseId, request)
+                    .map(CourseGroupAssignmentResponse::from)
+                    .map(ResponseEntity::ok)
+                    .orElseGet(() -> ResponseEntity.badRequest().build());
+        } catch (IllegalArgumentException ex) {
+            return ResponseEntity.badRequest().build();
+        }
     }
 
     @GetMapping("/{id}")

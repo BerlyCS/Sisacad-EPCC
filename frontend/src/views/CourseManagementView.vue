@@ -9,7 +9,7 @@
         </div>
         <div v-if="canAddCourses" class="flex gap-2">
           <button
-            @click="$router.push('/admin/courses/add')"
+            @click="openCreateCourseModal"
             class="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700"
           >
             <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -105,6 +105,147 @@
             </p>
           </div>
         </div>
+      </div>
+    </div>
+
+    <div
+      v-if="showCreateCourseModal"
+      class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4"
+    >
+      <div class="w-full max-w-3xl rounded-2xl bg-white shadow-2xl">
+        <div class="flex items-start justify-between border-b px-6 py-4">
+          <div>
+            <p class="text-xs font-semibold uppercase tracking-wide text-blue-500">Nuevo curso</p>
+            <h3 class="text-xl font-semibold text-gray-900">Registrar curso académico</h3>
+            <p class="text-sm text-gray-500">Completa los datos básicos para habilitar la matrícula.</p>
+          </div>
+          <button
+            class="rounded-full p-2 text-gray-400 hover:bg-gray-100 hover:text-gray-600"
+            @click="closeCreateCourseModal"
+            :disabled="createCourseLoading"
+          >
+            <span class="sr-only">Cerrar</span>
+            ✕
+          </button>
+        </div>
+
+        <form class="px-6 py-5 space-y-6" @submit.prevent="handleCreateCourse">
+          <div v-if="courseFormErrors.length || createCourseError" class="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
+            <p class="font-semibold">Revisa los siguientes campos:</p>
+            <ul class="mt-2 list-disc pl-5">
+              <li v-for="(message, index) in courseFormErrors" :key="`course-error-${index}`">{{ message }}</li>
+            </ul>
+            <p v-if="createCourseError" class="mt-2">{{ createCourseError }}</p>
+          </div>
+
+          <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
+            <label class="text-sm font-medium text-gray-700">
+              Código del curso
+              <input
+                v-model="newCourseForm.courseCode"
+                type="number"
+                inputmode="numeric"
+                class="mt-2 w-full rounded-xl border border-gray-200 px-4 py-2 text-sm focus:border-blue-500 focus:outline-none"
+                placeholder="Ej. 1701101"
+                :disabled="createCourseLoading"
+                min="1"
+              />
+            </label>
+            <label class="text-sm font-medium text-gray-700">
+              Créditos
+              <input
+                v-model="newCourseForm.credits"
+                type="number"
+                inputmode="numeric"
+                class="mt-2 w-full rounded-xl border border-gray-200 px-4 py-2 text-sm focus:border-blue-500 focus:outline-none"
+                placeholder="Ej. 3"
+                :disabled="createCourseLoading"
+                min="1"
+              />
+            </label>
+          </div>
+
+          <label class="text-sm font-medium text-gray-700">
+            Nombre del curso
+            <input
+              v-model="newCourseForm.name"
+              type="text"
+              class="mt-2 w-full rounded-xl border border-gray-200 px-4 py-2 text-sm focus:border-blue-500 focus:outline-none"
+              placeholder="Ingresa el nombre oficial"
+              :disabled="createCourseLoading"
+            />
+          </label>
+
+          <div class="grid grid-cols-1 gap-4 md:grid-cols-3">
+            <label class="text-sm font-medium text-gray-700">
+              Horas teoría
+              <input
+                v-model="newCourseForm.theoryHours"
+                type="number"
+                inputmode="numeric"
+                class="mt-2 w-full rounded-xl border border-gray-200 px-4 py-2 text-sm focus:border-blue-500 focus:outline-none"
+                placeholder="0"
+                :disabled="createCourseLoading"
+                min="0"
+              />
+            </label>
+            <label class="text-sm font-medium text-gray-700">
+              Horas práctica
+              <input
+                v-model="newCourseForm.practiceHours"
+                type="number"
+                inputmode="numeric"
+                class="mt-2 w-full rounded-xl border border-gray-200 px-4 py-2 text-sm focus:border-blue-500 focus:outline-none"
+                placeholder="0"
+                :disabled="createCourseLoading"
+                min="0"
+              />
+            </label>
+            <label class="text-sm font-medium text-gray-700">
+              Horas laboratorio
+              <input
+                v-model="newCourseForm.labHours"
+                type="number"
+                inputmode="numeric"
+                class="mt-2 w-full rounded-xl border border-gray-200 px-4 py-2 text-sm focus:border-blue-500 focus:outline-none"
+                placeholder="0"
+                :disabled="createCourseLoading"
+                min="0"
+              />
+            </label>
+          </div>
+
+          <label class="text-sm font-medium text-gray-700">
+            Número de semestre (opcional)
+            <input
+              v-model="newCourseForm.semesterNumber"
+              type="number"
+              inputmode="numeric"
+              class="mt-2 w-full rounded-xl border border-gray-200 px-4 py-2 text-sm focus:border-blue-500 focus:outline-none"
+              placeholder="1"
+              :disabled="createCourseLoading"
+              min="1"
+            />
+          </label>
+
+          <div class="flex flex-col gap-2 border-t pt-4 sm:flex-row sm:justify-end">
+            <button
+              type="button"
+              class="rounded-xl border border-gray-200 px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50"
+              @click="closeCreateCourseModal"
+              :disabled="createCourseLoading"
+            >
+              Cancelar
+            </button>
+            <button
+              type="submit"
+              class="rounded-xl bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-blue-300"
+              :disabled="createCourseLoading"
+            >
+              {{ createCourseLoading ? 'Guardando...' : 'Registrar curso' }}
+            </button>
+          </div>
+        </form>
       </div>
     </div>
 
@@ -230,7 +371,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, ref, watch, watchEffect } from 'vue'
+import { computed, onMounted, reactive, ref, watch, watchEffect } from 'vue'
 import { storeToRefs } from 'pinia'
 import AdminLayout from '../components/ui/TopBar.vue'
 import { useCourseService } from '../services/courseService'
@@ -251,7 +392,8 @@ const {
   courseGroupsError,
   fetchCourseGroups,
   assignProfessorToCourse,
-  removeProfessorFromCourse
+  removeProfessorFromCourse,
+  createCourse
 } = useCourseService()
 
 const {
@@ -267,6 +409,19 @@ const selectedProfessorId = ref<number | null>(null)
 const selectedGroupId = ref<number | null>(null)
 const assignmentError = ref('')
 const assignmentLoading = ref(false)
+const showCreateCourseModal = ref(false)
+const createCourseLoading = ref(false)
+const createCourseError = ref('')
+const courseFormErrors = ref<string[]>([])
+const newCourseForm = reactive({
+  courseCode: '',
+  name: '',
+  credits: '',
+  theoryHours: '',
+  practiceHours: '',
+  labHours: '',
+  semesterNumber: ''
+})
 
 const professorDirectory = computed(() => {
   const directory = new Map<number, Professor>()
@@ -392,6 +547,99 @@ const handleRemoveProfessor = async (professorId: number) => {
     assignmentError.value = err instanceof Error ? err.message : 'No se pudo actualizar el curso'
   } finally {
     assignmentLoading.value = false
+  }
+}
+
+const resetCourseForm = () => {
+  newCourseForm.courseCode = ''
+  newCourseForm.name = ''
+  newCourseForm.credits = ''
+  newCourseForm.theoryHours = ''
+  newCourseForm.practiceHours = ''
+  newCourseForm.labHours = ''
+  newCourseForm.semesterNumber = ''
+}
+
+const openCreateCourseModal = () => {
+  resetCourseForm()
+  courseFormErrors.value = []
+  createCourseError.value = ''
+  showCreateCourseModal.value = true
+}
+
+const closeCreateCourseModal = () => {
+  showCreateCourseModal.value = false
+  createCourseError.value = ''
+  courseFormErrors.value = []
+}
+
+const parseNonNegativeNumber = (value: string) => {
+  const parsed = Number(value)
+  return Number.isFinite(parsed) && parsed >= 0 ? parsed : 0
+}
+
+const validateCourseForm = () => {
+  const errors: string[] = []
+  const code = Number(newCourseForm.courseCode)
+  if (!Number.isFinite(code) || code <= 0) {
+    errors.push('Ingresa un código de curso válido mayor a cero.')
+  }
+
+  if (!newCourseForm.name.trim()) {
+    errors.push('El nombre del curso es obligatorio.')
+  }
+
+  const credits = Number(newCourseForm.credits)
+  if (!Number.isFinite(credits) || credits <= 0) {
+    errors.push('Los créditos deben ser un número positivo.')
+  }
+
+  const theory = parseNonNegativeNumber(newCourseForm.theoryHours)
+  const practice = parseNonNegativeNumber(newCourseForm.practiceHours)
+  const lab = parseNonNegativeNumber(newCourseForm.labHours)
+  if (theory + practice + lab === 0) {
+    errors.push('Define al menos una hora de teoría, práctica o laboratorio.')
+  }
+
+  if (newCourseForm.semesterNumber) {
+    const semester = Number(newCourseForm.semesterNumber)
+    if (!Number.isFinite(semester) || semester <= 0) {
+      errors.push('El semestre debe ser mayor a cero o puede dejarse vacío.')
+    }
+  }
+
+  courseFormErrors.value = errors
+  return errors.length === 0
+}
+
+const handleCreateCourse = async () => {
+  if (!validateCourseForm()) {
+    return
+  }
+
+  createCourseLoading.value = true
+  createCourseError.value = ''
+
+  const payload = {
+    courseCode: Number(newCourseForm.courseCode),
+    name: newCourseForm.name.trim(),
+    credits: Number(newCourseForm.credits),
+    theoryHours: parseNonNegativeNumber(newCourseForm.theoryHours),
+    practiceHours: parseNonNegativeNumber(newCourseForm.practiceHours),
+    labHours: parseNonNegativeNumber(newCourseForm.labHours),
+    semesterNumber: newCourseForm.semesterNumber
+      ? Number(newCourseForm.semesterNumber)
+      : null
+  }
+
+  try {
+    await createCourse(payload)
+    await fetchCourses()
+    closeCreateCourseModal()
+  } catch (err) {
+    createCourseError.value = err instanceof Error ? err.message : 'No se pudo registrar el curso'
+  } finally {
+    createCourseLoading.value = false
   }
 }
 
