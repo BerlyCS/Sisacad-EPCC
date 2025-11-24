@@ -40,7 +40,7 @@ public class AttendanceController {
             return service.getByProfessor(professorId);
         }
         if (groupId != null) {
-            return service.getByGroup(groupId);
+            return service.getByCourseGroup(groupId);
         }
         if (courseId != null) {
             return service.getByCourse(courseId);

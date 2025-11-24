@@ -63,8 +63,8 @@ public class StudentAttendanceRepositoryImpl implements StudentAttendanceReposit
     }
 
     @Override
-    public List<StudentAttendance> findByGroupId(Long groupId) {
-        return jpaRepository.findByAttendance_GroupId(groupId).stream().map(this::toDomain).collect(Collectors.toList());
+    public List<StudentAttendance> findByCourseGroupId(Long courseGroupId) {
+        return jpaRepository.findByAttendance_CourseGroupId(courseGroupId).stream().map(this::toDomain).collect(Collectors.toList());
     }
 
     @Override
@@ -114,7 +114,7 @@ public class StudentAttendanceRepositoryImpl implements StudentAttendanceReposit
                 a.getStudentId(),
                 a.getStatus(),
                 attendance.getCourseId(),
-                attendance.getGroupId(),
+                attendance.getCourseGroupId(),
                 attendance.getDate(),
                 attendance.getTimestamp(),
                 latitude,

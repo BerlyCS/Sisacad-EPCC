@@ -1,5 +1,6 @@
 package com.application.sisacadepcc.infrastructure.repository.jpa;
 
+import com.application.sisacadepcc.domain.model.Schedule;
 import com.application.sisacadepcc.domain.repository.ScheduleRepository;
 import org.springframework.stereotype.Repository;
 
@@ -16,34 +17,46 @@ public class ScheduleRepositoryImpl implements ScheduleRepository {
     }
 
     @Override
-    public List<ScheduleEntity> findAll() {
-        return jpaRepository.findAll();
+    public List<Schedule> findAll() {
+        return jpaRepository.findAll()
+                .stream()
+                .map(this::toDomain)
+                .toList();
     }
 
     @Override
-    public Optional<ScheduleEntity> findById(Long id) {
-        return jpaRepository.findById(id);
+    public Optional<Schedule> findById(Long id) {
+        return jpaRepository.findById(id)
+                .map(this::toDomain);
     }
 
     @Override
-    public List<ScheduleEntity> findByCourseGroupId(Long courseGroupId) {
+    public List<Schedule> findByCourseGroupId(Long courseGroupId) {
         if (courseGroupId == null) {
             return List.of();
         }
-        return jpaRepository.findByCourseGroup_Id(courseGroupId);
+        return jpaRepository.findByCourseGroupId(courseGroupId)
+                .stream()
+                .map(this::toDomain)
+                .toList();
     }
 
     @Override
-    public List<ScheduleEntity> findByClassroomId(Long classroomId) {
+    public List<Schedule> findByClassroomId(Long classroomId) {
         if (classroomId == null) {
             return List.of();
         }
-        return jpaRepository.findByClassroom_ClassroomId(classroomId);
+        return jpaRepository.findByClassroomId(classroomId)
+                .stream()
+                .map(this::toDomain)
+                .toList();
     }
 
     @Override
-    public ScheduleEntity save(ScheduleEntity schedule) {
-        return jpaRepository.save(schedule);
+    public Schedule save(Schedule schedule) {
+        ScheduleEntity entity = toEntity(schedule);
+        ScheduleEntity saved = jpaRepository.save(entity);
+        return toDomain(saved);
     }
 
     @Override
@@ -56,7 +69,27 @@ public class ScheduleRepositoryImpl implements ScheduleRepository {
     @Override
     public void deleteByCourseGroupId(Long courseGroupId) {
         if (courseGroupId != null) {
-            jpaRepository.deleteByCourseGroup_Id(courseGroupId);
+            jpaRepository.deleteAssignmentsByCourseGroup(courseGroupId);
         }
+    }
+
+    private Schedule toDomain(ScheduleEntity entity) {
+        Schedule schedule = new Schedule();
+        schedule.setId(entity.getId());
+        schedule.setDayOfWeek(entity.getDayOfWeek());
+        schedule.setStartTime(entity.getStartTime());
+        schedule.setEndTime(entity.getEndTime());
+        schedule.setScheduleType(entity.getScheduleType());
+        return schedule;
+    }
+
+    private ScheduleEntity toEntity(Schedule schedule) {
+        ScheduleEntity entity = new ScheduleEntity();
+        entity.setId(schedule.getId());
+        entity.setDayOfWeek(schedule.getDayOfWeek());
+        entity.setStartTime(schedule.getStartTime());
+        entity.setEndTime(schedule.getEndTime());
+        entity.setScheduleType(schedule.getScheduleType());
+        return entity;
     }
 }

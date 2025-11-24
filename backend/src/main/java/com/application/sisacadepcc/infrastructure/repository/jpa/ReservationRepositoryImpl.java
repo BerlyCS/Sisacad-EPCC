@@ -1,7 +1,8 @@
 package com.application.sisacadepcc.infrastructure.repository.jpa;
 
 import com.application.sisacadepcc.domain.model.Reservation;
-import com.application.sisacadepcc.domain.model.valueobject.OccupiedSchedule;
+import com.application.sisacadepcc.domain.model.Schedule;
+import com.application.sisacadepcc.domain.model.valueobject.ScheduleType;
 import com.application.sisacadepcc.domain.repository.ReservationRepository;
 import org.springframework.stereotype.Repository;
 
@@ -21,17 +22,19 @@ public class ReservationRepositoryImpl implements ReservationRepository {
     private Reservation toDomain(ReservationEntity entity) {
         Reservation reservation = new Reservation();
         reservation.setId(entity.getId());
-        reservation.setReservedBy(entity.getReservedBy());
+        reservation.setUserId(entity.getUserId());
         reservation.setPurpose(entity.getPurpose());
 
-        // Crear OccupiedSchedule desde el schedule referenciado
+        // Crear Schedule domain desde el schedule referenciado
         ScheduleEntity scheduleEntity = entity.getSchedule();
-        OccupiedSchedule schedule = new OccupiedSchedule(
-                scheduleEntity.getDayOfWeek(),
-                scheduleEntity.getStartTime(),
-                scheduleEntity.getEndTime()
-        );
+        Schedule schedule = new Schedule();
+        schedule.setId(scheduleEntity.getId());
+        schedule.setDayOfWeek(scheduleEntity.getDayOfWeek());
+        schedule.setStartTime(scheduleEntity.getStartTime());
+        schedule.setEndTime(scheduleEntity.getEndTime());
+        schedule.setScheduleType(scheduleEntity.getScheduleType());
         reservation.setSchedule(schedule);
+        reservation.setReservationDate(entity.getReservationDate());
 
         reservation.setCreatedAt(entity.getCreatedAt());
         reservation.setStatus(entity.getStatus());
@@ -42,17 +45,22 @@ public class ReservationRepositoryImpl implements ReservationRepository {
     private ReservationEntity toEntity(Reservation reservation) {
         ReservationEntity entity = new ReservationEntity();
         entity.setId(reservation.getId());
-        entity.setReservedBy(reservation.getReservedBy());
+        entity.setUserId(reservation.getUserId());
         entity.setPurpose(reservation.getPurpose());
 
-        // Crear ScheduleEntity desde el OccupiedSchedule
-        OccupiedSchedule schedule = reservation.getSchedule();
+        // Crear ScheduleEntity desde el Schedule domain
+        Schedule schedule = reservation.getSchedule();
         ScheduleEntity scheduleEntity = new ScheduleEntity();
         scheduleEntity.setDayOfWeek(schedule.getDayOfWeek());
         scheduleEntity.setStartTime(schedule.getStartTime());
         scheduleEntity.setEndTime(schedule.getEndTime());
+        // mark this schedule as a reservation-type schedule
+        scheduleEntity.setScheduleType(ScheduleType.RESERVATION);
         // classroom and courseGroup remain null for reservations
         entity.setSchedule(scheduleEntity);
+
+        // Persist reservation-specific date on reservation entity
+        entity.setReservationDate(reservation.getReservationDate());
 
         // CORRECCIÓN: Asegurar que createdAt nunca sea null
         if (reservation.getCreatedAt() == null) {
@@ -84,8 +92,8 @@ public class ReservationRepositoryImpl implements ReservationRepository {
     }
 
     @Override
-    public List<Reservation> findByReservedBy(String reservedBy) {
-        return jpaRepository.findByReservedBy(reservedBy).stream()
+    public List<Reservation> findByUserId(Long userId) {
+        return jpaRepository.findByUserId(userId).stream()
                 .map(this::toDomain)
                 .collect(Collectors.toList());
     }

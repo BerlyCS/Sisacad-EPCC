@@ -12,7 +12,7 @@ public class Attendance {
     private final Long attendanceId;
     private final Long professorId;
     private final Long courseId; // optional
-    private final Long groupId;  // optional
+    private final Long courseGroupId;  // optional
     private final AttendanceStatus status;
     private final LocalDateTime timestamp;
     private final GeoLocation location; // optional
@@ -23,7 +23,7 @@ public class Attendance {
     public Attendance(Long attendanceId,
                       Long professorId,
                       Long courseId,
-                      Long groupId,
+                      Long courseGroupId,
                       AttendanceStatus status,
                       LocalDateTime timestamp,
                       GeoLocation location,
@@ -33,7 +33,7 @@ public class Attendance {
         this.attendanceId = attendanceId;
         this.professorId = professorId;
         this.courseId = courseId;
-        this.groupId = groupId;
+        this.courseGroupId = courseGroupId;
         this.status = status;
         this.timestamp = timestamp;
         this.location = location;
@@ -45,7 +45,7 @@ public class Attendance {
     public Long getAttendanceId() { return attendanceId; }
     public Long getProfessorId() { return professorId; }
     public Long getCourseId() { return courseId; }
-    public Long getGroupId() { return groupId; }
+    public Long getCourseGroupId() { return courseGroupId; }
     public AttendanceStatus getStatus() { return status; }
     public LocalDateTime getTimestamp() { return timestamp; }
     public GeoLocation getLocation() { return location; }

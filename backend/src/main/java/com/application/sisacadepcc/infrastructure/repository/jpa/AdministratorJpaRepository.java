@@ -3,4 +3,5 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface AdministratorJpaRepository extends JpaRepository<AdministratorEntity, Long> {
     boolean existsByInstitutionalEmail(String email);
+    java.util.List<AdministratorEntity> findByInstitutionalEmail(String email);
 }

@@ -59,10 +59,38 @@ export const useClassroomService = () => {
     }
   }
 
+  const createClassroom = async (payload: { place: { building: string; floor?: number; number?: number; capacity?: number; classroomType?: string } }) => {
+    loading.value = true
+    error.value = ''
+    try {
+      const response = await fetch(`${API_BASE_URL}/classrooms`, {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      })
+
+      if (!response.ok) {
+        throw new Error('Error al crear el aula')
+      }
+
+      // Backend may return created classroom or echo; refresh list
+      await fetchClassrooms()
+      return true
+    } catch (err) {
+      error.value = 'No se pudo crear el aula'
+      console.error('Error creating classroom:', err)
+      return false
+    } finally {
+      loading.value = false
+    }
+  }
+
   return {
     classrooms,
     loading,
     error,
-    fetchClassrooms
+    fetchClassrooms,
+    createClassroom
   }
 }

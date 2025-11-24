@@ -2,7 +2,7 @@ package com.application.sisacadepcc.presentation.dto;
 
 import com.application.sisacadepcc.domain.model.Course;
 import com.application.sisacadepcc.domain.model.CourseGroup;
-import com.application.sisacadepcc.domain.model.valueobject.CourseSchedule;
+import com.application.sisacadepcc.domain.model.Schedule;
 import com.application.sisacadepcc.domain.model.valueobject.CourseType;
 
 import java.util.List;
@@ -16,7 +16,7 @@ public record LabSectionResponse(
         Integer remainingSeats,
         Long theoryCourseId,
         String courseTypeLabel,
-        List<CourseSchedule> scheduleSlots
+        List<Schedule> scheduleSlots
 ) {
     public static LabSectionResponse from(CourseGroup labGroup, long enrolledCount) {
         Course course = labGroup.getCourse();

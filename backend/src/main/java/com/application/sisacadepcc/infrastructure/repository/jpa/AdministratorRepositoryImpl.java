@@ -5,6 +5,7 @@ import com.application.sisacadepcc.domain.repository.AdministratorRepository;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Repository
@@ -49,6 +50,11 @@ public class AdministratorRepositoryImpl implements AdministratorRepository {
     @Override
     public boolean existsByInstitutionalEmail(String email) {
         return jpaRepository.existsByInstitutionalEmail(email);
+    }
+
+    @Override
+    public Optional<Administrator> findByInstitutionalEmail(String email) {
+        return jpaRepository.findByInstitutionalEmail(email).stream().findFirst().map(this::mapToDomain);
     }
 
 }

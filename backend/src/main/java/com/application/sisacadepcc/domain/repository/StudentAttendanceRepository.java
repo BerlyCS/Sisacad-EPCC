@@ -14,7 +14,7 @@ public interface StudentAttendanceRepository {
     List<StudentAttendance> findAll();
     StudentAttendance findById(Long id);
     void deleteById(Long id);
-    List<StudentAttendance> findByGroupId(Long groupId);
+    List<StudentAttendance> findByCourseGroupId(Long courseGroupId);
     List<StudentAttendance> findByCourseId(Long courseId);
     List<StudentAttendance> findByStudentIdAndDate(String studentId, java.time.LocalDate date);
 

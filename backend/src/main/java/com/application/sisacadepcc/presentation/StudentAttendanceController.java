@@ -37,7 +37,7 @@ public class StudentAttendanceController {
             return service.getByStudent(studentId);
         }
         if (groupId != null) {
-            return service.getByGroup(groupId);
+            return service.getByCourseGroup(groupId);
         }
         if (courseId != null) {
             return service.getByCourse(courseId);

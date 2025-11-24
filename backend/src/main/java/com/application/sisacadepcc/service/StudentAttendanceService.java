@@ -31,7 +31,7 @@ public class StudentAttendanceService {
 
     public List<StudentAttendance> getByStudent(String studentId) { return repository.findByStudentId(studentId); }
 
-    public List<StudentAttendance> getByGroup(Long groupId) { return repository.findByGroupId(groupId); }
+    public List<StudentAttendance> getByCourseGroup(Long courseGroupId) { return repository.findByCourseGroupId(courseGroupId); }
 
     public List<StudentAttendance> getByCourse(Long courseId) { return repository.findByCourseId(courseId); }
 

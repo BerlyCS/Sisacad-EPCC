@@ -1,6 +1,8 @@
 package com.application.sisacadepcc.service;
 
+import com.application.sisacadepcc.domain.model.Administrator;
 import com.application.sisacadepcc.domain.model.Professor;
+import com.application.sisacadepcc.domain.model.Secretary;
 import com.application.sisacadepcc.domain.model.Student;
 import com.application.sisacadepcc.domain.repository.AdministratorRepository;
 import com.application.sisacadepcc.domain.repository.ProfessorRepository;
@@ -123,6 +125,24 @@ public class AuthorizationService {
         }
 
         return asOauthUser(authentication).flatMap(this::buildProfessorFromAttributes);
+    }
+
+    public Optional<Secretary> getAuthenticatedSecretary(Authentication authentication) {
+        if (!isAuthenticated(authentication)) {
+            return Optional.empty();
+        }
+
+        return extractEmail(authentication)
+                .flatMap(secretaryRepository::findByInstitutionalEmail);
+    }
+
+    public Optional<Administrator> getAuthenticatedAdministrator(Authentication authentication) {
+        if (!isAuthenticated(authentication)) {
+            return Optional.empty();
+        }
+
+        return extractEmail(authentication)
+                .flatMap(administratorRepository::findByInstitutionalEmail);
     }
 
     private Optional<UserRole> deriveRoleFromRepositories(Authentication authentication) {

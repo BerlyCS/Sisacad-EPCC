@@ -7,7 +7,7 @@ import java.util.List;
 
 public interface AttendanceJpaRepository extends JpaRepository<AttendanceEntity, Long> {
     List<AttendanceEntity> findByProfessorId(Long professorId);
-    List<AttendanceEntity> findByGroupId(Long groupId);
+    List<AttendanceEntity> findByCourseGroupId(Long courseGroupId);
     List<AttendanceEntity> findByCourseId(Long courseId);
     List<AttendanceEntity> findByProfessorIdAndDate(Long professorId, LocalDate date);
 }

@@ -7,6 +7,14 @@
       </div>
       
       <div class="p-6">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div class="md:col-span-1">
+            <ClassroomForm :reset-key="resetKey" @submit="handleCreate" />
+            <div v-if="formError" class="mt-3 text-red-600 text-sm">{{ formError }}</div>
+            <div v-if="successMessage" class="mt-3 text-green-600 text-sm">{{ successMessage }}</div>
+          </div>
+
+          <div class="md:col-span-2">
         <!-- Estado de carga y error -->
         <div v-if="loading" class="text-center py-8">
           <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
@@ -97,11 +105,34 @@
 </template>
 
 <script setup>
-import { onMounted } from 'vue'
+import { onMounted, ref } from 'vue'
 import AdminLayout from '../components/ui/TopBar.vue'
+import ClassroomForm from '../components/features/classroom/ClassroomForm.vue'
 import { useClassroomService } from '../services/classroomService'
 
-const { classrooms, loading, error, fetchClassrooms } = useClassroomService()
+const { classrooms, loading, error, fetchClassrooms, createClassroom } = useClassroomService()
+
+const submitting = ref(false)
+const formError = ref('')
+const successMessage = ref('')
+const resetKey = ref(0)
+
+const handleCreate = async (payload) => {
+  formError.value = ''
+  successMessage.value = ''
+  submitting.value = true
+  const ok = await createClassroom(payload)
+  submitting.value = false
+  if (ok) {
+    successMessage.value = 'Aula creada correctamente.'
+    // signal the form to reset
+    resetKey.value = resetKey.value + 1
+    // ensure classrooms are fresh
+    await fetchClassrooms()
+  } else {
+    formError.value = 'Error creando el aula. Revisa la consola para más detalles.'
+  }
+}
 
 onMounted(() => {
   fetchClassrooms()

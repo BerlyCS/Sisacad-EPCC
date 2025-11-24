@@ -2,6 +2,7 @@ package com.application.sisacadepcc.infrastructure.repository.jpa;
 
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
+import java.time.LocalDate;
 
 @Entity
 @Table(name = "reservations")
@@ -10,12 +11,12 @@ public class ReservationEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     @JoinColumn(name = "schedule_id", nullable = false)
     private ScheduleEntity schedule;
 
     @Column(name = "reserved_by", nullable = false)
-    private String reservedBy;
+    private Long userId;
 
     @Column(nullable = false)
     private String purpose;
@@ -26,6 +27,9 @@ public class ReservationEntity {
     @Column(nullable = false)
     private String status;
 
+    @Column(name = "reservation_date")
+    private LocalDate reservationDate;
+
     public ReservationEntity() {}
 
     // Getters and Setters
@@ -33,12 +37,15 @@ public class ReservationEntity {
     public void setId(Long id) { this.id = id; }
     public ScheduleEntity getSchedule() { return schedule; }
     public void setSchedule(ScheduleEntity schedule) { this.schedule = schedule; }
-    public String getReservedBy() { return reservedBy; }
-    public void setReservedBy(String reservedBy) { this.reservedBy = reservedBy; }
+    public Long getUserId() { return userId; }
+    public void setUserId(Long userId) { this.userId = userId; }
     public String getPurpose() { return purpose; }
     public void setPurpose(String purpose) { this.purpose = purpose; }
     public LocalDateTime getCreatedAt() { return createdAt; }
     public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
     public String getStatus() { return status; }
     public void setStatus(String status) { this.status = status; }
+
+    public LocalDate getReservationDate() { return reservationDate; }
+    public void setReservationDate(LocalDate reservationDate) { this.reservationDate = reservationDate; }
 }

@@ -44,8 +44,11 @@ public class AttendanceRepositoryImpl implements AttendanceRepository {
     }
 
     @Override
-    public List<Attendance> findByGroupId(Long groupId) {
-        return jpaRepository.findByGroupId(groupId).stream().map(this::toDomain).collect(Collectors.toList());
+    public List<Attendance> findByCourseGroupId(Long courseGroupId) {
+        return jpaRepository.findByCourseGroupId(courseGroupId)
+                .stream()
+                .map(this::toDomain)
+                .collect(Collectors.toList());
     }
 
     @Override
@@ -63,7 +66,7 @@ public class AttendanceRepositoryImpl implements AttendanceRepository {
                 e.getAttendanceId(),
                 e.getProfessorId(),
                 e.getCourseId(),
-                e.getGroupId(),
+                e.getCourseGroupId(),
                 e.getStatus(),
                 e.getTimestamp(),
                 e.getLocation(),
@@ -77,7 +80,7 @@ public class AttendanceRepositoryImpl implements AttendanceRepository {
         return new AttendanceEntity(
                 a.getProfessorId(),
                 a.getCourseId(),
-                a.getGroupId(),
+                a.getCourseGroupId(),
                 a.getStatus(),
                 a.getTimestamp(),
                 a.getLocation(),

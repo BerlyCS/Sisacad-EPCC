@@ -32,7 +32,9 @@ public class AttendanceService {
 
     public List<Attendance> getByProfessor(Long professorId) { return repository.findByProfessorId(professorId); }
 
-    public List<Attendance> getByGroup(Long groupId) { return repository.findByGroupId(groupId); }
+    public List<Attendance> getByCourseGroup(Long courseGroupId) {
+        return repository.findByCourseGroupId(courseGroupId);
+    }
 
     public List<Attendance> getByCourse(Long courseId) { return repository.findByCourseId(courseId); }
 
@@ -41,12 +43,12 @@ public class AttendanceService {
     }
 
     @Transactional
-    public Attendance markAttendance(Long professorId, Long courseId, Long groupId,
+        public Attendance markAttendance(Long professorId, Long courseId, Long courseGroupId,
                                      AttendanceStatus status, GeoLocation location,
                                      LocalDateTime timestamp, LocalDate date,
                                      ClassType classType, String todo) {
         Attendance attendance = new Attendance(
-                null, professorId, courseId, groupId, status,
+            null, professorId, courseId, courseGroupId, status,
                 timestamp != null ? timestamp : LocalDateTime.now(),
                 location, date != null ? date : LocalDate.now(),
                 classType, todo

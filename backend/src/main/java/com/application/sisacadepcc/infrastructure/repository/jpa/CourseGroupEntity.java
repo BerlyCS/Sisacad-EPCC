@@ -38,8 +38,8 @@ public class CourseGroupEntity {
     @Column(name = "course_id", insertable = false, updatable = false)
     private Long courseId;
 
-    @OneToMany(mappedBy = "courseGroup", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
-    private List<ScheduleEntity> schedules = new ArrayList<>();
+    @OneToMany(mappedBy = "courseGroup", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<CourseScheduleEntity> scheduleAssignments = new ArrayList<>();
 
     @OneToMany(mappedBy = "courseGroup", fetch = FetchType.LAZY)
     private List<EnrollmentEntity> enrollments = new ArrayList<>();
@@ -108,12 +108,12 @@ public class CourseGroupEntity {
         this.courseId = courseId;
     }
 
-    public List<ScheduleEntity> getSchedules() {
-        return schedules;
+    public List<CourseScheduleEntity> getScheduleAssignments() {
+        return scheduleAssignments;
     }
 
-    public void setSchedules(List<ScheduleEntity> schedules) {
-        this.schedules = schedules;
+    public void setScheduleAssignments(List<CourseScheduleEntity> scheduleAssignments) {
+        this.scheduleAssignments = scheduleAssignments;
     }
 
     public List<EnrollmentEntity> getEnrollments() {

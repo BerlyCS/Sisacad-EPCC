@@ -1,16 +1,16 @@
 package com.application.sisacadepcc.domain.repository;
 
-import com.application.sisacadepcc.infrastructure.repository.jpa.ScheduleEntity;
+import com.application.sisacadepcc.domain.model.Schedule;
 
 import java.util.List;
 import java.util.Optional;
 
 public interface ScheduleRepository {
-    List<ScheduleEntity> findAll();
-    Optional<ScheduleEntity> findById(Long id);
-    List<ScheduleEntity> findByCourseGroupId(Long courseGroupId);
-    List<ScheduleEntity> findByClassroomId(Long classroomId);
-    ScheduleEntity save(ScheduleEntity schedule);
+    List<Schedule> findAll();
+    Optional<Schedule> findById(Long id);
+    List<Schedule> findByCourseGroupId(Long courseGroupId);
+    List<Schedule> findByClassroomId(Long classroomId);
+    Schedule save(Schedule schedule);
     void deleteById(Long id);
     void deleteByCourseGroupId(Long courseGroupId);
 }

@@ -22,7 +22,7 @@ public class StudentAttendanceEntity {
     private Long courseId;
 
     @Column(name = "group_id")
-    private Long groupId;
+    private Long courseGroupId;
 
     @Column(name = "date", nullable = false)
     private LocalDate date;
@@ -49,7 +49,7 @@ public class StudentAttendanceEntity {
                                    String studentId,
                                    AttendanceStatus status,
                                    Long courseId,
-                                   Long groupId,
+                                   Long courseGroupId,
                                    LocalDate date,
                                    LocalDateTime checkTimestamp,
                                    Double latitude,
@@ -58,7 +58,7 @@ public class StudentAttendanceEntity {
         this.studentId = studentId;
         this.status = status;
         this.courseId = courseId;
-        this.groupId = groupId;
+        this.courseGroupId = courseGroupId;
         this.date = date;
         this.checkTimestamp = checkTimestamp;
         this.latitude = latitude;
@@ -70,8 +70,8 @@ public class StudentAttendanceEntity {
     public void setAttendance(AttendanceEntity attendance) { this.attendance = attendance; }
     public Long getCourseId() { return courseId; }
     public void setCourseId(Long courseId) { this.courseId = courseId; }
-    public Long getGroupId() { return groupId; }
-    public void setGroupId(Long groupId) { this.groupId = groupId; }
+    public Long getCourseGroupId() { return courseGroupId; }
+    public void setCourseGroupId(Long courseGroupId) { this.courseGroupId = courseGroupId; }
     public LocalDate getDate() { return date; }
     public void setDate(LocalDate date) { this.date = date; }
     public LocalDateTime getCheckTimestamp() { return checkTimestamp; }

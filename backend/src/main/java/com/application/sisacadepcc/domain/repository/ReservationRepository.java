@@ -7,7 +7,7 @@ import java.util.Optional;
 public interface ReservationRepository {
     List<Reservation> findAll();
     Optional<Reservation> findById(Long id);
-    List<Reservation> findByReservedBy(String reservedBy);
+    List<Reservation> findByUserId(Long userId);
     Reservation save(Reservation reservation);
     void deleteById(Long id);
     List<Reservation> findByStatus(String status);

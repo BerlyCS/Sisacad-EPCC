@@ -2,12 +2,14 @@ package com.application.sisacadepcc.infrastructure.repository.jpa;
 
 import com.application.sisacadepcc.domain.model.Course;
 import com.application.sisacadepcc.domain.model.CourseGroup;
-import com.application.sisacadepcc.domain.model.valueobject.CourseSchedule;
+import com.application.sisacadepcc.domain.model.CourseSchedule;
+import com.application.sisacadepcc.domain.model.Schedule;
 import com.application.sisacadepcc.domain.repository.CourseRepository;
 import org.springframework.stereotype.Repository;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 
 @Repository
@@ -29,13 +31,19 @@ public class CourseRepositoryImpl implements CourseRepository {
 
     @Override
     public Optional<Course> findById(Long id) {
+        if (id == null) {
+            return Optional.empty();
+        }
         return jpaRepository.findById(id)
                 .map(this::mapToDomain);
     }
 
     @Override
     public Course save(Course course) {
-        CourseEntity entity = mapToEntity(course);
+        if (course == null) {
+            throw new IllegalArgumentException("course must not be null");
+        }
+        CourseEntity entity = Objects.requireNonNull(mapToEntity(course));
         CourseEntity saved = jpaRepository.save(entity);
         return mapToDomain(saved);
     }
@@ -81,44 +89,39 @@ public class CourseRepositoryImpl implements CourseRepository {
             group.setMaxCapacity(groupEntity.getMaxCapacity());
             group.setAvailableCapacity(groupEntity.getAvailableCapacity());
             group.setTeacherId(groupEntity.getTeacherId());
-            group.setScheduleSlots(mapScheduleSlotsToDomain(groupEntity.getSchedules()));
+            group.setCourseId(groupEntity.getCourseId());
+            group.setCourseSchedules(mapCourseSchedulesToDomain(groupEntity.getScheduleAssignments()));
             groups.add(group);
         }
         return groups;
     }
 
-    private List<CourseSchedule> mapScheduleSlotsToDomain(List<ScheduleEntity> entities) {
-        if (entities == null || entities.isEmpty()) {
+    private List<CourseSchedule> mapCourseSchedulesToDomain(List<CourseScheduleEntity> assignments) {
+        if (assignments == null || assignments.isEmpty()) {
             return new ArrayList<>();
         }
-        List<CourseSchedule> slots = new ArrayList<>();
-        for (ScheduleEntity entity : entities) {
-            CourseSchedule slot = new CourseSchedule(
-                    entity.getClassroomName(),
-                    entity.getDayOfWeek(),
-                    entity.getStartTime(),
-                    entity.getEndTime()
-            );
-            slots.add(slot);
-        }
-        return slots;
-    }
+        List<CourseSchedule> courseSchedules = new ArrayList<>();
+        for (CourseScheduleEntity assignment : assignments) {
+            CourseSchedule courseSchedule = new CourseSchedule();
+            courseSchedule.setId(assignment.getId());
+            courseSchedule.setCourseId(assignment.getCourseId());
+            courseSchedule.setCourseGroupId(assignment.getCourseGroup() != null ? assignment.getCourseGroup().getId() : null);
+            courseSchedule.setClassroomId(assignment.getClassroom() != null ? assignment.getClassroom().getClassroomId() : null);
+            courseSchedule.setSequenceOrder(assignment.getSequence());
 
-    private List<ScheduleEntity> mapScheduleSlotsToEntity(List<CourseSchedule> schedules, CourseGroupEntity courseGroup) {
-        if (schedules == null || schedules.isEmpty()) {
-            return new ArrayList<>();
+            ScheduleEntity schedule = assignment.getSchedule();
+            if (schedule != null) {
+                Schedule slot = new Schedule();
+                slot.setId(schedule.getId());
+                slot.setDayOfWeek(schedule.getDayOfWeek());
+                slot.setStartTime(schedule.getStartTime());
+                slot.setEndTime(schedule.getEndTime());
+                slot.setScheduleType(com.application.sisacadepcc.domain.model.valueobject.ScheduleType.COURSE);
+                courseSchedule.setSchedule(slot);
+            }
+            courseSchedules.add(courseSchedule);
         }
-        List<ScheduleEntity> entities = new ArrayList<>();
-        for (CourseSchedule schedule : schedules) {
-            ScheduleEntity entity = new ScheduleEntity();
-            entity.setClassroomName(schedule.getClassroomName());
-            entity.setDayOfWeek(schedule.getDayOfWeek());
-            entity.setStartTime(schedule.getStartTime());
-            entity.setEndTime(schedule.getEndTime());
-            entity.setCourseGroup(courseGroup);
-            entities.add(entity);
-        }
-        return entities;
+        return courseSchedules;
     }
 
     private CourseEntity mapToEntity(Course course) {

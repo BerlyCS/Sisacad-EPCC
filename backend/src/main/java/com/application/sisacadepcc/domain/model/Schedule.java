@@ -1,49 +1,33 @@
-package com.application.sisacadepcc.infrastructure.repository.jpa;
-
-import jakarta.persistence.*;
+package com.application.sisacadepcc.domain.model;
 
 import java.time.LocalTime;
+import java.util.Objects;
 
 import com.application.sisacadepcc.domain.model.valueobject.ScheduleType;
 
-@Entity
-@Table(name = "schedules")
-public class ScheduleEntity {
+public class Schedule {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "schedule_id")
     private Long id;
-
-    @Column(name = "day_of_week", nullable = false)
     private String dayOfWeek;
-
-    @Column(name = "start_time", nullable = false)
     private LocalTime startTime;
-
-    @Column(name = "end_time", nullable = false)
     private LocalTime endTime;
-
-    @Enumerated(EnumType.STRING)
-    @Column(name = "schedule_type", nullable = false)
     private ScheduleType scheduleType;
 
-    // Constructors
-    public ScheduleEntity() {}
+    public Schedule() {
+    }
 
-    public ScheduleEntity(String dayOfWeek, LocalTime startTime, LocalTime endTime) {
+    public Schedule(String dayOfWeek, LocalTime startTime, LocalTime endTime) {
         this.dayOfWeek = dayOfWeek;
         this.startTime = startTime;
         this.endTime = endTime;
     }
 
-    public ScheduleEntity(ScheduleType scheduleType, LocalTime startTime, LocalTime endTime) {
+    public Schedule(ScheduleType scheduleType, LocalTime startTime, LocalTime endTime) {
         this.scheduleType = scheduleType;
         this.startTime = startTime;
         this.endTime = endTime;
     }
 
-    // Getters and Setters
     public Long getId() {
         return id;
     }
@@ -51,8 +35,6 @@ public class ScheduleEntity {
     public void setId(Long id) {
         this.id = id;
     }
-
-    
 
     public String getDayOfWeek() {
         return dayOfWeek;
@@ -74,6 +56,10 @@ public class ScheduleEntity {
         return endTime;
     }
 
+    public void setEndTime(LocalTime endTime) {
+        this.endTime = endTime;
+    }
+
     public ScheduleType getScheduleType() {
         return scheduleType;
     }
@@ -82,8 +68,19 @@ public class ScheduleEntity {
         this.scheduleType = scheduleType;
     }
 
-    public void setEndTime(LocalTime endTime) {
-        this.endTime = endTime;
+    public boolean isRecurring() {
+        return dayOfWeek != null;
     }
 
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof Schedule schedule)) return false;
+        return Objects.equals(id, schedule.id);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(id);
+    }
 }

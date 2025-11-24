@@ -1,12 +1,12 @@
 package com.application.sisacadepcc.domain.model;
 
-import com.application.sisacadepcc.domain.model.valueobject.CourseSchedule;
 import com.application.sisacadepcc.domain.model.valueobject.CourseType;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 public class CourseGroup {
 
@@ -18,11 +18,11 @@ public class CourseGroup {
     private int availableCapacity;
     private Course course;
     private Long courseId;
-    private List<CourseSchedule> schedules;
+    private List<CourseSchedule> courseSchedules;
     private List<Enrollment> enrollments;
 
     public CourseGroup() {
-        this.schedules = new ArrayList<>();
+        this.courseSchedules = new ArrayList<>();
         this.enrollments = new ArrayList<>();
     }
 
@@ -101,30 +101,64 @@ public class CourseGroup {
         this.courseId = courseId;
     }
 
-    public List<CourseSchedule> getSchedules() {
-        return Collections.unmodifiableList(schedules);
+    public List<CourseSchedule> getCourseSchedules() {
+        return Collections.unmodifiableList(courseSchedules);
     }
 
-    public List<CourseSchedule> getScheduleSlots() {
-        return getSchedules();
+    public List<Schedule> getScheduleSlots() {
+        return courseSchedules.stream()
+                .map(CourseSchedule::getSchedule)
+                .filter(Objects::nonNull)
+                .collect(Collectors.toUnmodifiableList());
     }
 
-    public void setSchedules(List<CourseSchedule> schedules) {
-        this.schedules = schedules != null ? new ArrayList<>(schedules) : new ArrayList<>();
+    public void setSchedules(List<Schedule> schedules) {
+        if (schedules == null) {
+            this.courseSchedules = new ArrayList<>();
+            return;
+        }
+        this.courseSchedules = schedules.stream()
+                .filter(Objects::nonNull)
+                .map(schedule -> {
+                    CourseSchedule assignment = new CourseSchedule();
+                    assignment.setSchedule(schedule);
+                    return assignment;
+                })
+                .collect(Collectors.toCollection(ArrayList::new));
     }
 
-    public void setScheduleSlots(List<CourseSchedule> scheduleSlots) {
+    public void setScheduleSlots(List<Schedule> scheduleSlots) {
         setSchedules(scheduleSlots);
     }
 
-    public void addScheduleSlot(CourseSchedule slot) {
-        if (slot != null && !schedules.contains(slot)) {
-            schedules.add(slot);
+    public void setCourseSchedules(List<CourseSchedule> courseSchedules) {
+        this.courseSchedules = courseSchedules != null ? new ArrayList<>(courseSchedules) : new ArrayList<>();
+    }
+
+    public void addScheduleSlot(Schedule slot) {
+        if (slot == null) {
+            return;
+        }
+        CourseSchedule assignment = new CourseSchedule();
+        assignment.setSchedule(slot);
+        addCourseSchedule(assignment);
+    }
+
+    public void removeScheduleSlot(Schedule slot) {
+        if (slot == null) {
+            return;
+        }
+        courseSchedules.removeIf(cs -> slot.equals(cs.getSchedule()));
+    }
+
+    public void addCourseSchedule(CourseSchedule courseSchedule) {
+        if (courseSchedule != null && !courseSchedules.contains(courseSchedule)) {
+            courseSchedules.add(courseSchedule);
         }
     }
 
-    public void removeScheduleSlot(CourseSchedule slot) {
-        schedules.remove(slot);
+    public void removeCourseSchedule(CourseSchedule courseSchedule) {
+        courseSchedules.remove(courseSchedule);
     }
 
     public List<Enrollment> getEnrollments() {

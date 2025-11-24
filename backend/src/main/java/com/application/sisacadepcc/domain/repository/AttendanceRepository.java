@@ -12,7 +12,7 @@ public interface AttendanceRepository {
     void deleteById(Long id);
 
     List<Attendance> findByProfessorId(Long professorId);
-    List<Attendance> findByGroupId(Long groupId);
+    List<Attendance> findByCourseGroupId(Long courseGroupId);
     List<Attendance> findByCourseId(Long courseId);
     List<Attendance> findByProfessorIdAndDate(Long professorId, LocalDate date);
 }

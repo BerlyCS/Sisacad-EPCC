@@ -33,7 +33,7 @@ public class AttendanceEntity {
     private Long courseId;
 
     @Column(name = "group_id")
-    private Long groupId;
+    private Long courseGroupId;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
@@ -61,13 +61,13 @@ public class AttendanceEntity {
 
     public AttendanceEntity() {}
 
-    public AttendanceEntity(Long professorId, Long courseId, Long groupId,
+    public AttendanceEntity(Long professorId, Long courseId, Long courseGroupId,
                             AttendanceStatus status, LocalDateTime timestamp,
                             GeoLocation location, LocalDate date,
                             ClassType classType, String todo) {
         this.professorId = professorId;
         this.courseId = courseId;
-        this.groupId = groupId;
+        this.courseGroupId = courseGroupId;
         this.status = status;
         this.timestamp = timestamp;
         this.location = location;
@@ -81,8 +81,8 @@ public class AttendanceEntity {
     public void setProfessorId(Long professorId) { this.professorId = professorId; }
     public Long getCourseId() { return courseId; }
     public void setCourseId(Long courseId) { this.courseId = courseId; }
-    public Long getGroupId() { return groupId; }
-    public void setGroupId(Long groupId) { this.groupId = groupId; }
+    public Long getCourseGroupId() { return courseGroupId; }
+    public void setCourseGroupId(Long courseGroupId) { this.courseGroupId = courseGroupId; }
     public AttendanceStatus getStatus() { return status; }
     public void setStatus(AttendanceStatus status) { this.status = status; }
     public LocalDateTime getTimestamp() { return timestamp; }

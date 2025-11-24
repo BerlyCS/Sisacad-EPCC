@@ -9,7 +9,7 @@ public interface StudentAttendanceJpaRepository extends JpaRepository<StudentAtt
     List<StudentAttendanceEntity> findByAttendance_AttendanceId(Long attendanceId);
     List<StudentAttendanceEntity> findByStudentId(String studentId);
 
-    List<StudentAttendanceEntity> findByAttendance_GroupId(Long groupId);
+    List<StudentAttendanceEntity> findByAttendance_CourseGroupId(Long courseGroupId);
     List<StudentAttendanceEntity> findByAttendance_CourseId(Long courseId);
     List<StudentAttendanceEntity> findByStudentIdAndAttendance_Date(String studentId, java.time.LocalDate date);
 
