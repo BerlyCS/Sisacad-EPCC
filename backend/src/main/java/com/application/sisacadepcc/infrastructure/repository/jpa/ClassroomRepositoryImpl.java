@@ -1,11 +1,11 @@
 package com.application.sisacadepcc.infrastructure.repository.jpa;
 
 import com.application.sisacadepcc.domain.model.Classroom;
-import com.application.sisacadepcc.domain.model.valueobject.Place;
 import com.application.sisacadepcc.domain.repository.ClassroomRepository;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Repository
@@ -23,6 +23,15 @@ public class ClassroomRepositoryImpl implements ClassroomRepository {
                 .stream()
                 .map(this::mapToDomain)
                 .collect(Collectors.toList());
+    }
+
+    @Override
+    public Optional<Classroom> findById(Long id) {
+        if (id == null) {
+            return Optional.empty();
+        }
+        return jpaRepository.findById(id)
+                .map(this::mapToDomain);
     }
 
     @Override

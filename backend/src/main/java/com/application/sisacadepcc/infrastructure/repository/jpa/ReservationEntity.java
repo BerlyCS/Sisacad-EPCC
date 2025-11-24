@@ -15,6 +15,9 @@ public class ReservationEntity {
     @JoinColumn(name = "schedule_id", nullable = false)
     private ScheduleEntity schedule;
 
+    @Column(name = "classroom_id", nullable = false)
+    private Long classroomId;
+
     @Column(name = "reserved_by", nullable = false)
     private Long userId;
 
@@ -37,6 +40,8 @@ public class ReservationEntity {
     public void setId(Long id) { this.id = id; }
     public ScheduleEntity getSchedule() { return schedule; }
     public void setSchedule(ScheduleEntity schedule) { this.schedule = schedule; }
+    public Long getClassroomId() { return classroomId; }
+    public void setClassroomId(Long classroomId) { this.classroomId = classroomId; }
     public Long getUserId() { return userId; }
     public void setUserId(Long userId) { this.userId = userId; }
     public String getPurpose() { return purpose; }

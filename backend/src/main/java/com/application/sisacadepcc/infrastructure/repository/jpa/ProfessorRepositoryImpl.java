@@ -36,6 +36,15 @@ public class ProfessorRepositoryImpl implements ProfessorRepository {
                 .map(this::mapToDomain);
     }
 
+    @Override
+    public Optional<Professor> findById(Long id) {
+        if (id == null) {
+            return Optional.empty();
+        }
+        return jpaRepository.findById(id)
+                .map(this::mapToDomain);
+    }
+
     private Professor mapToDomain(ProfessorEntity entity) {
         Professor professor = new Professor();
         professor.setUserId(entity.getUserId());

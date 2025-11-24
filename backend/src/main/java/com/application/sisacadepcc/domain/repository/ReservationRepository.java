@@ -8,6 +8,7 @@ public interface ReservationRepository {
     List<Reservation> findAll();
     Optional<Reservation> findById(Long id);
     List<Reservation> findByUserId(Long userId);
+    List<Reservation> findByClassroomId(Long classroomId);
     Reservation save(Reservation reservation);
     void deleteById(Long id);
     List<Reservation> findByStatus(String status);

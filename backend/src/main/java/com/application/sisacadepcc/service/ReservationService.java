@@ -1,6 +1,9 @@
 package com.application.sisacadepcc.service;
 
 import com.application.sisacadepcc.domain.model.Administrator;
+import com.application.sisacadepcc.domain.model.Classroom;
+import com.application.sisacadepcc.domain.model.Course;
+import com.application.sisacadepcc.domain.model.CourseGroup;
 import com.application.sisacadepcc.domain.model.Professor;
 import com.application.sisacadepcc.domain.model.Reservation;
 import com.application.sisacadepcc.domain.model.Schedule;
@@ -9,27 +12,50 @@ import com.application.sisacadepcc.domain.model.Student;
 import com.application.sisacadepcc.domain.model.valueobject.ScheduleType;
 import com.application.sisacadepcc.domain.repository.ReservationRepository;
 import com.application.sisacadepcc.domain.repository.ScheduleRepository;
+import com.application.sisacadepcc.domain.repository.ClassroomRepository;
+import com.application.sisacadepcc.domain.repository.CourseRepository;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Locale;
+import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 public class ReservationService {
 
+    private static final List<String> DEFAULT_DAYS = List.of("LUNES", "MARTES", "MIERCOLES", "JUEVES", "VIERNES");
+    private static final List<String> DEFAULT_TIME_SLOTS = List.of(
+            "7:00-7:50", "7:50-8:40", "8:50-09:40", "09:40-10:30",
+            "10:40-11:30", "11:30-12:20", "12:20-13:10", "13:10-14:00",
+            "14:00-14:50", "14:50-15:40", "15:50-16:40", "16:40-17:30",
+            "17:40-18:30", "18:30-19:20", "19:20-20:10"
+    );
+    private static final DateTimeFormatter TIME_FORMATTER = DateTimeFormatter.ofPattern("H:mm");
+
     private final ReservationRepository reservationRepository;
     private final ScheduleRepository scheduleRepository;
     private final AuthorizationService authorizationService;
+    private final ClassroomRepository classroomRepository;
+    private final CourseRepository courseRepository;
 
     public ReservationService(ReservationRepository reservationRepository,
                               ScheduleRepository scheduleRepository,
-                              AuthorizationService authorizationService) {
+                              AuthorizationService authorizationService,
+                              ClassroomRepository classroomRepository,
+                              CourseRepository courseRepository) {
         this.reservationRepository = reservationRepository;
         this.scheduleRepository = scheduleRepository;
         this.authorizationService = authorizationService;
+        this.classroomRepository = classroomRepository;
+        this.courseRepository = courseRepository;
     }
 
     public List<Reservation> getAllReservations() {
@@ -44,7 +70,64 @@ public class ReservationService {
         return reservationRepository.findByUserId(userId);
     }
 
-    public Reservation createReservation(Reservation reservation, Authentication authentication) {
+    public List<String> getReservableClassrooms() {
+        return classroomRepository.findAll().stream()
+                .map(Classroom::getDisplayName)
+                .sorted()
+                .toList();
+    }
+
+    public List<Reservation> getReservationsForCurrentUser(Authentication authentication) {
+        Long userId = getUserId(authentication);
+        return reservationRepository.findByUserId(userId);
+    }
+
+    public List<Reservation> getReservationsByClassroomName(String classroomName) {
+        Classroom classroom = requireClassroom(classroomName);
+        return reservationRepository.findByClassroomId(classroom.getClassroomID());
+    }
+
+    public Reservation createReservation(String classroomName,
+                                         String purpose,
+                                         String dayOfWeek,
+                                         String startTime,
+                                         String endTime,
+                                         Authentication authentication) {
+        Classroom classroom = requireClassroom(classroomName);
+        Schedule schedule = createReservationSchedule(dayOfWeek, startTime, endTime);
+        Reservation reservation = new Reservation(classroom.getClassroomID(), null, purpose, schedule, null);
+        return persistReservation(reservation, authentication);
+    }
+
+    public boolean isTimeSlotAvailable(String classroomName,
+                                       String dayOfWeek,
+                                       LocalTime startTime,
+                                       LocalTime endTime) {
+        Classroom classroom = requireClassroom(classroomName);
+        return isTimeSlotAvailable(classroom.getClassroomID(), dayOfWeek, startTime, endTime);
+    }
+
+    public List<CourseScheduleEntry> getCourseScheduleEntries(String classroomName) {
+        Classroom classroom = requireClassroom(classroomName);
+        return loadCourseScheduleEntries(classroom.getClassroomID());
+    }
+
+    public List<List<Boolean>> buildAvailabilityMatrix(String classroomName) {
+        Classroom classroom = requireClassroom(classroomName);
+        List<CourseScheduleEntry> courseEntries = loadCourseScheduleEntries(classroom.getClassroomID());
+        List<Reservation> reservations = reservationRepository.findByClassroomId(classroom.getClassroomID());
+        return buildAvailabilityMatrix(courseEntries, reservations);
+    }
+
+    public List<String> getSupportedDays() {
+        return List.copyOf(DEFAULT_DAYS);
+    }
+
+    public List<String> getDefaultTimeSlots() {
+        return List.copyOf(DEFAULT_TIME_SLOTS);
+    }
+
+    private Reservation persistReservation(Reservation reservation, Authentication authentication) {
         // Verificar que el usuario tiene permisos para reservar
         if (!canMakeReservation(authentication)) {
             throw new SecurityException("No tiene permisos para realizar reservas");
@@ -60,7 +143,6 @@ public class ReservationService {
             throw new IllegalArgumentException("El aula no está disponible en este horario");
         }
 
-        // TODO: rework this with userId
         Long userId = getUserId(authentication);
         reservation.setUserId(userId);
 
@@ -98,7 +180,7 @@ public class ReservationService {
         }
     }
 
-    public boolean isTimeSlotAvailable(Long classroomId, String dayOfWeek, LocalTime startTime, LocalTime endTime) {
+    private boolean isTimeSlotAvailable(Long classroomId, String dayOfWeek, LocalTime startTime, LocalTime endTime) {
         // Verificar en las reservas existentes
         List<Reservation> reservations = getReservationsByClassroomId(classroomId);
         return reservations.stream().noneMatch(reservation -> {
@@ -112,25 +194,16 @@ public class ReservationService {
     }
 
     private List<Reservation> getReservationsByClassroomId(Long classroomId) {
-        // Since repository doesn't have findByClassroomId, we need to filter all or add method
-        // For now, return all and filter
-        return reservationRepository.findAll().stream()
-                .filter(r -> r.getClassroomId().equals(classroomId))
-                .toList();
+        if (classroomId == null) {
+            return List.of();
+        }
+        return reservationRepository.findByClassroomId(classroomId);
     }
 
     private boolean canMakeReservation(Authentication authentication) {
         return authorizationService.isAdministrator(authentication) ||
                 authorizationService.isProfessor(authentication) ||
                 authorizationService.isSecretary(authentication);
-    }
-
-    private String getUserEmail(Authentication authentication) {
-        Object principal = authentication.getPrincipal();
-        if (principal instanceof OAuth2User oauth2User) {
-            return oauth2User.getAttribute("email");
-        }
-        throw new SecurityException("Usuario no autenticado");
     }
 
     private Long getUserId(Authentication authentication) {
@@ -210,7 +283,9 @@ public class ReservationService {
     // Método helper para crear Schedule for reservation from strings
     public Schedule createReservationSchedule(String dayOfWeek, String startTime, String endTime) {
         try {
-            Schedule s = new Schedule(dayOfWeek, LocalTime.parse(startTime), LocalTime.parse(endTime));
+            Schedule s = new Schedule(dayOfWeek,
+                    LocalTime.parse(startTime, TIME_FORMATTER),
+                    LocalTime.parse(endTime, TIME_FORMATTER));
             s.setScheduleType(ScheduleType.RESERVATION);
             return s;
         } catch (Exception e) {
@@ -222,12 +297,185 @@ public class ReservationService {
     public Schedule createSpecificDateSchedule(java.time.LocalDate date, String startTime, String endTime) {
         try {
             String day = dayOfWeekInSpanish(date);
-            Schedule s = new Schedule(day, LocalTime.parse(startTime), LocalTime.parse(endTime));
+            Schedule s = new Schedule(day,
+                    LocalTime.parse(startTime, TIME_FORMATTER),
+                    LocalTime.parse(endTime, TIME_FORMATTER));
             s.setScheduleType(ScheduleType.RESERVATION);
             return s;
         } catch (Exception e) {
             throw new IllegalArgumentException("Formato de hora inválido: " + e.getMessage());
         }
+    }
+
+    public static class CourseScheduleEntry {
+        private final String dayOfWeek;
+        private final LocalTime startTime;
+        private final LocalTime endTime;
+        private final String courseName;
+
+        public CourseScheduleEntry(String dayOfWeek, LocalTime startTime, LocalTime endTime, String courseName) {
+            this.dayOfWeek = dayOfWeek;
+            this.startTime = startTime;
+            this.endTime = endTime;
+            this.courseName = courseName;
+        }
+
+        public String getDayOfWeek() {
+            return dayOfWeek;
+        }
+
+        public LocalTime getStartTime() {
+            return startTime;
+        }
+
+        public LocalTime getEndTime() {
+            return endTime;
+        }
+
+        public String getCourseName() {
+            return courseName;
+        }
+    }
+
+    private Classroom requireClassroom(String classroomName) {
+        Classroom classroom = resolveClassroomByName(classroomName);
+        if (classroom == null) {
+            throw new IllegalArgumentException("Aula no encontrada: " + classroomName);
+        }
+        return classroom;
+    }
+
+    private Classroom resolveClassroomByName(String classroomName) {
+        if (classroomName == null || classroomName.isBlank()) {
+            return null;
+        }
+        String normalized = normalizeClassroomName(classroomName);
+        return classroomRepository.findAll().stream()
+            .filter(classroom -> normalized.equals(classroom.getNormalizedDisplayName()))
+                .findFirst()
+                .orElse(null);
+    }
+
+    private String normalizeClassroomName(String value) {
+        if (value == null) {
+            return "";
+        }
+        return value.trim().replaceAll("\\s+", " ").toUpperCase(Locale.ROOT);
+    }
+
+    public String getClassroomDisplayName(Long classroomId) {
+        if (classroomId == null) {
+            return "Aula sin asignar";
+        }
+        return classroomRepository.findById(classroomId)
+                .map(Classroom::getDisplayName)
+                .orElse("Aula #" + classroomId);
+    }
+
+    private List<CourseScheduleEntry> loadCourseScheduleEntries(Long classroomId) {
+        if (classroomId == null) {
+            return List.of();
+        }
+
+        List<CourseScheduleEntry> entries = new ArrayList<>();
+        for (Course course : courseRepository.findAll()) {
+            if (course.getGroups() == null) {
+                continue;
+            }
+            for (CourseGroup group : course.getGroups()) {
+                if (group.getCourseSchedules() == null) {
+                    continue;
+                }
+                group.getCourseSchedules().stream()
+                        .filter(schedule -> schedule.getClassroomId() != null && schedule.getClassroomId().equals(classroomId))
+                        .map(schedule -> schedule.getSchedule())
+                        .filter(java.util.Objects::nonNull)
+                        .forEach(slot -> entries.add(new CourseScheduleEntry(
+                                slot.getDayOfWeek(),
+                                slot.getStartTime(),
+                                slot.getEndTime(),
+                                formatCourseLabel(course, group)
+                        )));
+            }
+        }
+
+        entries.sort(Comparator
+                .comparing((CourseScheduleEntry entry) -> dayIndex(entry.getDayOfWeek()))
+                .thenComparing(CourseScheduleEntry::getStartTime));
+        return entries;
+    }
+
+    private String formatCourseLabel(Course course, CourseGroup group) {
+        String name = course != null && course.getName() != null ? course.getName() : "Curso";
+        if (group != null && group.getLetter() != null && !group.getLetter().isBlank()) {
+            return name + " (" + group.getLetter() + ")";
+        }
+        return name;
+    }
+
+    private int dayIndex(String day) {
+        if (day == null) {
+            return Integer.MAX_VALUE;
+        }
+        String normalized = normalizeDay(day);
+        int idx = DEFAULT_DAYS.indexOf(normalized);
+        return idx >= 0 ? idx : Integer.MAX_VALUE;
+    }
+
+    private List<List<Boolean>> buildAvailabilityMatrix(List<CourseScheduleEntry> courseEntries, List<Reservation> reservations) {
+        Map<String, List<CourseScheduleEntry>> courseByDay = courseEntries.stream()
+                .collect(Collectors.groupingBy(entry -> normalizeDay(entry.getDayOfWeek()), LinkedHashMap::new, Collectors.toList()));
+        Map<String, List<Reservation>> reservationsByDay = reservations.stream()
+                .filter(reservation -> reservation.getSchedule() != null && reservation.getStatus() != null)
+                .filter(reservation -> !"REJECTED".equalsIgnoreCase(reservation.getStatus()))
+                .collect(Collectors.groupingBy(reservation -> normalizeDay(reservation.getSchedule().getDayOfWeek()), LinkedHashMap::new, Collectors.toList()));
+
+        List<List<Boolean>> matrix = new ArrayList<>();
+        for (String day : DEFAULT_DAYS) {
+            List<CourseScheduleEntry> dayCourses = courseByDay.getOrDefault(day, List.of());
+            List<Reservation> dayReservations = reservationsByDay.getOrDefault(day, List.of());
+            List<Boolean> row = new ArrayList<>();
+
+            for (String slot : DEFAULT_TIME_SLOTS) {
+                String[] bounds = slot.split("-");
+                if (bounds.length != 2) {
+                    row.add(Boolean.TRUE);
+                    continue;
+                }
+                LocalTime slotStart = parseTime(bounds[0]);
+                LocalTime slotEnd = parseTime(bounds[1]);
+
+                boolean occupiedByCourse = dayCourses.stream()
+                        .anyMatch(entry -> overlaps(slotStart, slotEnd, entry.getStartTime(), entry.getEndTime()));
+
+                boolean occupiedByReservation = dayReservations.stream()
+                        .map(Reservation::getSchedule)
+                        .filter(java.util.Objects::nonNull)
+                        .anyMatch(schedule -> overlaps(slotStart, slotEnd, schedule.getStartTime(), schedule.getEndTime()));
+
+                row.add(!(occupiedByCourse || occupiedByReservation));
+            }
+            matrix.add(row);
+        }
+        return matrix;
+    }
+
+    private String normalizeDay(String day) {
+        if (day == null) {
+            return "";
+        }
+        return day.trim().toUpperCase(Locale.ROOT);
+    }
+
+    private LocalTime parseTime(String value) {
+        return LocalTime.parse(value.trim(), TIME_FORMATTER);
+    }
+
+    private boolean overlaps(LocalTime slotStart, LocalTime slotEnd, LocalTime eventStart, LocalTime eventEnd) {
+        if (slotStart == null || slotEnd == null || eventStart == null || eventEnd == null) {
+            return false;
+        }
+        return eventStart.isBefore(slotEnd) && eventEnd.isAfter(slotStart);
     }
 
     private String dayOfWeekInSpanish(java.time.LocalDate date) {

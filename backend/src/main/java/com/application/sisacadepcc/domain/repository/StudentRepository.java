@@ -13,4 +13,6 @@ public interface StudentRepository {
     Optional<Student> findByCorreoInstitucional(String correoInstitucional);
 
     Optional<Student> findByCui(String cui);
+
+    Optional<Student> findById(Long id);
 }

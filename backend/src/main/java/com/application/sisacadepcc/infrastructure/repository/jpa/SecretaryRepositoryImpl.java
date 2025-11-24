@@ -57,4 +57,13 @@ public class SecretaryRepositoryImpl implements SecretaryRepository {
         return jpaRepository.findByInstitutionalEmail(email).stream().findFirst().map(this::mapToDomain);
     }
 
+    @Override
+    public Optional<Secretary> findById(Long id) {
+        if (id == null) {
+            return Optional.empty();
+        }
+        return jpaRepository.findById(id)
+                .map(this::mapToDomain);
+    }
+
 }

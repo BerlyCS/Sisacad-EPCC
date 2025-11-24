@@ -1,7 +1,6 @@
 package com.application.sisacadepcc.infrastructure.repository.jpa;
 
 import com.application.sisacadepcc.domain.model.Student;
-import com.application.sisacadepcc.domain.model.valueobject.UserType;
 import com.application.sisacadepcc.domain.repository.StudentRepository;
 import org.springframework.stereotype.Repository;
 
@@ -48,6 +47,15 @@ public class StudentRepositoryImpl implements StudentRepository {
     @Override
     public Optional<Student> findByCui(String cui) {
         return studentJpaRepository.findByCui(cui)
+                .map(this::mapToDomain);
+    }
+
+    @Override
+    public Optional<Student> findById(Long id) {
+        if (id == null) {
+            return Optional.empty();
+        }
+        return studentJpaRepository.findById(id)
                 .map(this::mapToDomain);
     }
 

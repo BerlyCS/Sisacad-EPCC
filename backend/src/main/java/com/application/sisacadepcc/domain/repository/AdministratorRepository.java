@@ -10,4 +10,5 @@ public interface AdministratorRepository {
     List<Administrator> findAll();
     boolean existsByInstitutionalEmail(String email);
     Optional<Administrator> findByInstitutionalEmail(String email);
+    Optional<Administrator> findById(Long id);
 }

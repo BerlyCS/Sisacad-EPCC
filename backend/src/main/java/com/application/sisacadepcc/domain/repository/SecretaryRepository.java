@@ -8,4 +8,5 @@ public interface SecretaryRepository {
     List<Secretary> findAll();
     boolean existsByInstitutionalEmail(String email);
     Optional<Secretary> findByInstitutionalEmail(String email);
+    Optional<Secretary> findById(Long id);
 }

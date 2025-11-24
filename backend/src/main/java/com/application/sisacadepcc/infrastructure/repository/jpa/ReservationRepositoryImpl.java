@@ -23,6 +23,7 @@ public class ReservationRepositoryImpl implements ReservationRepository {
         Reservation reservation = new Reservation();
         reservation.setId(entity.getId());
         reservation.setUserId(entity.getUserId());
+        reservation.setClassroomId(entity.getClassroomId());
         reservation.setPurpose(entity.getPurpose());
 
         // Crear Schedule domain desde el schedule referenciado
@@ -76,6 +77,8 @@ public class ReservationRepositoryImpl implements ReservationRepository {
             entity.setStatus(reservation.getStatus());
         }
 
+        entity.setClassroomId(reservation.getClassroomId());
+
         return entity;
     }
 
@@ -94,6 +97,16 @@ public class ReservationRepositoryImpl implements ReservationRepository {
     @Override
     public List<Reservation> findByUserId(Long userId) {
         return jpaRepository.findByUserId(userId).stream()
+                .map(this::toDomain)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<Reservation> findByClassroomId(Long classroomId) {
+        if (classroomId == null) {
+            return List.of();
+        }
+        return jpaRepository.findByClassroomId(classroomId).stream()
                 .map(this::toDomain)
                 .collect(Collectors.toList());
     }
