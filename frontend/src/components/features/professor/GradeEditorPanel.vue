@@ -4,7 +4,7 @@
       <p class="text-sm font-semibold text-blue-500 uppercase tracking-wide">Panel de calificación</p>
       <div class="flex items-center justify-between gap-2">
         <h2 class="text-2xl font-bold text-gray-900">{{ student?.fullName || 'Selecciona un estudiante' }}</h2>
-        <span v-if="student" class="text-xs font-semibold text-gray-500">{{ student.studentDocumentoIdentidad }}</span>
+        <span v-if="student" class="text-xs font-semibold text-gray-500">{{ student.studentUserId }}</span>
       </div>
       <p class="text-sm text-gray-500" v-if="student">
         Grupo {{ student.groupLetter }} · {{ student.courseType === 'LAB' ? 'Laboratorio' : 'Teoría' }}

@@ -132,56 +132,93 @@
 
         <div class="px-6 py-5 space-y-6">
           <div>
-            <h4 class="text-sm font-semibold text-gray-700">Docentes asignados</h4>
-            <div v-if="assignedProfessors.length > 0" class="mt-3 space-y-3">
-              <div
-                v-for="professor in assignedProfessors"
-                :key="professor.id"
-                class="flex items-center justify-between rounded-xl border border-gray-200 px-4 py-3"
+            <h4 class="text-sm font-semibold text-gray-700">Selecciona el grupo y el tipo</h4>
+            <p class="text-xs text-gray-500">Los docentes se asignan individualmente por grupo.</p>
+            <p v-if="courseGroupsLoading" class="mt-3 text-sm text-gray-500">Cargando grupos...</p>
+            <p v-else-if="courseGroupsError" class="mt-3 text-sm text-red-600">{{ courseGroupsError }}</p>
+            <p v-else-if="courseGroups.length === 0" class="mt-3 text-sm text-gray-500">
+              Este curso aún no tiene grupos configurados.
+            </p>
+            <div v-else class="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
+              <button
+                v-for="group in courseGroups"
+                :key="group.groupId"
+                type="button"
+                class="rounded-xl border px-4 py-3 text-left transition"
+                :class="[
+                  group.groupId === selectedGroupId
+                    ? 'border-blue-500 bg-blue-50'
+                    : 'border-gray-200 hover:border-blue-300'
+                ]"
+                @click="selectedGroupId = group.groupId"
               >
-                <div>
-                  <p class="font-semibold text-gray-900">{{ professorFullName(professor) }}</p>
-                  <p class="text-xs text-gray-500">{{ professor.correo }}</p>
-                </div>
-                <button
-                  class="text-sm font-medium text-red-600 hover:text-red-700"
-                  :disabled="assignmentLoading"
-                  @click="handleRemoveProfessor(professor.id)"
-                >
-                  Quitar
-                </button>
-              </div>
+                <p class="text-sm font-semibold text-gray-900">
+                  {{ group.typeLabel }} {{ group.letter }}
+                </p>
+                <p class="text-xs text-gray-500">
+                  {{ group.teacherId ? 'Docente asignado' : 'Sin docente asignado' }}
+                </p>
+              </button>
             </div>
-            <p v-else class="mt-3 text-sm text-gray-500">Este curso aún no tiene docentes asignados.</p>
           </div>
 
-          <div class="border-t pt-4">
-            <h4 class="text-sm font-semibold text-gray-700">Asignar nuevo docente</h4>
-            <div class="mt-2 space-y-3">
-              <select
-                v-model.number="selectedProfessorId"
-                class="w-full rounded-xl border border-gray-200 px-4 py-2 text-sm focus:border-blue-500 focus:outline-none"
-                :disabled="availableProfessors.length === 0 || professorsLoading || assignmentLoading"
-              >
-                <option :value="null" disabled>Selecciona un docente</option>
-                <option
-                  v-for="professor in availableProfessors"
-                  :key="professor.id"
-                  :value="professor.id"
+          <div v-if="selectedGroup" class="space-y-6 border-t pt-4">
+            <div>
+              <h4 class="text-sm font-semibold text-gray-700">
+                Docentes asignados para {{ selectedGroupLabel }}
+              </h4>
+              <div v-if="assignedProfessors.length > 0" class="mt-3 space-y-3">
+                <div
+                  v-for="professor in assignedProfessors"
+                  :key="professor.userId"
+                  class="flex items-center justify-between rounded-xl border border-gray-200 px-4 py-3"
                 >
-                  {{ professorFullName(professor) }}
-                </option>
-              </select>
-              <p v-if="availableProfessors.length === 0" class="text-xs text-gray-500">
-                Todos los docentes registrados ya están asignados a este curso.
+                  <div>
+                    <p class="font-semibold text-gray-900">{{ professorFullName(professor) }}</p>
+                    <p class="text-xs text-gray-500">{{ professor.institutionalEmail }}</p>
+                  </div>
+                  <button
+                    class="text-sm font-medium text-red-600 hover:text-red-700"
+                    :disabled="assignmentLoading"
+                    @click="handleRemoveProfessor(professor.userId)"
+                  >
+                    Quitar
+                  </button>
+                </div>
+              </div>
+              <p v-else class="mt-3 text-sm text-gray-500">
+                Este grupo aún no tiene docentes asignados.
               </p>
-              <button
-                class="w-full rounded-xl bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-blue-300"
-                :disabled="assignmentLoading || !selectedProfessorId || availableProfessors.length === 0"
-                @click="handleAssignProfessor"
-              >
-                {{ assignmentLoading ? 'Guardando...' : 'Asignar docente' }}
-              </button>
+            </div>
+
+            <div>
+              <h4 class="text-sm font-semibold text-gray-700">Asignar nuevo docente</h4>
+              <div class="mt-2 space-y-3">
+                <select
+                  v-model.number="selectedProfessorId"
+                  class="w-full rounded-xl border border-gray-200 px-4 py-2 text-sm focus:border-blue-500 focus:outline-none"
+                  :disabled="availableProfessors.length === 0 || professorsLoading || assignmentLoading"
+                >
+                  <option :value="null" disabled>Selecciona un docente</option>
+                  <option
+                    v-for="professor in availableProfessors"
+                    :key="professor.userId"
+                    :value="professor.userId"
+                  >
+                    {{ professorFullName(professor) }}
+                  </option>
+                </select>
+                <p v-if="availableProfessors.length === 0" class="text-xs text-gray-500">
+                  Todos los docentes disponibles ya están asignados a este grupo.
+                </p>
+                <button
+                  class="w-full rounded-xl bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-blue-300"
+                  :disabled="assignmentLoading || !selectedProfessorId || availableProfessors.length === 0"
+                  @click="handleAssignProfessor"
+                >
+                  {{ assignmentLoading ? 'Guardando...' : 'Asignar docente' }}
+                </button>
+              </div>
             </div>
           </div>
 
@@ -193,7 +230,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, ref, watchEffect } from 'vue'
+import { computed, onMounted, ref, watch, watchEffect } from 'vue'
 import { storeToRefs } from 'pinia'
 import AdminLayout from '../components/ui/TopBar.vue'
 import { useCourseService } from '../services/courseService'
@@ -209,6 +246,10 @@ const {
   loading,
   error,
   fetchCourses,
+  courseGroups,
+  courseGroupsLoading,
+  courseGroupsError,
+  fetchCourseGroups,
   assignProfessorToCourse,
   removeProfessorFromCourse
 } = useCourseService()
@@ -223,13 +264,14 @@ const {
 const showAssignmentModal = ref(false)
 const selectedCourseId = ref<number | null>(null)
 const selectedProfessorId = ref<number | null>(null)
+const selectedGroupId = ref<number | null>(null)
 const assignmentError = ref('')
 const assignmentLoading = ref(false)
 
 const professorDirectory = computed(() => {
   const directory = new Map<number, Professor>()
   professors.value.forEach(professor => {
-    directory.set(professor.id, professor)
+    directory.set(professor.userId, professor)
   })
   return directory
 })
@@ -241,28 +283,50 @@ const selectedCourse = computed(() => {
   return courses.value.find(course => course.courseId === selectedCourseId.value) ?? null
 })
 
+const selectedGroup = computed(() => {
+  if (!selectedGroupId.value) {
+    return null
+  }
+  return courseGroups.value.find(group => group.groupId === selectedGroupId.value) ?? null
+})
+
+const assignedProfessorIds = computed(() => {
+  const teacherId = selectedGroup.value?.teacherId
+  return teacherId ? [teacherId] : []
+})
+
+const selectedGroupLabel = computed(() => {
+  if (!selectedGroup.value) {
+    return ''
+  }
+  return `${selectedGroup.value.typeLabel} ${selectedGroup.value.letter}`
+})
+
 const assignedProfessors = computed(() => {
-  if (!selectedCourse.value) {
+  if (!professorDirectory.value) {
     return []
   }
-  return (selectedCourse.value.teacherIDs || [])
+  return assignedProfessorIds.value
     .map(id => professorDirectory.value.get(id))
     .filter((professor): professor is Professor => Boolean(professor))
 })
 
 const availableProfessors = computed(() => {
-  if (!selectedCourse.value) {
+  if (!professors.value.length || !selectedGroup.value) {
     return []
   }
-  const assignedIds = new Set(selectedCourse.value.teacherIDs || [])
-  return professors.value.filter(professor => !assignedIds.has(professor.id))
+  const assignedIds = new Set(assignedProfessorIds.value)
+  if (!assignedIds.size) {
+    return professors.value
+  }
+  return professors.value.filter(professor => !assignedIds.has(professor.userId))
 })
 
 const canAssignProfessors = computed(() => isAdmin.value || isSecretary.value)
 const canAddCourses = computed(() => isAdmin.value || isSecretary.value)
 
 const professorFullName = (professor: Professor) => {
-  return [professor.nombres, professor.apellidoPaterno, professor.apellidoMaterno]
+  return [professor.firstNames, professor.paternalSurname, professor.maternalSurname]
     .filter(Boolean)
     .join(' ')
 }
@@ -275,20 +339,27 @@ const resolveProfessorName = (professorId: number) => {
   return professorFullName(professor)
 }
 
-const openAssignmentModal = (courseId: number) => {
+const openAssignmentModal = async (courseId: number) => {
   selectedCourseId.value = courseId
   assignmentError.value = ''
   showAssignmentModal.value = true
+  selectedGroupId.value = null
+  await fetchCourseGroups(courseId)
+  if (courseGroups.value.length > 0) {
+    const firstGroup = courseGroups.value[0]
+    selectedGroupId.value = firstGroup ? firstGroup.groupId : null
+  }
 }
 
 const closeAssignmentModal = () => {
   showAssignmentModal.value = false
   selectedCourseId.value = null
+  selectedGroupId.value = null
   assignmentError.value = ''
 }
 
 const handleAssignProfessor = async () => {
-  if (!selectedCourse.value || !selectedProfessorId.value) {
+  if (!selectedCourse.value || !selectedGroupId.value || !selectedProfessorId.value) {
     return
   }
 
@@ -296,8 +367,8 @@ const handleAssignProfessor = async () => {
   assignmentError.value = ''
 
   try {
-    await assignProfessorToCourse(selectedCourse.value.courseId, selectedProfessorId.value)
-    await fetchCourses()
+    await assignProfessorToCourse(selectedCourse.value.courseId, selectedGroupId.value, selectedProfessorId.value)
+    await fetchCourseGroups(selectedCourse.value.courseId)
     selectedProfessorId.value = null
   } catch (err) {
     assignmentError.value = err instanceof Error ? err.message : 'No se pudo asignar el docente'
@@ -307,7 +378,7 @@ const handleAssignProfessor = async () => {
 }
 
 const handleRemoveProfessor = async (professorId: number) => {
-  if (!selectedCourse.value) {
+  if (!selectedCourse.value || !selectedGroupId.value) {
     return
   }
 
@@ -315,8 +386,8 @@ const handleRemoveProfessor = async (professorId: number) => {
   assignmentError.value = ''
 
   try {
-    await removeProfessorFromCourse(selectedCourse.value.courseId, professorId)
-    await fetchCourses()
+    await removeProfessorFromCourse(selectedCourse.value.courseId, selectedGroupId.value, professorId)
+    await fetchCourseGroups(selectedCourse.value.courseId)
   } catch (err) {
     assignmentError.value = err instanceof Error ? err.message : 'No se pudo actualizar el curso'
   } finally {
@@ -324,16 +395,34 @@ const handleRemoveProfessor = async (professorId: number) => {
   }
 }
 
-watchEffect(() => {
-  if (!showAssignmentModal.value) {
+watch(courseGroups, groups => {
+  if (!groups.length) {
+    selectedGroupId.value = null
+    return
+  }
+  if (!groups.some(group => group.groupId === selectedGroupId.value)) {
+    const firstGroup = groups[0]
+    selectedGroupId.value = firstGroup ? firstGroup.groupId : null
+  }
+})
+
+watch([showAssignmentModal, availableProfessors, selectedGroup], ([modalOpen]) => {
+  if (!modalOpen) {
     selectedProfessorId.value = null
     return
   }
 
   if (!selectedProfessorId.value && availableProfessors.value.length > 0) {
     const nextProfessor = availableProfessors.value[0]
-    selectedProfessorId.value = nextProfessor ? nextProfessor.id : null
+    selectedProfessorId.value = nextProfessor ? nextProfessor.userId : null
   }
+})
+
+watch(selectedGroupId, () => {
+  if (!showAssignmentModal.value) {
+    return
+  }
+  selectedProfessorId.value = null
 })
 
 onMounted(() => {

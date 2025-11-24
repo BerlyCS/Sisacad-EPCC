@@ -57,11 +57,15 @@ public class CourseService {
                 .map(this::buildCourseDetails);
     }
 
-    public List<CourseGroup> getLabGroupsForCourse(Long courseId) {
+    public List<CourseGroup> getCourseGroups(Long courseId) {
         if (courseId == null) {
             return List.of();
         }
-        return courseGroupRepository.findByCourseId(courseId).stream()
+        return courseGroupRepository.findByCourseId(courseId);
+    }
+
+    public List<CourseGroup> getLabGroupsForCourse(Long courseId) {
+        return getCourseGroups(courseId).stream()
                 .filter(group -> group.getType() == CourseType.LAB)
                 .collect(Collectors.toList());
     }
@@ -91,14 +95,31 @@ public class CourseService {
                 .toList();
     }
 
-    public Optional<Course> assignProfessorToCourse(Long courseId, Long professorId) {
-        // TODO: Implement assignment logic using CourseGroupRepository
-        return Optional.empty();
+    public Optional<CourseGroup> assignProfessorToGroup(Long courseId, Long groupId, Long professorId) {
+        if (courseId == null || groupId == null || professorId == null) {
+            return Optional.empty();
+        }
+
+        return courseGroupRepository.findById(groupId)
+                .filter(group -> Objects.equals(group.getCourseId(), courseId))
+                .map(group -> {
+                    group.setTeacherId(professorId);
+                    return courseGroupRepository.save(group);
+                });
     }
 
-    public Optional<Course> removeProfessorFromCourse(Long courseId, Long professorId) {
-        // TODO: Implement removal logic using CourseGroupRepository
-        return Optional.empty();
+    public Optional<CourseGroup> removeProfessorFromGroup(Long courseId, Long groupId, Long professorId) {
+        if (courseId == null || groupId == null || professorId == null) {
+            return Optional.empty();
+        }
+
+        return courseGroupRepository.findById(groupId)
+                .filter(group -> Objects.equals(group.getCourseId(), courseId))
+                .filter(group -> Objects.equals(group.getTeacherId(), professorId))
+                .map(group -> {
+                    group.setTeacherId(null);
+                    return courseGroupRepository.save(group);
+                });
     }
 
     private CourseDetails buildCourseDetails(CourseGroup group) {

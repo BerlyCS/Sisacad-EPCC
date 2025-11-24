@@ -24,14 +24,25 @@ export interface Course {
   teacherIDs?: number[]
 }
 
+export interface CourseGroupSummary {
+  groupId: number
+  courseId: number
+  letter: string
+  type: CourseType
+  typeLabel: string
+  maxCapacity: number | null
+  availableCapacity: number | null
+  teacherId: number | null
+}
+
 export interface CourseStudentSummary {
-  documentoIdentidad: string
+  userId: number
   cui: string
-  nombres: string
-  apellidoPaterno: string
-  apellidoMaterno: string
-  correoInstitucional: string
-  anio: number | null
+  firstNames: string
+  paternalSurname: string
+  maternalSurname: string
+  institutionalEmail: string
+  enrollmentYear: number | null
 }
 
 export interface CourseTopicSummary {
@@ -97,6 +108,9 @@ export const useCourseService = () => {
   const courseDetails = ref<CourseDetails | null>(null)
   const courseDetailsLoading = ref(false)
   const courseDetailsError = ref('')
+  const courseGroups = ref<CourseGroupSummary[]>([])
+  const courseGroupsLoading = ref(false)
+  const courseGroupsError = ref('')
 
   const fetchCourses = async () => {
     loading.value = true
@@ -132,18 +146,46 @@ export const useCourseService = () => {
     }
   }
 
+  const fetchCourseGroups = async (courseId: number | null | undefined) => {
+    if (!courseId) {
+      courseGroups.value = []
+      return
+    }
+
+    courseGroupsLoading.value = true
+    courseGroupsError.value = ''
+    try {
+      const response = await fetch(`${API_BASE_URL}/courses/${courseId}/groups`, {
+        credentials: 'include'
+      })
+
+      if (!response.ok) {
+        throw new Error('Error al cargar los grupos del curso')
+      }
+
+      const data: CourseGroupSummary[] = await response.json()
+      courseGroups.value = data
+    } catch (err) {
+      courseGroupsError.value = 'No se pudieron cargar los grupos del curso'
+      console.error('Error fetching course groups:', err)
+      courseGroups.value = []
+    } finally {
+      courseGroupsLoading.value = false
+    }
+  }
+
   const mapCourseDetailsResponse = (data: any): CourseDetails => {
     const courseType = (typeof data.courseType === 'string' ? data.courseType.toUpperCase() : 'THEORY') as CourseType
 
     const students: CourseStudentSummary[] = Array.isArray(data.enrolledStudents)
       ? data.enrolledStudents.map((student: any) => ({
-          documentoIdentidad: student.documentoIdentidad ?? '',
+          userId: student.userId ?? 0,
           cui: student.cui ?? '',
-          nombres: student.nombres ?? '',
-          apellidoPaterno: student.apellidoPaterno ?? '',
-          apellidoMaterno: student.apellidoMaterno ?? '',
-          correoInstitucional: student.correoInstitucional ?? '',
-          anio: student.anio != null ? Number(student.anio) : null
+          firstNames: student.firstNames ?? '',
+          paternalSurname: student.paternalSurname ?? '',
+          maternalSurname: student.maternalSurname ?? '',
+          institutionalEmail: student.institutionalEmail ?? '',
+          enrollmentYear: student.enrollmentYear != null ? Number(student.enrollmentYear) : null
         }))
       : []
 
@@ -241,12 +283,12 @@ export const useCourseService = () => {
     }
   }
 
-  const assignProfessorToCourse = async (courseId: number, professorId: number): Promise<Course> => {
-    if (!courseId || !professorId) {
+  const assignProfessorToCourse = async (courseId: number, groupId: number, professorId: number) => {
+    if (!courseId || !groupId || !professorId) {
       throw new Error('Curso o docente inválido')
     }
 
-    const response = await fetch(`${API_BASE_URL}/courses/${courseId}/professors/${professorId}`, {
+    const response = await fetch(`${API_BASE_URL}/courses/${courseId}/professors/${professorId}?groupId=${groupId}`, {
       method: 'POST',
       credentials: 'include'
     })
@@ -279,12 +321,12 @@ export const useCourseService = () => {
     return response.json()
   }
 
-  const removeProfessorFromCourse = async (courseId: number, professorId: number): Promise<Course> => {
-    if (!courseId || !professorId) {
+  const removeProfessorFromCourse = async (courseId: number, groupId: number, professorId: number) => {
+    if (!courseId || !groupId || !professorId) {
       throw new Error('Curso o docente inválido')
     }
 
-    const response = await fetch(`${API_BASE_URL}/courses/${courseId}/professors/${professorId}`, {
+    const response = await fetch(`${API_BASE_URL}/courses/${courseId}/professors/${professorId}?groupId=${groupId}`, {
       method: 'DELETE',
       credentials: 'include'
     })
@@ -306,6 +348,10 @@ export const useCourseService = () => {
     courseDetails,
     courseDetailsLoading,
     courseDetailsError,
+    courseGroups,
+    courseGroupsLoading,
+    courseGroupsError,
+    fetchCourseGroups,
     fetchCourseDetails,
     assignProfessorToCourse,
     removeProfessorFromCourse,

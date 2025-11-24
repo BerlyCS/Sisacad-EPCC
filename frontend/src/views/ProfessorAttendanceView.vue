@@ -155,7 +155,7 @@ interface AttendanceEntry {
 const attendanceList = ref<AttendanceEntry[]>([])
 
 const resolveStudentId = (entry: CourseRosterEntry): string => {
-  return entry.studentCui || entry.studentDocumentoIdentidad || ''
+  return entry.studentCui || String(entry.studentUserId) || ''
 }
 
 watch(rosterEntries, (entries) => {
@@ -194,7 +194,7 @@ const markAllPresent = () => {
 const loadProfessorProfile = async () => {
   try {
     const profile = await fetchCurrentProfessor()
-    professorId.value = profile?.id ?? null
+    professorId.value = profile?.userId ?? null
   } catch (error) {
     console.error('No se pudo obtener la información del profesor', error)
     professorId.value = null

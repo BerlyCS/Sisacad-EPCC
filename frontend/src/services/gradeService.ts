@@ -43,7 +43,7 @@ export interface CourseGroupSummary {
 }
 
 export interface CourseRosterEntry {
-  studentDocumentoIdentidad: string
+  studentUserId: number
   studentCui: string
   fullName: string
   email: string
@@ -82,7 +82,7 @@ export interface GradeSubmissionPayload {
 export interface GradeSubmissionResponse {
   courseId: number
   courseCode: string
-  studentDocumentoIdentidad: string
+  studentUserId: number
   continuousGrades: number[]
   examGrades: number[]
   finalGrade: number | null
@@ -180,20 +180,20 @@ const buildHttpError = async (response: Response) => {
 }
 
 export const gradeService = {
-  async fetchStudentGrades(studentDocumento: string): Promise<StudentGrade[]> {
-    if (!studentDocumento) {
+  async fetchStudentGrades(studentUserId: number): Promise<StudentGrade[]> {
+    if (!studentUserId) {
       return []
     }
-    const data = await requestJson(`${API_BASE_URL}/grades/students/${encodeURIComponent(studentDocumento)}`)
+    const data = await requestJson(`${API_BASE_URL}/grades/students/${encodeURIComponent(String(studentUserId))}`)
     return Array.isArray(data) ? data.map(mapStudentGrade) : []
   },
 
-  async fetchGradeForCourse(studentDocumento: string, courseCode: string): Promise<StudentGrade | null> {
-    if (!studentDocumento || !courseCode) {
+  async fetchGradeForCourse(studentUserId: number, courseCode: string): Promise<StudentGrade | null> {
+    if (!studentUserId || !courseCode) {
       return null
     }
     try {
-      const data = await requestJson(`${API_BASE_URL}/grades/students/${encodeURIComponent(studentDocumento)}/courses/${encodeURIComponent(courseCode)}`)
+      const data = await requestJson(`${API_BASE_URL}/grades/students/${encodeURIComponent(String(studentUserId))}/courses/${encodeURIComponent(courseCode)}`)
       return data ? mapStudentGrade(data) : null
     } catch (error) {
       if ((error as Error & { status?: number }).status === 404) {
@@ -261,12 +261,12 @@ export const gradeService = {
     return mapRubric(data)
   },
 
-  async submitGrade(courseId: number, studentDocumento: string, groupId: number, payload: GradeSubmissionPayload): Promise<GradeSubmissionResponse> {
-    if (!courseId || !studentDocumento || !groupId) {
+  async submitGrade(courseId: number, studentUserId: number, groupId: number, payload: GradeSubmissionPayload): Promise<GradeSubmissionResponse> {
+    if (!courseId || !studentUserId || !groupId) {
       throw new Error('Datos incompletos para registrar la nota')
     }
 
-    const url = `${API_BASE_URL}/grades/courses/${courseId}/students/${encodeURIComponent(studentDocumento)}/groups/${groupId}`
+    const url = `${API_BASE_URL}/grades/courses/${courseId}/students/${encodeURIComponent(String(studentUserId))}/groups/${groupId}`
     const data = await requestJsonWithBody(url, 'POST', payload)
     return mapGradeSubmissionResponse(data)
   }
@@ -293,7 +293,7 @@ const mapCourseGroupSummary = (payload: any): CourseGroupSummary => ({
 })
 
 const mapCourseRosterEntry = (payload: any): CourseRosterEntry => ({
-  studentDocumentoIdentidad: payload.studentDocumentoIdentidad ?? '',
+  studentUserId: Number(payload.studentUserId ?? payload.studentDocumentoIdentidad ?? 0),
   studentCui: payload.studentCui ?? '',
   fullName: payload.fullName ?? 'Estudiante',
   email: payload.email ?? '',
@@ -325,7 +325,7 @@ const mapRubric = (payload: any): GradingRubric => ({
 const mapGradeSubmissionResponse = (payload: any): GradeSubmissionResponse => ({
   courseId: Number(payload.courseId ?? 0),
   courseCode: String(payload.courseCode ?? ''),
-  studentDocumentoIdentidad: payload.studentDocumentoIdentidad ?? '',
+  studentUserId: Number(payload.studentUserId ?? payload.studentDocumentoIdentidad ?? 0),
   continuousGrades: toNumberArray(payload.continuousGrades ?? []),
   examGrades: toNumberArray(payload.examGrades ?? []),
   finalGrade: toNumber(payload.finalGrade),

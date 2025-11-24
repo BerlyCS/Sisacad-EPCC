@@ -3,11 +3,11 @@ import { ref } from 'vue'
 const API_BASE_URL = 'http://localhost:8080/api'
 
 export interface Professor {
-  id: number
-  nombres: string
-  apellidoPaterno: string
-  apellidoMaterno: string
-  correo: string
+  userId: number
+  firstNames: string
+  paternalSurname: string
+  maternalSurname: string
+  institutionalEmail: string
 }
 
 export const useProfessorService = () => {

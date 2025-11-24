@@ -3,13 +3,13 @@ import { ref } from 'vue'
 const API_BASE_URL = 'http://localhost:8080/api'
 
 export interface Student {
-  documentoIdentidad: string
+  userId: number
   cui: string
-  nombres: string
-  apellidoPaterno: string
-  apellidoMaterno: string
-  correoInstitucional: string
-  anio?: number | null
+  firstNames: string
+  paternalSurname: string
+  maternalSurname: string
+  institutionalEmail: string
+  enrollmentYear?: number | null
 }
 
 type CourseType = 'THEORY' | 'LAB'
@@ -105,13 +105,13 @@ export const useStudentService = () => {
       const data = await response.json()
 
       const studentData: Student = {
-        documentoIdentidad: data.documentoIdentidad ?? '',
+        userId: data.userId ?? 0,
         cui: data.cui ?? cui,
-        nombres: data.nombres ?? '',
-        apellidoPaterno: data.apellidoPaterno ?? '',
-        apellidoMaterno: data.apellidoMaterno ?? '',
-        correoInstitucional: data.correoInstitucional ?? '',
-        anio: data.anio ?? null
+        firstNames: data.firstNames ?? '',
+        paternalSurname: data.paternalSurname ?? '',
+        maternalSurname: data.maternalSurname ?? '',
+        institutionalEmail: data.institutionalEmail ?? '',
+        enrollmentYear: data.enrollmentYear ?? null
       }
 
       studentProfile.value = {
@@ -152,13 +152,13 @@ export const useStudentService = () => {
       const data = await response.json()
 
       const studentData: Student = {
-        documentoIdentidad: data.documentoIdentidad ?? '',
+        userId: data.userId ?? 0,
         cui: data.cui ?? '',
-        nombres: data.nombres ?? '',
-        apellidoPaterno: data.apellidoPaterno ?? '',
-        apellidoMaterno: data.apellidoMaterno ?? '',
-        correoInstitucional: data.correoInstitucional ?? '',
-        anio: data.anio ?? null
+        firstNames: data.firstNames ?? '',
+        paternalSurname: data.paternalSurname ?? '',
+        maternalSurname: data.maternalSurname ?? '',
+        institutionalEmail: data.institutionalEmail ?? '',
+        enrollmentYear: data.enrollmentYear ?? null
       }
 
       studentProfile.value = {

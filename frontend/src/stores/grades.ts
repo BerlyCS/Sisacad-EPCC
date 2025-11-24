@@ -118,7 +118,7 @@ export const useGradeStore = defineStore('grades', () => {
     courseRubric.value = null
   }
 
-  const loadStudentGrades = async (studentDocumento: string) => {
+  const loadStudentGrades = async (studentUserId: number) => {
     studentGradesLoading.value = true
     studentGradesError.value = ''
 
@@ -127,7 +127,7 @@ export const useGradeStore = defineStore('grades', () => {
 
     while (attempt < maxAttempts) {
       try {
-        studentGrades.value = await gradeService.fetchStudentGrades(studentDocumento)
+        studentGrades.value = await gradeService.fetchStudentGrades(studentUserId)
         studentGradesLoading.value = false
         return
       } catch (error) {
@@ -284,7 +284,7 @@ export const useGradeStore = defineStore('grades', () => {
       rosterEntries.value = response.students
       if (selectedRosterStudent.value) {
         const refreshed = response.students.find(
-          entry => entry.studentDocumentoIdentidad === selectedRosterStudent.value?.studentDocumentoIdentidad &&
+          entry => entry.studentUserId === selectedRosterStudent.value?.studentUserId &&
             entry.courseId === selectedRosterStudent.value?.courseId
         )
         selectedRosterStudent.value = refreshed ?? (response.students[0] ?? null)
@@ -331,7 +331,7 @@ export const useGradeStore = defineStore('grades', () => {
     selectedRosterStudent.value = entry
   }
 
-  const submitRosterGrade = async (payload: { studentDocumentoIdentidad: string; groupId: number; continuousGrades: number[]; examGrades: number[]; status?: string }) => {
+  const submitRosterGrade = async (payload: { studentUserId: number; groupId: number; continuousGrades: number[]; examGrades: number[]; status?: string }) => {
     if (!activeCourseId.value) {
       throw new Error('No hay un curso activo seleccionado')
     }
@@ -342,7 +342,7 @@ export const useGradeStore = defineStore('grades', () => {
     try {
       const response = await gradeService.submitGrade(
         activeCourseId.value,
-        payload.studentDocumentoIdentidad,
+        payload.studentUserId,
         payload.groupId,
         {
           continuousGrades: payload.continuousGrades,
@@ -352,7 +352,7 @@ export const useGradeStore = defineStore('grades', () => {
       )
 
       rosterEntries.value = rosterEntries.value.map(entry => {
-        if (entry.studentDocumentoIdentidad === response.studentDocumentoIdentidad && entry.courseId === payload.groupId) {
+        if (entry.studentUserId === response.studentUserId && entry.courseId === payload.groupId) {
           const updated: CourseRosterEntry = {
             ...entry,
             continuousGrades: response.continuousGrades,
@@ -360,7 +360,7 @@ export const useGradeStore = defineStore('grades', () => {
             finalGrade: response.finalGrade,
             submissionStatus: response.status
           }
-          if (selectedRosterStudent.value?.studentDocumentoIdentidad === updated.studentDocumentoIdentidad &&
+          if (selectedRosterStudent.value?.studentUserId === updated.studentUserId &&
             selectedRosterStudent.value?.courseId === updated.courseId) {
             selectedRosterStudent.value = updated
           }

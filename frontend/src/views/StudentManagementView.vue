@@ -47,7 +47,7 @@
             <thead class="bg-gray-50">
               <tr>
                 <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-24">
-                  DNI
+                  User ID
                 </th>
                 <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-28">
                   CUI
@@ -67,22 +67,22 @@
               </tr>
             </thead>
             <tbody class="bg-white divide-y divide-gray-200">
-              <tr v-for="student in students" :key="student.documentoIdentidad" class="hover:bg-gray-50">
+              <tr v-for="student in students" :key="student.userId" class="hover:bg-gray-50">
                 <td class="px-4 py-4 whitespace-nowrap text-sm font-mono text-gray-900">
-                  {{ student.documentoIdentidad }}
+                  {{ student.userId }}
                 </td>
                 <td class="px-4 py-4 whitespace-nowrap text-sm font-mono text-gray-900">
                   {{ student.cui }}
                 </td>
                 <td class="px-4 py-4 text-sm text-gray-900 break-words">
-                  {{ student.nombres }}
+                  {{ student.firstNames }}
                 </td>
                 <td class="px-4 py-4 text-sm text-gray-900 break-words">
-                  {{ student.apellidoPaterno }} {{ student.apellidoMaterno }}
+                  {{ student.paternalSurname }} {{ student.maternalSurname }}
                 </td>
                 <td class="px-4 py-4 text-sm text-gray-900 break-words">
-                  <a :href="`mailto:${student.correoInstitucional}`" class="text-blue-600 hover:text-blue-800 break-all">
-                    {{ student.correoInstitucional }}
+                  <a :href="`mailto:${student.institutionalEmail}`" class="text-blue-600 hover:text-blue-800 break-all">
+                    {{ student.institutionalEmail }}
                   </a>
                 </td>
                 <td class="px-4 py-4 text-sm text-gray-900 text-center">

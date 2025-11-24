@@ -4,6 +4,7 @@ import com.application.sisacadepcc.config.security.RequiresAdministratorAccess;
 import com.application.sisacadepcc.domain.model.Course;
 import com.application.sisacadepcc.domain.model.CourseGroup;
 import com.application.sisacadepcc.presentation.dto.CourseDetailsResponse;
+import com.application.sisacadepcc.presentation.dto.CourseGroupAssignmentResponse;
 import com.application.sisacadepcc.presentation.dto.UpdateCapacityRequest;
 import com.application.sisacadepcc.domain.repository.EnrollmentRepository;
 import com.application.sisacadepcc.service.AuthorizationService;
@@ -35,6 +36,15 @@ public class CourseController {
     @GetMapping
     public ResponseEntity<List<Course>> getAllCourses() {
         return ResponseEntity.ok(service.getAllCourses());
+    }
+
+    @GetMapping("/{courseId}/groups")
+    public ResponseEntity<List<CourseGroupAssignmentResponse>> getCourseGroups(@PathVariable Long courseId) {
+        return ResponseEntity.ok(
+                service.getCourseGroups(courseId).stream()
+                        .map(CourseGroupAssignmentResponse::from)
+                        .toList()
+        );
     }
 
     @GetMapping("/{id}")
@@ -98,27 +108,31 @@ public class CourseController {
     }
 
     @PostMapping("/{courseId}/professors/{professorId}")
-    public ResponseEntity<Course> assignProfessor(@PathVariable Long courseId,
-                                                  @PathVariable Long professorId,
-                                                  Authentication authentication) {
+    public ResponseEntity<CourseGroupAssignmentResponse> assignProfessor(@PathVariable Long courseId,
+                                                                        @PathVariable Long professorId,
+                                                                        @RequestParam("groupId") Long groupId,
+                                                                        Authentication authentication) {
         if (!authorizationService.hasAnyRole(authentication, UserRole.ADMIN, UserRole.SECRETARY)) {
             return ResponseEntity.status(403).build();
         }
 
-        return service.assignProfessorToCourse(courseId, professorId)
+        return service.assignProfessorToGroup(courseId, groupId, professorId)
+                .map(CourseGroupAssignmentResponse::from)
                 .map(ResponseEntity::ok)
                 .orElseGet(() -> ResponseEntity.notFound().build());
     }
 
     @DeleteMapping("/{courseId}/professors/{professorId}")
-    public ResponseEntity<Course> unassignProfessor(@PathVariable Long courseId,
-                                                    @PathVariable Long professorId,
-                                                    Authentication authentication) {
+    public ResponseEntity<CourseGroupAssignmentResponse> unassignProfessor(@PathVariable Long courseId,
+                                                                          @PathVariable Long professorId,
+                                                                          @RequestParam("groupId") Long groupId,
+                                                                          Authentication authentication) {
         if (!authorizationService.hasAnyRole(authentication, UserRole.ADMIN, UserRole.SECRETARY)) {
             return ResponseEntity.status(403).build();
         }
 
-        return service.removeProfessorFromCourse(courseId, professorId)
+        return service.removeProfessorFromGroup(courseId, groupId, professorId)
+                .map(CourseGroupAssignmentResponse::from)
                 .map(ResponseEntity::ok)
                 .orElseGet(() -> ResponseEntity.notFound().build());
     }

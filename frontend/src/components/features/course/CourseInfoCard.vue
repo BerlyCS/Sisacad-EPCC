@@ -146,8 +146,8 @@
           <option value="">Selecciona un estudiante</option>
           <option
             v-for="student in details.enrolledStudents"
-            :key="student.documentoIdentidad || student.cui"
-            :value="student.documentoIdentidad"
+            :key="student.userId || student.cui"
+            :value="student.userId"
           >
             {{ formatStudentName(student) }}
           </option>
@@ -158,9 +158,9 @@
           class="rounded-md bg-gray-50 p-4 text-sm text-gray-700 space-y-1"
         >
           <p><span class="font-semibold">CUI:</span> {{ selectedStudent.cui || 'No registrado' }}</p>
-          <p><span class="font-semibold">Documento:</span> {{ selectedStudent.documentoIdentidad }}</p>
-          <p><span class="font-semibold">Correo:</span> {{ selectedStudent.correoInstitucional || 'No registrado' }}</p>
-          <p><span class="font-semibold">Año:</span> {{ selectedStudent.anio ?? 'Sin dato' }}</p>
+          <p><span class="font-semibold">User ID:</span> {{ selectedStudent.userId }}</p>
+          <p><span class="font-semibold">Correo:</span> {{ selectedStudent.institutionalEmail || 'No registrado' }}</p>
+          <p><span class="font-semibold">Año:</span> {{ selectedStudent.enrollmentYear ?? 'Sin dato' }}</p>
         </div>
       </div>
     </div>
@@ -177,21 +177,21 @@ const props = defineProps<{ details: CourseDetails }>()
 const emit = defineEmits<{ (e: 'open-lab', courseId: number): void }>()
 const router = useRouter()
 
-const selectedStudentId = ref('')
+const selectedStudentId = ref<number | null>(null)
 
 const selectedStudent = computed(() =>
-  props.details.enrolledStudents.find(student => student.documentoIdentidad === selectedStudentId.value)
+  props.details.enrolledStudents.find(student => student.userId === selectedStudentId.value)
 )
 
 watch(
   () => props.details.courseId,
   () => {
-    selectedStudentId.value = ''
+    selectedStudentId.value = null
   }
 )
 
 const formatStudentName = (student: CourseStudentSummary) =>
-  [student.nombres, student.apellidoPaterno, student.apellidoMaterno]
+  [student.firstNames, student.paternalSurname, student.maternalSurname]
     .filter(Boolean)
     .join(' ')
 

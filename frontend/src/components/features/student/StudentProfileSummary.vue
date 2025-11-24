@@ -24,9 +24,9 @@
 
       <div class="bg-blue-50 border border-blue-100 rounded-lg p-4">
         <p class="text-xs font-semibold text-blue-700 uppercase tracking-wide">
-          DNI
+          User ID
         </p>
-        <p class="mt-1 text-gray-900 font-semibold">{{ student.documentoIdentidad || 'No disponible' }}</p>
+        <p class="mt-1 text-gray-900 font-semibold">{{ student.userId || 'No disponible' }}</p>
       </div>
 
       <div class="bg-blue-50 border border-blue-100 rounded-lg p-4">
@@ -34,7 +34,7 @@
           Correo institucional
         </p>
         <p class="mt-1 text-gray-900 font-semibold break-words">
-          {{ student.correoInstitucional || 'No registrado' }}
+          {{ student.institutionalEmail || 'No registrado' }}
         </p>
       </div>
 
@@ -42,7 +42,7 @@
         <p class="text-xs font-semibold text-blue-700 uppercase tracking-wide">
           Año académico
         </p>
-        <p class="mt-1 text-gray-900 font-semibold">{{ student.anio ?? 'No registrado' }}</p>
+        <p class="mt-1 text-gray-900 font-semibold">{{ student.enrollmentYear ?? 'No registrado' }}</p>
       </div>
 
       <slot name="extra"></slot>
@@ -67,9 +67,9 @@ const props = defineProps({
 const student = computed(() => props.profile?.student ?? {})
 
 const fullName = computed(() => {
-  const nombres = student.value.nombres || ''
-  const apellidoPaterno = student.value.apellidoPaterno || ''
-  const apellidoMaterno = student.value.apellidoMaterno || ''
-  return `${nombres} ${apellidoPaterno} ${apellidoMaterno}`.trim() || 'Nombre no disponible'
+  const firstNames = student.value.firstNames || ''
+  const paternalSurname = student.value.paternalSurname || ''
+  const maternalSurname = student.value.maternalSurname || ''
+  return `${firstNames} ${paternalSurname} ${maternalSurname}`.trim() || 'Nombre no disponible'
 })
 </script>

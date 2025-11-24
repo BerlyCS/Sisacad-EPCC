@@ -30,6 +30,17 @@ public class AuthorizationAspect {
         return joinPoint.proceed();
     }
 
+    @Around("@annotation(RequiresAdministratorOrSecretaryAccess)")
+    public Object checkAdministratorOrSecretaryAccess(ProceedingJoinPoint joinPoint) throws Throwable {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
+        if (!authorizationService.isAdministrator(authentication) && !authorizationService.isSecretary(authentication)) {
+            throw new AccessDeniedException("Acceso denegado. Se requiere rol de administrador o secretaria.");
+        }
+
+        return joinPoint.proceed();
+    }
+
     @Around("@annotation(RequiresStudentAccess)")
     public Object checkStudentAccess(ProceedingJoinPoint joinPoint) throws Throwable {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();

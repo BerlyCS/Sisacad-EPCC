@@ -296,6 +296,7 @@ const adminNavigation = [
 ]
 
 const secretaryNavigation = [
+  { name: 'Aulas', to: '/admin/classrooms' },
   { name: 'Estudiantes', to: '/admin/students' },
   { name: 'Gestionar cursos', to: '/admin/courses' },
   { name: 'Matricular', to: '/admin/student-enrollment' }

@@ -1,7 +1,7 @@
 const API_BASE_URL = 'http://localhost:8080/api'
 
 export interface EnrollmentPayload {
-  studentDocumentoIdentidad?: string
+  studentId?: number
   studentCui?: string
 }
 

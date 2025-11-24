@@ -155,10 +155,10 @@ const handleSubmit = async () => {
     return
   }
 
-  const documentId = studentProfile.value.student?.documentoIdentidad
+  const userId = studentProfile.value.student?.userId
   const cui = studentProfile.value.student?.cui || studentCui.value.trim()
 
-  if (!documentId && !cui) {
+  if (!userId && !cui) {
     submitError.value = 'No se pudo reconocer al estudiante'
     return
   }
@@ -166,7 +166,7 @@ const handleSubmit = async () => {
   isSubmitting.value = true
   try {
     await enrollStudentInCourse({
-      studentDocumentoIdentidad: documentId || undefined,
+      studentId: userId || undefined,
       studentCui: cui,
       courseId: selectedCourse.value.courseId
     })

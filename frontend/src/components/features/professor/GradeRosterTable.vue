@@ -36,7 +36,7 @@
           >
             <td class="px-3 py-2">
               <p class="font-semibold text-gray-900">{{ student.fullName }}</p>
-              <p class="text-xs text-gray-500">{{ student.studentCui || student.studentDocumentoIdentidad }}</p>
+              <p class="text-xs text-gray-500">{{ student.studentCui || student.studentUserId }}</p>
             </td>
             <td class="px-3 py-2 text-gray-600">
               <span class="font-semibold">{{ student.groupLetter }}</span>
@@ -81,13 +81,13 @@ const filteredStudents = computed(() => {
   return props.students.filter(student => {
     return (
       student.fullName.toLowerCase().includes(normalizedQuery.value) ||
-      student.studentDocumentoIdentidad.toLowerCase().includes(normalizedQuery.value) ||
+      student.studentUserId.toString().toLowerCase().includes(normalizedQuery.value) ||
       (student.studentCui ?? '').toLowerCase().includes(normalizedQuery.value)
     )
   })
 })
 
-const rowKey = (student: CourseRosterEntry) => `${student.courseId}-${student.studentDocumentoIdentidad}`
+const rowKey = (student: CourseRosterEntry) => `${student.courseId}-${student.studentUserId}`
 
 const select = (student: CourseRosterEntry) => {
   emit('select', student)

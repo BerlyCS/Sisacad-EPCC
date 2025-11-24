@@ -11,7 +11,7 @@ export interface Secretary {
 }
 
 export interface EnrollmentPayload {
-  studentDocumentoIdentidad?: string
+  studentId?: number
   studentCui?: string
   courseId: number
 }
@@ -19,7 +19,7 @@ export interface EnrollmentPayload {
 export interface EnrollmentResponse {
   success: boolean
   message: string
-  studentDocumentoIdentidad?: string
+  studentId?: number
   courseId?: number
 }
 

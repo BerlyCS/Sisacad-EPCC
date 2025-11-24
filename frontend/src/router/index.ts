@@ -27,6 +27,7 @@ const router = createRouter({
       path: '/admin/classrooms',
       name: 'classrooms',
       component: ClassroomManagementView,
+      meta: { requiresAuth: true, allowedRoles: ['ADMIN', 'SECRETARY'] }
     },
     {
       path: '/admin/courses',

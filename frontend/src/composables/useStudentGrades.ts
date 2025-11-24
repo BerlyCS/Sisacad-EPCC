@@ -27,14 +27,14 @@ export const useStudentGrades = () => {
     pendingCourses
   } = storeToRefs(gradeStore)
 
-  const refresh = async (documento?: string) => {
-    const targetDocumento = documento || resolveRefString(authStore.userDocumentoIdentidad)
+  const refresh = async (userId?: number) => {
+    const targetUserId = userId || Number(resolveRefString(authStore.userDocumentoIdentidad))
 
-    if (!targetDocumento) {
-      throw new Error('No se pudo determinar el documento del estudiante autenticado')
+    if (!targetUserId || !Number.isFinite(targetUserId)) {
+      throw new Error('No se pudo determinar el ID del estudiante autenticado')
     }
 
-    await gradeStore.loadStudentGrades(targetDocumento)
+    await gradeStore.loadStudentGrades(targetUserId)
   }
 
   return {

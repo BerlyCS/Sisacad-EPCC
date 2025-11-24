@@ -64,7 +64,7 @@ export const useProfessorGrades = () => {
     gradeStore.selectRosterStudent(entry)
   }
 
-  const submitGrade = async (payload: { studentDocumentoIdentidad: string; groupId: number; continuousGrades: number[]; examGrades: number[]; status?: string }) => {
+  const submitGrade = async (payload: { studentUserId: number; groupId: number; continuousGrades: number[]; examGrades: number[]; status?: string }) => {
     await gradeStore.submitRosterGrade(payload)
     await refreshRoster()
   }

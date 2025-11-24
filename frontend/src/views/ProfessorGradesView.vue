@@ -198,7 +198,7 @@ const selectedStudentKey = computed(() => {
   if (!selectedRosterStudent.value) {
     return null
   }
-  return `${selectedRosterStudent.value.courseId}-${selectedRosterStudent.value.studentDocumentoIdentidad}`
+  return `${selectedRosterStudent.value.courseId}-${selectedRosterStudent.value.studentUserId}`
 })
 
 const isReadonlyPanel = computed(() => {
@@ -213,7 +213,7 @@ const handleSubmitGrade = async (payload: { continuousGrades: number[]; examGrad
     return
   }
   await submitGrade({
-    studentDocumentoIdentidad: selectedRosterStudent.value.studentDocumentoIdentidad,
+    studentUserId: selectedRosterStudent.value.studentUserId,
     groupId: selectedRosterStudent.value.courseId,
     continuousGrades: payload.continuousGrades,
     examGrades: payload.examGrades,

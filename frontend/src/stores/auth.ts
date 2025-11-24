@@ -118,7 +118,7 @@ export const useAuthStore = defineStore('auth', () => {
   })
 
   const userDocumentoIdentidad = computed(() => {
-    return user.value?.documentoIdentidad || ''
+    return user.value?.userId || ''
   })
 
   const userCui = computed(() => {
