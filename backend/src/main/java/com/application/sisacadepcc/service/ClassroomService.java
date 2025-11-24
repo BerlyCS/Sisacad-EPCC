@@ -18,4 +18,8 @@ public class ClassroomService {
     public List<Classroom> getAllClassrooms() {
         return repository.findAll();
     }
+
+    public Classroom createClassroom(Classroom classroom) {
+        return repository.save(classroom);
+    }
 }

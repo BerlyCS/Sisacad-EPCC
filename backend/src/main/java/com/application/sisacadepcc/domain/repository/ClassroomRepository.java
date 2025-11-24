@@ -5,4 +5,5 @@ import java.util.List;
 
 public interface ClassroomRepository {
     List<Classroom> findAll();
+    Classroom save(Classroom classroom);
 }

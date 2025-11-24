@@ -7,7 +7,7 @@ import java.util.Optional;
 
 public class Classroom {
 
-    private final Long classroomID;
+    private Long classroomID;
     private final Place place;
 
     public Classroom(Long classroomID, Place place) {
@@ -15,9 +15,15 @@ public class Classroom {
         this.place = place;
     }
 
+    public Classroom(Place place) {
+        this.place = place;
+    }
+
     // Getters
     public Long getClassroomID() { return classroomID; }
     public Place getPlace() { return place; }
+
+    public void setClassroomID(Long classroomID) { this.classroomID = classroomID; }
 
     // Método para obtener el nombre del aula - CORREGIDO
     public String getName() {

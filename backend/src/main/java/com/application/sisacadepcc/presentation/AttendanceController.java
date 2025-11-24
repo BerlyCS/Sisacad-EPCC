@@ -1,6 +1,6 @@
 package com.application.sisacadepcc.presentation;
 
-import com.application.sisacadepcc.domain.model.Attendance;
+import com.application.sisacadepcc.domain.model.ProfessorAttendance;
 import com.application.sisacadepcc.domain.model.StudentAttendance;
 import com.application.sisacadepcc.domain.model.valueobject.AttendanceStatus;
 import com.application.sisacadepcc.domain.model.valueobject.ClassType;
@@ -27,7 +27,7 @@ public class AttendanceController {
     }
 
     @GetMapping
-    public List<Attendance> list(
+    public List<ProfessorAttendance> list(
             @RequestParam(required = false) Long professorId,
             @RequestParam(required = false) Long groupId,
             @RequestParam(required = false) Long courseId,
@@ -49,18 +49,18 @@ public class AttendanceController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Attendance> get(@PathVariable Long id) {
-        Attendance attendance = service.getById(id);
+    public ResponseEntity<ProfessorAttendance> get(@PathVariable Long id) {
+        ProfessorAttendance attendance = service.getById(id);
         if (attendance == null) return ResponseEntity.notFound().build();
         return ResponseEntity.ok(attendance);
     }
 
     @PostMapping
-    public ResponseEntity<Attendance> create(@RequestBody AttendanceRequest request) {
+    public ResponseEntity<ProfessorAttendance> create(@RequestBody AttendanceRequest request) {
         GeoLocation location = (request.latitude != null && request.longitude != null)
                 ? new GeoLocation(request.latitude, request.longitude)
                 : null;
-        Attendance created = service.markAttendance(
+        ProfessorAttendance created = service.markAttendance(
                 request.professorId,
                 request.courseId,
                 request.groupId,
@@ -75,26 +75,28 @@ public class AttendanceController {
     }
 
     @PostMapping("/session")
-    public ResponseEntity<Attendance> createSession(@RequestBody SessionRequest request) {
+    public ResponseEntity<ProfessorAttendance> createSession(@RequestBody SessionRequest request) {
         GeoLocation location = (request.latitude != null && request.longitude != null)
                 ? new GeoLocation(request.latitude, request.longitude)
                 : null;
         
-        Attendance session = new Attendance(
-                null, request.professorId, request.courseId, request.groupId,
-                AttendanceStatus.PRESENT,
-                request.timestamp != null ? request.timestamp : LocalDateTime.now(),
-                location,
-                request.date != null ? request.date : LocalDate.now(),
-                request.classType,
-                request.todo
+        ProfessorAttendance session = ProfessorAttendance.newSession(
+            request.professorId,
+            request.courseId,
+            request.groupId,
+            AttendanceStatus.PRESENT,
+            location,
+            request.timestamp != null ? request.timestamp : LocalDateTime.now(),
+            request.date != null ? request.date : LocalDate.now(),
+            request.classType,
+            request.todo
         );
         
         List<StudentAttendance> students = request.students.stream()
-                .map(s -> new StudentAttendance(null, null, s.studentId, s.status))
+            .map(s -> StudentAttendance.pendingFor(s.studentId, s.status))
                 .collect(Collectors.toList());
 
-        Attendance created = service.createSession(session, students);
+            ProfessorAttendance created = service.createSession(session, students);
         return new ResponseEntity<>(created, HttpStatus.CREATED);
     }
 

@@ -1,18 +1,18 @@
 package com.application.sisacadepcc.domain.repository;
 
-import com.application.sisacadepcc.domain.model.Attendance;
+import com.application.sisacadepcc.domain.model.ProfessorAttendance;
 
 import java.time.LocalDate;
 import java.util.List;
 
 public interface AttendanceRepository {
-    List<Attendance> findAll();
-    Attendance findById(Long id);
-    Attendance save(Attendance attendance);
+    List<ProfessorAttendance> findAll();
+    ProfessorAttendance findById(Long id);
+    ProfessorAttendance save(ProfessorAttendance attendance);
     void deleteById(Long id);
 
-    List<Attendance> findByProfessorId(Long professorId);
-    List<Attendance> findByCourseGroupId(Long courseGroupId);
-    List<Attendance> findByCourseId(Long courseId);
-    List<Attendance> findByProfessorIdAndDate(Long professorId, LocalDate date);
+    List<ProfessorAttendance> findByProfessorId(Long professorId);
+    List<ProfessorAttendance> findByCourseGroupId(Long courseGroupId);
+    List<ProfessorAttendance> findByCourseId(Long courseId);
+    List<ProfessorAttendance> findByProfessorIdAndDate(Long professorId, LocalDate date);
 }

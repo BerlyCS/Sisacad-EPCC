@@ -25,10 +25,22 @@ public class ClassroomRepositoryImpl implements ClassroomRepository {
                 .collect(Collectors.toList());
     }
 
+    @Override
+    public Classroom save(Classroom classroom) {
+        ClassroomEntity entity = mapToEntity(classroom);
+        ClassroomEntity savedEntity = jpaRepository.save(entity);
+        return mapToDomain(savedEntity);
+    }
+
     private Classroom mapToDomain(ClassroomEntity entity) {
-        return new Classroom(
+        Classroom classroom = new Classroom(
                 entity.getClassroomId(),
                 entity.getPlace()
         );
+        return classroom;
+    }
+
+    private ClassroomEntity mapToEntity(Classroom classroom) {
+        return new ClassroomEntity(classroom.getClassroomID(), classroom.getPlace());
     }
 }

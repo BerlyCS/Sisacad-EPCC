@@ -1,6 +1,6 @@
 package com.application.sisacadepcc.service;
 
-import com.application.sisacadepcc.domain.model.Attendance;
+import com.application.sisacadepcc.domain.model.ProfessorAttendance;
 import com.application.sisacadepcc.domain.model.StudentAttendance;
 import com.application.sisacadepcc.domain.model.valueobject.AttendanceStatus;
 import com.application.sisacadepcc.domain.model.valueobject.ClassType;
@@ -44,25 +44,23 @@ public class StudentAttendanceService {
                                             AttendanceStatus status, GeoLocation location,
                                             LocalDateTime timestamp, LocalDate date) {
         // Create a session for this single attendance
-        Attendance session = new Attendance(
-                null,
-                0L, // No professor ID available in this legacy call
-                courseId,
-                groupId,
-                AttendanceStatus.PRESENT, // Session is present
-                timestamp != null ? timestamp : LocalDateTime.now(),
-                location,
-                date != null ? date : LocalDate.now(),
-                ClassType.THEORY, // Default
-                "Legacy single attendance"
+        ProfessorAttendance session = ProfessorAttendance.newSession(
+            0L,
+            courseId,
+            groupId,
+            AttendanceStatus.PRESENT,
+            location,
+            timestamp != null ? timestamp : LocalDateTime.now(),
+            date != null ? date : LocalDate.now(),
+            ClassType.THEORY,
+            "Legacy single attendance"
         );
-        Attendance savedSession = attendanceRepository.save(session);
+        ProfessorAttendance savedSession = attendanceRepository.save(session);
 
-        StudentAttendance attendance = new StudentAttendance(
-                null,
-                savedSession.getAttendanceId(),
-                studentId,
-                status
+        StudentAttendance attendance = StudentAttendance.forSession(
+            savedSession.getAttendanceId(),
+            studentId,
+            status
         );
         return repository.save(attendance);
     }

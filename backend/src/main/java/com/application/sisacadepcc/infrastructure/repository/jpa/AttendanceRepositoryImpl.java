@@ -1,6 +1,6 @@
 package com.application.sisacadepcc.infrastructure.repository.jpa;
 
-import com.application.sisacadepcc.domain.model.Attendance;
+import com.application.sisacadepcc.domain.model.ProfessorAttendance;
 import com.application.sisacadepcc.domain.repository.AttendanceRepository;
 import org.springframework.stereotype.Repository;
 
@@ -17,17 +17,17 @@ public class AttendanceRepositoryImpl implements AttendanceRepository {
     }
 
     @Override
-    public List<Attendance> findAll() {
+    public List<ProfessorAttendance> findAll() {
         return jpaRepository.findAll().stream().map(this::toDomain).collect(Collectors.toList());
     }
 
     @Override
-    public Attendance findById(Long id) {
+    public ProfessorAttendance findById(Long id) {
         return jpaRepository.findById(id).map(this::toDomain).orElse(null);
     }
 
     @Override
-    public Attendance save(Attendance attendance) {
+    public ProfessorAttendance save(ProfessorAttendance attendance) {
         AttendanceEntity entity = toEntity(attendance);
         AttendanceEntity saved = jpaRepository.saveAndFlush(entity);
         return toDomain(saved);
@@ -39,12 +39,12 @@ public class AttendanceRepositoryImpl implements AttendanceRepository {
     }
 
     @Override
-    public List<Attendance> findByProfessorId(Long professorId) {
+    public List<ProfessorAttendance> findByProfessorId(Long professorId) {
         return jpaRepository.findByProfessorId(professorId).stream().map(this::toDomain).collect(Collectors.toList());
     }
 
     @Override
-    public List<Attendance> findByCourseGroupId(Long courseGroupId) {
+    public List<ProfessorAttendance> findByCourseGroupId(Long courseGroupId) {
         return jpaRepository.findByCourseGroupId(courseGroupId)
                 .stream()
                 .map(this::toDomain)
@@ -52,17 +52,17 @@ public class AttendanceRepositoryImpl implements AttendanceRepository {
     }
 
     @Override
-    public List<Attendance> findByCourseId(Long courseId) {
+    public List<ProfessorAttendance> findByCourseId(Long courseId) {
         return jpaRepository.findByCourseId(courseId).stream().map(this::toDomain).collect(Collectors.toList());
     }
 
     @Override
-    public java.util.List<Attendance> findByProfessorIdAndDate(Long professorId, java.time.LocalDate date) {
+    public java.util.List<ProfessorAttendance> findByProfessorIdAndDate(Long professorId, java.time.LocalDate date) {
         return jpaRepository.findByProfessorIdAndDate(professorId, date).stream().map(this::toDomain).collect(Collectors.toList());
     }
 
-    private Attendance toDomain(AttendanceEntity e) {
-        return new Attendance(
+    private ProfessorAttendance toDomain(AttendanceEntity e) {
+        return new ProfessorAttendance(
                 e.getAttendanceId(),
                 e.getProfessorId(),
                 e.getCourseId(),
@@ -76,7 +76,7 @@ public class AttendanceRepositoryImpl implements AttendanceRepository {
         );
     }
 
-    private AttendanceEntity toEntity(Attendance a) {
+    private AttendanceEntity toEntity(ProfessorAttendance a) {
         return new AttendanceEntity(
                 a.getProfessorId(),
                 a.getCourseId(),
@@ -86,7 +86,7 @@ public class AttendanceRepositoryImpl implements AttendanceRepository {
                 a.getLocation(),
                 a.getDate(),
                 a.getClassType(),
-                a.getTodo()
+                a.getNotes()
         );
     }
 }

@@ -1,6 +1,7 @@
 package com.application.sisacadepcc.infrastructure.repository.jpa;
 
 import com.application.sisacadepcc.domain.model.StudentAttendance;
+import com.application.sisacadepcc.domain.model.valueobject.GeoLocation;
 import com.application.sisacadepcc.domain.repository.StudentAttendanceRepository;
 import org.springframework.stereotype.Repository;
 
@@ -90,17 +91,31 @@ public class StudentAttendanceRepositoryImpl implements StudentAttendanceReposit
     }
 
     private StudentAttendance toDomain(StudentAttendanceEntity e) {
+        GeoLocation location = (e.getLatitude() != null && e.getLongitude() != null)
+                ? new GeoLocation(e.getLatitude(), e.getLongitude())
+                : null;
+
+        AttendanceEntity session = e.getAttendance();
+
         return new StudentAttendance(
                 e.getId(),
-                e.getAttendance().getAttendanceId(),
+                session.getAttendanceId(),
                 e.getStudentId(),
-                e.getStatus()
+                e.getStatus(),
+                e.getCheckTimestamp(),
+                location,
+                e.getDate(),
+                e.getCourseId(),
+                e.getCourseGroupId(),
+                session.getClassType(),
+                session.getTodo()
         );
     }
 
-    private StudentAttendanceEntity toEntity(StudentAttendance a) {
-        AttendanceEntity attendance = attendanceJpaRepository.findById(a.getAttendanceId())
-                .orElseThrow(() -> new RuntimeException("Attendance session not found: " + a.getAttendanceId()));
+    private StudentAttendanceEntity toEntity(StudentAttendance attendance) {
+        Long sessionId = attendance.getSessionId() != null ? attendance.getSessionId() : attendance.getAttendanceId();
+        AttendanceEntity session = attendanceJpaRepository.findById(sessionId)
+                .orElseThrow(() -> new IllegalArgumentException("Attendance session not found: " + sessionId));
 
         Double latitude = null;
         Double longitude = null;
@@ -110,15 +125,15 @@ public class StudentAttendanceRepositoryImpl implements StudentAttendanceReposit
         }
 
         return new StudentAttendanceEntity(
-                attendance,
-                a.getStudentId(),
-                a.getStatus(),
-                attendance.getCourseId(),
-                attendance.getCourseGroupId(),
-                attendance.getDate(),
-                attendance.getTimestamp(),
-                latitude,
-                longitude
+                session,
+                attendance.getStudentId(),
+                attendance.getStatus(),
+                session.getCourseId(),
+                session.getCourseGroupId(),
+                attendance.getDate() != null ? attendance.getDate() : session.getDate(),
+                attendance.getTimestamp() != null ? attendance.getTimestamp() : session.getTimestamp(),
+                latitude != null ? latitude : session.getLocation() != null ? session.getLocation().latitude() : null,
+                longitude != null ? longitude : session.getLocation() != null ? session.getLocation().longitude() : null
         );
     }
 }
