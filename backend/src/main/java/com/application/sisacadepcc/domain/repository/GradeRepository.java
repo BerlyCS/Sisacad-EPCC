@@ -11,11 +11,11 @@ public interface GradeRepository {
 
     Optional<Grade> findById(Long gradeID);
 
-    Optional<Grade> findByCourseAndStudent(String courseCode, Long studentId);
+    Optional<Grade> findByCourseAndStudent(Long courseId, Long studentId);
 
     List<Grade> findByStudent(Long studentId);
 
-    List<Grade> findByCourseCode(String courseCode);
+    List<Grade> findByCourseId(Long courseId);
 
     boolean save(Grade grade);
 

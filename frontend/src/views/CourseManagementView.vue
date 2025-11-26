@@ -118,9 +118,9 @@
 
     <div
       v-if="showCreateCourseModal"
-      class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4"
+      class="fixed inset-0 z-50 flex items-start md:items-center justify-center bg-black/40 p-4 overflow-auto"
     >
-      <div class="w-full max-w-3xl rounded-2xl bg-white shadow-2xl">
+      <div class="w-full max-w-3xl rounded-2xl bg-white shadow-2xl max-h-[calc(100vh-2rem)] overflow-y-auto">
         <div class="flex items-start justify-between border-b px-6 py-4">
           <div>
             <p class="text-xs font-semibold uppercase tracking-wide text-blue-500">Nuevo curso</p>
@@ -259,9 +259,9 @@
 
     <div
       v-if="showAssignmentModal && selectedCourse"
-      class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4"
+      class="fixed inset-0 z-50 flex items-start md:items-center justify-center bg-black/40 p-4 overflow-auto"
     >
-      <div class="w-full max-w-2xl rounded-2xl bg-white shadow-2xl">
+      <div class="w-full max-w-2xl rounded-2xl bg-white shadow-2xl max-h-[calc(100vh-2rem)] overflow-y-auto">
         <div class="flex items-start justify-between border-b px-6 py-4">
           <div>
             <p class="text-xs font-semibold uppercase tracking-wide text-blue-500">Gestión de docentes</p>

@@ -19,6 +19,10 @@ public class CourseLookupService {
         return resolveCourseId(courseCode).flatMap(courseRepository::findById);
     }
 
+    public Optional<Course> findById(Long courseId) {
+        return courseRepository.findById(courseId);
+    }
+
     public Optional<Long> resolveCourseId(String courseCode) {
         if (courseCode == null || courseCode.isBlank()) {
             return Optional.empty();

@@ -188,12 +188,12 @@ export const gradeService = {
     return Array.isArray(data) ? data.map(mapStudentGrade) : []
   },
 
-  async fetchGradeForCourse(studentUserId: number, courseCode: string): Promise<StudentGrade | null> {
-    if (!studentUserId || !courseCode) {
+  async fetchGradeForCourse(studentUserId: number, courseId: number): Promise<StudentGrade | null> {
+    if (!studentUserId || !courseId) {
       return null
     }
     try {
-      const data = await requestJson(`${API_BASE_URL}/grades/students/${encodeURIComponent(String(studentUserId))}/courses/${encodeURIComponent(courseCode)}`)
+      const data = await requestJson(`${API_BASE_URL}/grades/students/${encodeURIComponent(String(studentUserId))}/courses/${courseId}`)
       return data ? mapStudentGrade(data) : null
     } catch (error) {
       if ((error as Error & { status?: number }).status === 404) {
@@ -203,11 +203,11 @@ export const gradeService = {
     }
   },
 
-  async fetchCourseStatistics(courseCode: string): Promise<CourseGradeStats> {
-    if (!courseCode) {
-      throw new Error('Código de curso inválido')
+  async fetchCourseStatistics(courseId: number): Promise<CourseGradeStats> {
+    if (!courseId) {
+      throw new Error('Curso inválido')
     }
-    const data = await requestJson(`${API_BASE_URL}/grades/courses/${encodeURIComponent(courseCode)}/statistics`)
+    const data = await requestJson(`${API_BASE_URL}/grades/courses/${courseId}/statistics`)
     return mapCourseStats(data)
   },
 

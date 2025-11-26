@@ -10,17 +10,17 @@ public class Grade {
 
     private final Long gradeID;
     private final Long studentId;
-    private final String courseCode;
+    private final Long courseId;
     private final Long professorID;
 
     private final List<Integer> continuousGrades;
     private final List<Integer> examGrades;
 
-    public Grade(Long gradeID, Long studentId, String courseCode, Long professorID,
+    public Grade(Long gradeID, Long studentId, Long courseId, Long professorID,
                  List<Integer> continuousGrades, List<Integer> examGrades) {
         this.gradeID = gradeID;
         this.studentId = studentId;
-        this.courseCode = courseCode;
+        this.courseId = courseId;
         this.professorID = professorID;
 
         this.continuousGrades = continuousGrades != null
@@ -35,7 +35,7 @@ public class Grade {
     // Getters
     public Long getGradeID() { return gradeID; }
     public Long getStudentId() { return studentId; }
-    public String getCourseCode() { return courseCode; }
+    public Long getCourseId() { return courseId; }
     public Long getProfessorID() { return professorID; }
 
     public List<Integer> getContinuousGrades() {

@@ -68,28 +68,28 @@ public class GradeController {
         return ResponseEntity.ok(gradeQueryService.getGradesForStudent(studentId));
     }
 
-    @GetMapping("/students/{studentId}/courses/{courseCode}")
+    @GetMapping("/students/{studentId}/courses/{courseId}")
     @RequiresStudentAccess
     public ResponseEntity<StudentGradeResponse> getGradeForCourse(@PathVariable Long studentId,
-                                                                  @PathVariable String courseCode,
+                                                                  @PathVariable Long courseId,
                                                                   Authentication authentication) {
         if (!ownsStudentRecord(studentId, authentication)) {
             return ResponseEntity.status(403).build();
         }
 
-        return gradeQueryService.getGradeForCourse(studentId, courseCode)
+        return gradeQueryService.getGradeForCourse(studentId, courseId)
                 .map(ResponseEntity::ok)
                 .orElseGet(() -> ResponseEntity.notFound().build());
     }
 
-    @GetMapping("/courses/{courseCode}/statistics")
-    public ResponseEntity<ProfessorCourseGradeStatsResponse> getCourseStatistics(@PathVariable String courseCode,
+    @GetMapping("/courses/{courseId}/statistics")
+    public ResponseEntity<ProfessorCourseGradeStatsResponse> getCourseStatistics(@PathVariable Long courseId,
                                                                                 Authentication authentication) {
         if (!authorizationService.hasAnyRole(authentication, UserRole.ADMIN, UserRole.PROFESSOR)) {
             return ResponseEntity.status(403).build();
         }
 
-        return gradeStatisticsService.getStatisticsForCourse(courseCode)
+        return gradeStatisticsService.getStatisticsForCourse(courseId)
                 .map(ResponseEntity::ok)
                 .orElseGet(() -> ResponseEntity.notFound().build());
     }

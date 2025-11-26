@@ -143,13 +143,13 @@ public class ProfessorGradingService {
         List<Integer> sanitizedExam = sanitizeGrades(request.examGrades());
 
         Grade persisted = gradeRepository
-            .findByCourseAndStudent(String.valueOf(groupCourse.getCourseId()), studentId)
+            .findByCourseAndStudent(groupCourse.getCourseId(), studentId)
                 .orElse(null);
 
         Grade grade = new Grade(
                 persisted != null ? persisted.getGradeID() : null,
             studentId,
-                String.valueOf(groupCourse.getCourseId()),
+                groupCourse.getCourseId(),
                 resolveProfessorId(professor),
                 sanitizedContinuous,
                 sanitizedExam
@@ -159,13 +159,13 @@ public class ProfessorGradingService {
 
         BigDecimal finalGrade = gradeComputationService.computeFinalGrade(grade, groupCourse);
         return new GradeSubmissionResponse(
-                groupCourse.getCourseId(),
-                String.valueOf(groupCourse.getCourseId()),
+            groupCourse.getCourseId(),
+            groupCourse.getCourseId().toString(),
             studentId,
-                sanitizedContinuous,
-                sanitizedExam,
-                finalGrade.doubleValue(),
-                Optional.ofNullable(request.status()).orElse("SUBMITTED")
+            sanitizedContinuous,
+            sanitizedExam,
+            finalGrade.doubleValue(),
+            Optional.ofNullable(request.status()).orElse("SUBMITTED")
         );
     }
 

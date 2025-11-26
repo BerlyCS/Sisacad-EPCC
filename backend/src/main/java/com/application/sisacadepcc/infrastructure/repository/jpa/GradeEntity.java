@@ -16,8 +16,8 @@ public class GradeEntity {
     @Column(name = "student_id", nullable = false)
     private Long studentId;
 
-    @Column(name = "course_code", nullable = false)
-    private String courseCode;
+    @Column(name = "course_id", nullable = false)
+    private Long courseId;
 
     @Column(name = "professor_id", nullable = false)
     private Long professorID;
@@ -43,10 +43,10 @@ public class GradeEntity {
     // --- Constructors ---
     public GradeEntity() {}
 
-    public GradeEntity(Long studentId, String courseCode, Long professorID,
+    public GradeEntity(Long studentId, Long courseId, Long professorID,
                        List<Integer> continuousGrades, List<Integer> examGrades) {
         this.studentId = studentId;
-        this.courseCode = courseCode;
+        this.courseId = courseId;
         this.professorID = professorID;
         if (continuousGrades != null) this.continuousGrades = continuousGrades;
         if (examGrades != null) this.examGrades = examGrades;
@@ -69,12 +69,12 @@ public class GradeEntity {
         this.studentId = studentId;
     }
 
-    public String getCourseCode() {
-        return courseCode;
+    public Long getCourseId() {
+        return courseId;
     }
 
-    public void setCourseCode(String courseCode) {
-        this.courseCode = courseCode;
+    public void setCourseId(Long courseId) {
+        this.courseId = courseId;
     }
 
     public Long getProfessorID() {

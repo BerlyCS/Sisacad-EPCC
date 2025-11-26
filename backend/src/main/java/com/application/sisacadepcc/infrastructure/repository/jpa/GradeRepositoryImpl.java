@@ -32,8 +32,8 @@ public class GradeRepositoryImpl implements GradeRepository {
     }
 
     @Override
-    public Optional<Grade> findByCourseAndStudent(String courseCode, Long studentId) {
-        return jpaRepository.findByCourseCodeAndStudentId(courseCode, studentId)
+    public Optional<Grade> findByCourseAndStudent(Long courseId, Long studentId) {
+        return jpaRepository.findByCourseIdAndStudentId(courseId, studentId)
                 .map(this::mapToDomain);
     }
 
@@ -46,8 +46,8 @@ public class GradeRepositoryImpl implements GradeRepository {
     }
 
     @Override
-    public List<Grade> findByCourseCode(String courseCode) {
-        return jpaRepository.findByCourseCode(courseCode)
+    public List<Grade> findByCourseId(Long courseId) {
+        return jpaRepository.findByCourseId(courseId)
                 .stream()
                 .map(this::mapToDomain)
                 .collect(Collectors.toList());
@@ -80,7 +80,7 @@ public class GradeRepositoryImpl implements GradeRepository {
         return new Grade(
                 entity.getGradeID(),
                 entity.getStudentId(),
-                entity.getCourseCode(),
+                entity.getCourseId(),
                 entity.getProfessorID(),
                 entity.getContinuousGrades(),
                 entity.getExamGrades()
@@ -91,7 +91,7 @@ public class GradeRepositoryImpl implements GradeRepository {
         GradeEntity entity = new GradeEntity();
         entity.setGradeID(domain.getGradeID());
         entity.setStudentId(domain.getStudentId());
-        entity.setCourseCode(domain.getCourseCode());
+        entity.setCourseId(domain.getCourseId());
         entity.setProfessorID(domain.getProfessorID());
         entity.setContinuousGrades(new java.util.ArrayList<>(domain.getContinuousGrades()));
         entity.setExamGrades(new java.util.ArrayList<>(domain.getExamGrades()));

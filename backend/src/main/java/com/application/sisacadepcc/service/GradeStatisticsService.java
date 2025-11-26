@@ -29,8 +29,8 @@ public class GradeStatisticsService {
         this.gradeComputationService = gradeComputationService;
     }
 
-    public Optional<ProfessorCourseGradeStatsResponse> getStatisticsForCourse(String courseCode) {
-        List<Grade> grades = gradeRepository.findByCourseCode(courseCode);
+    public Optional<ProfessorCourseGradeStatsResponse> getStatisticsForCourse(Long courseId) {
+        List<Grade> grades = gradeRepository.findByCourseId(courseId);
         if (grades.isEmpty()) {
             return Optional.empty();
         }
@@ -43,14 +43,14 @@ public class GradeStatisticsService {
             .mapToInt(Integer::intValue)
             .summaryStatistics();
 
-        Course course = courseLookupService.findByCode(courseCode).orElse(null);
+        Course course = courseLookupService.findById(courseId).orElse(null);
         DoubleSummaryStatistics finalStats = grades.stream()
                 .map(grade -> gradeComputationService.computeFinalGrade(grade, course))
                 .mapToDouble(BigDecimal::doubleValue)
                 .summaryStatistics();
 
         ProfessorCourseGradeStatsResponse response = new ProfessorCourseGradeStatsResponse(
-                courseCode,
+            course != null ? String.valueOf(course.getCourseCode()) : null,
                 mergedStats.getCount() > 0 ? mergedStats.getAverage() : null,
                 mergedStats.getCount() > 0 ? (double) mergedStats.getMax() : null,
                 mergedStats.getCount() > 0 ? (double) mergedStats.getMin() : null,

@@ -195,11 +195,17 @@ export const useGradeStore = defineStore('grades', () => {
       return
     }
 
+    const courseId = selectedCourseId.value
+    if (!courseId) {
+      statsError.value = 'Curso inválido'
+      return
+    }
+
     statsLoading.value = true
     statsError.value = ''
 
     try {
-      const stats = await gradeService.fetchCourseStatistics(courseCode)
+      const stats = await gradeService.fetchCourseStatistics(courseId)
       statsByCourse.value = {
         ...statsByCourse.value,
         [courseCode]: stats

@@ -34,8 +34,8 @@ public class GradeQueryService {
                 .collect(Collectors.toList());
     }
 
-    public Optional<StudentGradeResponse> getGradeForCourse(Long studentId, String courseCode) {
-        return gradeRepository.findByCourseAndStudent(courseCode, studentId)
+    public Optional<StudentGradeResponse> getGradeForCourse(Long studentId, Long courseId) {
+        return gradeRepository.findByCourseAndStudent(courseId, studentId)
                 .flatMap(grade -> mapIfAllowed(grade, studentId));
     }
 
@@ -44,22 +44,22 @@ public class GradeQueryService {
             return Optional.empty();
         }
 
-        return courseRepository.findByCourseCode(Long.parseLong(grade.getCourseCode()))
-                .filter(course -> course.getCourseId() != null)
-                .map(course -> toDto(grade, course));
+        return courseRepository.findById(grade.getCourseId())
+            .filter(course -> course.getCourseId() != null)
+            .map(course -> toDto(grade, course));
     }
 
     private StudentGradeResponse toDto(Grade grade, Course course) {
         GradeComputationService.GradeWeightSnapshot weights = gradeComputationService.snapshotWeights(course);
         return new StudentGradeResponse(
-                grade.getCourseCode(),
-                course.getCourseId(),
-                course.getName(),
-                grade.getContinuousGrades(),
-                grade.getExamGrades(),
-                weights.continuousWeights(),
-                weights.examWeights(),
-                gradeComputationService.computeFinalGrade(grade, course)
+            String.valueOf(course.getCourseCode()),
+            course.getCourseId(),
+            course.getName(),
+            grade.getContinuousGrades(),
+            grade.getExamGrades(),
+            weights.continuousWeights(),
+            weights.examWeights(),
+            gradeComputationService.computeFinalGrade(grade, course)
         );
     }
 }
