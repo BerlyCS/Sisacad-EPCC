@@ -35,11 +35,19 @@
         subtitle="Estudiante seleccionado"
       />
 
+      <StudentCoursesCard
+        v-if="studentProfile"
+        :courses="enrolledCourses"
+        :loading="currentCoursesLoading"
+        :error="currentCoursesError"
+        :refreshable="false"
+      />
+
       <StudentScheduleCard
         v-if="studentProfile"
-        :entries="studentProfile.schedule"
-        :loading="profileLoading"
-        :error="profileError"
+        :entries="scheduleEntries"
+        :loading="currentScheduleLoading"
+        :error="currentScheduleError"
         :refreshable="false"
       />
 
@@ -49,6 +57,7 @@
           <select
             v-model="selectedCourseId"
             class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white text-gray-900 appearance-none pr-10"
+            @change="onCourseChange"
           >
             <option value="">Selecciona un curso</option>
             <option
@@ -68,6 +77,34 @@
         </div>
         <p v-if="coursesLoading" class="mt-1 text-sm text-gray-500">Cargando cursos...</p>
         <p v-else-if="availableCourses.length === 0" class="mt-1 text-sm text-red-600">No se encontraron cursos disponibles</p>
+      </div>
+
+      <div v-if="selectedCourseId">
+        <label class="block text-sm font-medium text-gray-700">Grupo del curso</label>
+        <div class="mt-1 relative">
+          <select
+            v-model="selectedCourseGroupId"
+            class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white text-gray-900 appearance-none pr-10"
+          >
+            <option value="">Selecciona un grupo</option>
+            <option
+              v-for="group in availableCourseGroups"
+              :key="group.groupId"
+              :value="group.groupId"
+            >
+              Grupo {{ group.letter }} - {{ group.typeLabel }} (Capacidad: {{ group.maxCapacity }})
+            </option>
+          </select>
+          <!-- Icono de flecha para el dropdown -->
+          <div class="absolute inset-y-0 right-0 flex items-center px-2 pointer-events-none">
+            <svg class="h-5 w-5 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
+              <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
+            </svg>
+          </div>
+        </div>
+        <p v-if="courseGroupsLoading" class="mt-1 text-sm text-gray-500">Cargando grupos...</p>
+        <p v-else-if="availableCourseGroups.length === 0" class="mt-1 text-sm text-red-600">No se encontraron grupos disponibles para este curso</p>
+        <p v-if="courseGroupsError" class="mt-1 text-sm text-red-600">{{ courseGroupsError }}</p>
       </div>
 
       <div class="flex flex-wrap gap-3">
@@ -93,6 +130,7 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
 import StudentProfileSummary from '@/components/features/student/StudentProfileSummary.vue'
+import StudentCoursesCard from '@/components/features/student/StudentCoursesCard.vue'
 import StudentScheduleCard from '@/components/features/student/StudentScheduleCard.vue'
 import { useCourseService } from '@/services/courseService'
 import { useSecretaryService } from '@/services/secretaryService'
@@ -100,17 +138,27 @@ import { useStudentService } from '@/services/studentService'
 
 const studentCui = ref('')
 const selectedCourseId = ref<number | ''>('')
+const selectedCourseGroupId = ref<number | ''>('')
 const studentSearchError = ref('')
 const submitError = ref('')
 const successMessage = ref('')
 const isSearching = ref(false)
 const isSubmitting = ref(false)
 
-const { studentProfile, profileError, profileLoading, fetchStudentProfile } = useStudentService()
-const { courses, loading: coursesLoading, fetchCourses } = useCourseService()
+const { studentProfile, profileError, fetchStudentProfile, fetchStudentCourses, fetchStudentSchedule } = useStudentService()
+const { courses, loading: coursesLoading, fetchCourses, courseGroups, courseGroupsLoading, courseGroupsError, fetchCourseGroups } = useCourseService()
 const { enrollStudentInCourse } = useSecretaryService()
 
+const currentCoursesLoading = ref(false)
+const currentCoursesError = ref('')
+const currentScheduleLoading = ref(false)
+const currentScheduleError = ref('')
+
+const enrolledCourses = computed(() => studentProfile.value?.courses ?? [])
+const scheduleEntries = computed(() => studentProfile.value?.schedule ?? [])
+
 const availableCourses = computed(() => courses.value || [])
+const availableCourseGroups = computed(() => courseGroups.value || [])
 
 const selectedCourse = computed(() => {
   if (!selectedCourseId.value) {
@@ -120,7 +168,59 @@ const selectedCourse = computed(() => {
   return courses.value.find(course => course.courseId === courseId) || null
 })
 
-const canSubmit = computed(() => Boolean(studentProfile.value && selectedCourse.value && !isSubmitting.value))
+const selectedCourseGroup = computed(() => {
+  if (!selectedCourseGroupId.value) {
+    return null
+  }
+  const groupId = Number(selectedCourseGroupId.value)
+  return courseGroups.value.find(group => group.groupId === groupId) || null
+})
+
+const canSubmit = computed(() => Boolean(studentProfile.value && selectedCourseGroup.value && !isSubmitting.value))
+
+const onCourseChange = async () => {
+  selectedCourseGroupId.value = ''
+  if (selectedCourseId.value) {
+    await fetchCourseGroups(Number(selectedCourseId.value))
+  }
+}
+
+const loadAcademicData = async (cui: string) => {
+  if (!cui) {
+    return
+  }
+
+  currentCoursesError.value = ''
+  currentScheduleError.value = ''
+  currentCoursesLoading.value = true
+  currentScheduleLoading.value = true
+
+  const coursePromise = (async () => {
+    try {
+      await fetchStudentCourses(cui)
+    } catch (error) {
+      currentCoursesError.value = error instanceof Error
+        ? error.message
+        : 'No se pudieron cargar los cursos matriculados'
+    } finally {
+      currentCoursesLoading.value = false
+    }
+  })()
+
+  const schedulePromise = (async () => {
+    try {
+      await fetchStudentSchedule(cui)
+    } catch (error) {
+      currentScheduleError.value = error instanceof Error
+        ? error.message
+        : 'No se pudo cargar el horario del estudiante'
+    } finally {
+      currentScheduleLoading.value = false
+    }
+  })()
+
+  await Promise.all([coursePromise, schedulePromise])
+}
 
 const searchStudent = async () => {
   studentSearchError.value = ''
@@ -134,10 +234,14 @@ const searchStudent = async () => {
 
   isSearching.value = true
   try {
-    await fetchStudentProfile(studentCui.value.trim())
+    const cui = studentCui.value.trim()
+    await fetchStudentProfile(cui)
     if (profileError.value) {
       studentSearchError.value = profileError.value
+      studentProfile.value = null
+      return
     }
+    await loadAcademicData(cui)
   } catch (error) {
     console.error('Error buscando estudiante:', error)
     studentSearchError.value = 'No se pudo cargar el estudiante'
@@ -150,8 +254,8 @@ const handleSubmit = async () => {
   submitError.value = ''
   successMessage.value = ''
 
-  if (!canSubmit.value || !studentProfile.value || !selectedCourse.value) {
-    submitError.value = 'Selecciona un estudiante y un curso'
+  if (!canSubmit.value || !studentProfile.value || !selectedCourseGroup.value) {
+    submitError.value = 'Selecciona un estudiante y un grupo de curso'
     return
   }
 
@@ -168,10 +272,11 @@ const handleSubmit = async () => {
     await enrollStudentInCourse({
       studentId: userId || undefined,
       studentCui: cui,
-      courseId: selectedCourse.value.courseId
+      courseGroupId: selectedCourseGroup.value.groupId
     })
-    successMessage.value = `Se matriculó correctamente al estudiante en ${selectedCourse.value.name}`
+    successMessage.value = `Se matriculó correctamente al estudiante en ${selectedCourse.value?.name} - Grupo ${selectedCourseGroup.value.letter}`
     await fetchStudentProfile(cui)
+    await loadAcademicData(cui)
   } catch (error) {
     console.error('Error matriculando estudiante:', error)
     submitError.value = error instanceof Error ? error.message : 'No se pudo matricular al estudiante'
@@ -183,9 +288,12 @@ const handleSubmit = async () => {
 const resetForm = () => {
   studentCui.value = ''
   selectedCourseId.value = ''
+  selectedCourseGroupId.value = ''
   studentSearchError.value = ''
   submitError.value = ''
   successMessage.value = ''
+  currentCoursesError.value = ''
+  currentScheduleError.value = ''
 }
 
 onMounted(async () => {

@@ -1,4 +1,5 @@
-const API_BASE_URL = 'http://localhost:8080/api'
+const rawApiBase = (import.meta.env.VITE_API_BASE_URL as string | undefined) ?? '/api'
+const API_BASE_URL = rawApiBase.replace(/\/+$/, '') || '/api'
 
 export interface StudentGrade {
   courseCode: string
@@ -32,6 +33,7 @@ export interface ProfessorCourseSummary {
 }
 
 export interface CourseGroupSummary {
+  groupId: number
   courseId: number
   courseCode: string
   courseName: string
@@ -47,6 +49,7 @@ export interface CourseRosterEntry {
   studentCui: string
   fullName: string
   email: string
+  groupId: number
   courseId: number
   courseCode: string
   groupLetter: string
@@ -80,6 +83,7 @@ export interface GradeSubmissionPayload {
 }
 
 export interface GradeSubmissionResponse {
+  groupId: number
   courseId: number
   courseCode: string
   studentUserId: number
@@ -87,6 +91,21 @@ export interface GradeSubmissionResponse {
   examGrades: number[]
   finalGrade: number | null
   status: string
+}
+
+export interface CourseGroupExamPdf {
+  summaryId: number
+  groupId: number
+  examNumber: number
+  summaryType: 'MEAN' | 'BEST' | 'WORST'
+  fileName: string | null
+  fileSizeBytes: number | null
+}
+
+export interface ExamPdfUploadPayload {
+  examNumber: number
+  summaryType: 'MEAN' | 'BEST' | 'WORST'
+  file: File
 }
 
 const toNumber = (value: unknown): number | null => {
@@ -141,6 +160,18 @@ const mapProfessorCourseSummary = (payload: any): ProfessorCourseSummary => {
   }
 }
 
+const ensureJsonPayload = async (response: Response) => {
+  const clone = response.clone()
+  try {
+    return await clone.json()
+  } catch (error) {
+    const text = await response.text().catch(() => '')
+    const snippet = text.trim().slice(0, 200)
+    const detail = snippet ? ` Fragmento: ${snippet}` : ''
+    throw new Error(`Respuesta inválida del servidor (HTTP ${response.status}).${detail}`)
+  }
+}
+
 const requestJson = async (url: string) => {
   const response = await fetch(url, { credentials: 'include' })
 
@@ -148,7 +179,7 @@ const requestJson = async (url: string) => {
     throw await buildHttpError(response)
   }
 
-  return response.json()
+  return ensureJsonPayload(response)
 }
 
 const requestJsonWithBody = async (url: string, method: string, body: unknown) => {
@@ -162,7 +193,7 @@ const requestJsonWithBody = async (url: string, method: string, body: unknown) =
   if (!response.ok) {
     throw await buildHttpError(response)
   }
-  return response.json()
+  return ensureJsonPayload(response)
 }
 
 const buildHttpError = async (response: Response) => {
@@ -269,6 +300,54 @@ export const gradeService = {
     const url = `${API_BASE_URL}/grades/courses/${courseId}/students/${encodeURIComponent(String(studentUserId))}/groups/${groupId}`
     const data = await requestJsonWithBody(url, 'POST', payload)
     return mapGradeSubmissionResponse(data)
+  },
+
+  async fetchGroupExamPdfs(groupId: number): Promise<CourseGroupExamPdf[]> {
+    if (!groupId) {
+      return []
+    }
+    const data = await requestJson(`${API_BASE_URL}/grades/groups/${groupId}/exam-summaries`)
+    return Array.isArray(data) ? data.map(mapCourseGroupExamPdf) : []
+  },
+
+  async uploadGroupExamPdf(groupId: number, payload: ExamPdfUploadPayload): Promise<CourseGroupExamPdf> {
+    if (!groupId || !payload?.file) {
+      throw new Error('Datos incompletos para subir el PDF')
+    }
+    const formData = new FormData()
+    formData.append('metadata', new Blob([
+      JSON.stringify({ examNumber: payload.examNumber, summaryType: payload.summaryType })
+    ], { type: 'application/json' }))
+    formData.append('file', payload.file)
+
+    const response = await fetch(`${API_BASE_URL}/grades/groups/${groupId}/exam-summaries`, {
+      method: 'POST',
+      credentials: 'include',
+      body: formData
+    })
+
+    if (!response.ok) {
+      throw await buildHttpError(response)
+    }
+    const data = await response.json()
+    return mapCourseGroupExamPdf(data)
+  },
+
+  async deleteGroupExamPdf(groupId: number, summaryId: number): Promise<void> {
+    if (!groupId || !summaryId) {
+      return
+    }
+    const response = await fetch(`${API_BASE_URL}/grades/groups/${groupId}/exam-summaries/${summaryId}`, {
+      method: 'DELETE',
+      credentials: 'include'
+    })
+    if (!response.ok && response.status !== 404) {
+      throw await buildHttpError(response)
+    }
+  },
+
+  buildExamPdfDownloadUrl(groupId: number, summaryId: number): string {
+    return `${API_BASE_URL}/grades/groups/${groupId}/exam-summaries/${summaryId}/download`
   }
 }
 
@@ -282,7 +361,8 @@ const toNumberArray = (source: unknown): number[] => {
 }
 
 const mapCourseGroupSummary = (payload: any): CourseGroupSummary => ({
-  courseId: Number(payload.courseId ?? payload.courseID ?? 0),
+  groupId: Number(payload.groupId ?? payload.groupID ?? payload.id ?? payload.courseId ?? 0),
+  courseId: Number(payload.courseId ?? payload.parentCourseId ?? payload.anchorCourseId ?? 0),
   courseCode: String(payload.courseCode ?? payload.courseId ?? ''),
   courseName: payload.courseName ?? payload.name ?? 'Curso',
   groupLetter: String(payload.groupLetter ?? '').trim() || '-',
@@ -293,11 +373,12 @@ const mapCourseGroupSummary = (payload: any): CourseGroupSummary => ({
 })
 
 const mapCourseRosterEntry = (payload: any): CourseRosterEntry => ({
-  studentUserId: Number(payload.studentUserId ?? payload.studentDocumentoIdentidad ?? 0),
+  studentUserId: Number(payload.studentUserId ?? payload.studentId ?? payload.studentDocumentoIdentidad ?? 0),
   studentCui: payload.studentCui ?? '',
   fullName: payload.fullName ?? 'Estudiante',
   email: payload.email ?? '',
-  courseId: Number(payload.courseId ?? 0),
+  groupId: Number(payload.groupId ?? payload.groupID ?? payload.courseGroupId ?? payload.courseId ?? 0),
+  courseId: Number(payload.courseId ?? payload.parentCourseId ?? payload.anchorCourseId ?? 0),
   courseCode: String(payload.courseCode ?? ''),
   groupLetter: String(payload.groupLetter ?? '').trim() || '-',
   courseType: ((payload.courseType ?? 'THEORY').toString().toUpperCase()) as 'THEORY' | 'LAB' | 'PRACTICE',
@@ -305,7 +386,7 @@ const mapCourseRosterEntry = (payload: any): CourseRosterEntry => ({
   continuousGrades: toNumberArray(payload.continuousGrades ?? []),
   examGrades: toNumberArray(payload.examGrades ?? []),
   finalGrade: toNumber(payload.finalGrade),
-  submissionStatus: payload.submissionStatus ?? 'PENDING'
+  submissionStatus: payload.submissionStatus ?? payload.status ?? 'PENDING'
 })
 
 const mapCourseRosterPage = (payload: any): CourseRosterPage => ({
@@ -323,11 +404,23 @@ const mapRubric = (payload: any): GradingRubric => ({
 })
 
 const mapGradeSubmissionResponse = (payload: any): GradeSubmissionResponse => ({
-  courseId: Number(payload.courseId ?? 0),
+  groupId: Number(payload.groupId ?? payload.groupID ?? payload.courseGroupId ?? payload.courseId ?? 0),
+  courseId: Number(payload.courseId ?? payload.parentCourseId ?? 0),
   courseCode: String(payload.courseCode ?? ''),
-  studentUserId: Number(payload.studentUserId ?? payload.studentDocumentoIdentidad ?? 0),
+  studentUserId: Number(payload.studentUserId ?? payload.studentId ?? payload.studentDocumentoIdentidad ?? 0),
   continuousGrades: toNumberArray(payload.continuousGrades ?? []),
   examGrades: toNumberArray(payload.examGrades ?? []),
   finalGrade: toNumber(payload.finalGrade),
   status: payload.status ?? 'SUBMITTED'
+})
+
+const mapCourseGroupExamPdf = (payload: any): CourseGroupExamPdf => ({
+  summaryId: Number(payload.summaryId ?? payload.id ?? 0),
+  groupId: Number(payload.groupId ?? 0),
+  examNumber: Number(payload.examNumber ?? 0),
+  summaryType: ((payload.summaryType ?? 'MEAN').toString().toUpperCase()) as 'MEAN' | 'BEST' | 'WORST',
+  fileName: payload.fileName ?? payload.name ?? null,
+  fileSizeBytes: typeof payload.fileSizeBytes === 'number'
+    ? payload.fileSizeBytes
+    : (payload.fileSizeBytes != null ? Number(payload.fileSizeBytes) : null)
 })

@@ -17,31 +17,39 @@ public class GradeComputationService {
     private static final int SCALE = 2;
     private static final int WEIGHT_SCALE = 6;
     private static final BigDecimal ONE_HUNDRED = BigDecimal.valueOf(100);
+    private static final BigDecimal MAX_GRADE = BigDecimal.valueOf(20);
 
     public BigDecimal computeFinalGrade(Grade grade, Course course) {
         GradeWeightSnapshot weights = snapshotWeights(course);
         BigDecimal continuousContribution = weightedScore(grade.getContinuousGrades(), weights.continuousWeights());
         BigDecimal examContribution = weightedScore(grade.getExamGrades(), weights.examWeights());
+        BigDecimal finalGrade = continuousContribution.add(examContribution);
+        if (finalGrade.compareTo(MAX_GRADE) > 0) {
+            finalGrade = MAX_GRADE;
+        }
 
-        return continuousContribution.add(examContribution).setScale(SCALE, RoundingMode.HALF_UP);
+        BigDecimal normalized = finalGrade.setScale(SCALE, RoundingMode.HALF_UP);
+        return normalized.setScale(0, RoundingMode.CEILING);
     }
 
     public GradeWeightSnapshot snapshotWeights(Course course) {
-        List<BigDecimal> continuousWeights = sanitizeWeights(null); // continuousGradeWeights removed
-        List<BigDecimal> examWeights = sanitizeWeights(null); // examGradeWeights removed
+        List<Integer> continuousRaw = course != null ? course.getContinuousGradeWeights() : null;
+        List<Integer> examRaw = course != null ? course.getExamGradeWeights() : null;
+        List<BigDecimal> continuousWeights = sanitizeWeights(continuousRaw);
+        List<BigDecimal> examWeights = sanitizeWeights(examRaw);
         normalizeWeights(continuousWeights, examWeights);
         return new GradeWeightSnapshot(List.copyOf(continuousWeights), List.copyOf(examWeights));
     }
 
-    private List<BigDecimal> sanitizeWeights(List<BigDecimal> rawWeights) {
+    private List<BigDecimal> sanitizeWeights(List<Integer> rawWeights) {
         List<BigDecimal> sanitized = new ArrayList<>(Collections.nCopies(EXPECTED_COMPONENTS, BigDecimal.ZERO));
         if (rawWeights == null || rawWeights.isEmpty()) {
             return sanitized;
         }
 
         for (int i = 0; i < EXPECTED_COMPONENTS && i < rawWeights.size(); i++) {
-            BigDecimal value = rawWeights.get(i);
-            sanitized.set(i, value != null ? value : BigDecimal.ZERO);
+            Integer value = rawWeights.get(i);
+            sanitized.set(i, value != null && value > 0 ? BigDecimal.valueOf(value) : BigDecimal.ZERO);
         }
         return sanitized;
     }

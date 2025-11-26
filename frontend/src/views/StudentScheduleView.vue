@@ -5,7 +5,6 @@
       <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
           <h2 class="text-2xl font-semibold text-gray-800">Mi Horario Semanal</h2>
-          <p class="text-gray-600 mt-1">Visualiza tu horario en formato de tabla profesional</p>
         </div>
         <button
           @click="loadSchedule"

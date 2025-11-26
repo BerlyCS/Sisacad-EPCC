@@ -23,6 +23,18 @@ export interface AttendanceSession {
   todo: string
 }
 
+export interface ProfessorAttendanceRecord {
+  attendanceId: number
+  professorId: number
+  courseId: number
+  courseGroupId?: number
+  status: AttendanceStatus
+  timestamp: string
+  date: string
+  classType: ClassType
+  todo?: string
+}
+
 export interface StudentAttendanceRequest {
   studentId: string
   status: AttendanceStatus
@@ -39,6 +51,19 @@ export interface SessionRequest {
   classType: ClassType
   todo: string
   students: StudentAttendanceRequest[]
+}
+
+export interface ProfessorAttendanceRequest {
+  professorId: number
+  courseId: number
+  groupId: number
+  status: AttendanceStatus
+  date?: string
+  timestamp?: string
+  classType: ClassType
+  todo?: string
+  latitude?: number
+  longitude?: number
 }
 
 const requestJson = async (url: string) => {
@@ -61,6 +86,10 @@ const requestJsonWithBody = async (url: string, method: string, body: unknown) =
 export const attendanceService = {
   async createSession(data: SessionRequest): Promise<AttendanceSession> {
     return requestJsonWithBody(`${API_BASE_URL}/attendances/session`, 'POST', data)
+  },
+
+  async markProfessorAttendance(data: ProfessorAttendanceRequest): Promise<ProfessorAttendanceRecord> {
+    return requestJsonWithBody(`${API_BASE_URL}/attendances`, 'POST', data)
   },
 
   async getStudentAttendance(studentId: string, courseId: number): Promise<StudentAttendanceDTO[]> {

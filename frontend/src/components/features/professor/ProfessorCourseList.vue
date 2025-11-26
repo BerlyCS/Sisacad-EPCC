@@ -40,8 +40,12 @@
               <p class="text-lg font-semibold text-gray-900">{{ course.courseName }}</p>
             </div>
             <div class="text-right text-sm text-gray-500">
-              <p>Grupo {{ course.groupLetter }}</p>
-              <p v-if="course.creditNumber != null">{{ course.creditNumber }} créditos</p>
+              <p class="text-xs uppercase tracking-wide text-gray-400">Grupo {{ course.groupLetter }}</p>
+              <span class="inline-flex items-center justify-end gap-1 rounded-full bg-gray-100 px-3 py-1 text-[11px] font-semibold text-gray-700">
+                <span class="w-2 h-2 rounded-full" :class="typeDotClass(course.courseType)"></span>
+                {{ resolveCourseTypeLabel(course.courseType) }}
+              </span>
+              <p v-if="course.creditNumber != null" class="mt-1">{{ course.creditNumber }} créditos</p>
             </div>
           </div>
         </button>
@@ -93,5 +97,29 @@ const filteredCourses = computed(() => {
 
 const handleSelect = (course: ProfessorCourseSummary) => {
   emit('select', course)
+}
+
+const COURSE_TYPE_LABEL: Record<string, string> = {
+  THEORY: 'Teoría',
+  PRACTICE: 'Práctica',
+  LAB: 'Laboratorio'
+}
+
+const resolveCourseTypeLabel = (type?: string) => {
+  if (!type) {
+    return COURSE_TYPE_LABEL.THEORY
+  }
+  return COURSE_TYPE_LABEL[type.toUpperCase()] ?? COURSE_TYPE_LABEL.THEORY
+}
+
+const typeDotClass = (type?: string) => {
+  const normalized = type?.toUpperCase()
+  if (normalized === 'LAB') {
+    return 'bg-purple-500'
+  }
+  if (normalized === 'PRACTICE') {
+    return 'bg-emerald-500'
+  }
+  return 'bg-blue-500'
 }
 </script>

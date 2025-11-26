@@ -69,6 +69,26 @@
               <span>Calificaciones</span>
             </router-link>
 
+            <router-link 
+              v-if="userRole === 'PROFESSOR'"
+              to="/professor/schedule" 
+              class="text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-all duration-200 px-3 py-2 rounded-md text-sm font-medium flex items-center space-x-2"
+              :class="{ 'bg-blue-100 text-blue-700': $route.path === '/professor/schedule' }"
+            >
+              <i class="fas fa-calendar-week"></i>
+              <span>Mi Horario</span>
+            </router-link>
+
+            <router-link 
+              v-if="userRole === 'PROFESSOR'"
+              to="/professor/exams" 
+              class="text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-all duration-200 px-3 py-2 rounded-md text-sm font-medium flex items-center space-x-2"
+              :class="{ 'bg-blue-100 text-blue-700': $route.path === '/professor/exams' }"
+            >
+              <i class="fas fa-file-pdf"></i>
+              <span>Exámenes</span>
+            </router-link>
+
             <router-link
               v-if="userRole === 'STUDENT'"
               to="/student/profile"
@@ -191,6 +211,26 @@
               @click="isMenuOpen = false"
             >
               Calificaciones
+            </router-link>
+
+            <router-link 
+              v-if="userRole === 'PROFESSOR'"
+              to="/professor/schedule"
+              class="block text-gray-700 hover:bg-gray-100 rounded-md px-3 py-2 text-sm font-medium"
+              :class="{ 'bg-blue-100 text-blue-700': $route.path === '/professor/schedule' }"
+              @click="isMenuOpen = false"
+            >
+              Mi Horario
+            </router-link>
+
+            <router-link 
+              v-if="userRole === 'PROFESSOR'"
+              to="/professor/exams"
+              class="block text-gray-700 hover:bg-gray-100 rounded-md px-3 py-2 text-sm font-medium"
+              :class="{ 'bg-blue-100 text-blue-700': $route.path === '/professor/exams' }"
+              @click="isMenuOpen = false"
+            >
+              Exámenes
             </router-link>
 
             <router-link

@@ -1,6 +1,7 @@
 package com.application.sisacadepcc.domain.model;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 public class Course {
@@ -15,10 +16,12 @@ public class Course {
     private Integer theoryHours;
     private Integer semesterNumber;
     private List<CourseGroup> groups;
+    private List<Integer> continuousGradeWeights;
+    private List<Integer> examGradeWeights;
 
     // Constructor sin parámetros
     public Course() {
-        this.groups = new ArrayList<>();
+        initializeCollections();
     }
 
     // Constructor con parámetros
@@ -31,7 +34,13 @@ public class Course {
         this.practiceHours = practiceHours;
         this.theoryHours = theoryHours;
         this.semesterNumber = semesterNumber;
+        initializeCollections();
+    }
+
+    private void initializeCollections() {
         this.groups = new ArrayList<>();
+        this.continuousGradeWeights = defaultWeightList();
+        this.examGradeWeights = defaultWeightList();
     }
 
     // Getters y setters
@@ -65,6 +74,22 @@ public class Course {
     public List<CourseGroup> getGroups() { return groups; }
     public void setGroups(List<CourseGroup> groups) { this.groups = groups != null ? groups : new ArrayList<>(); }
 
+    public List<Integer> getContinuousGradeWeights() {
+        return Collections.unmodifiableList(continuousGradeWeights);
+    }
+
+    public void setContinuousGradeWeights(List<Integer> weights) {
+        this.continuousGradeWeights = normalizeWeights(weights);
+    }
+
+    public List<Integer> getExamGradeWeights() {
+        return Collections.unmodifiableList(examGradeWeights);
+    }
+
+    public void setExamGradeWeights(List<Integer> weights) {
+        this.examGradeWeights = normalizeWeights(weights);
+    }
+
     public void addGroup(CourseGroup group) {
         if (group != null && !groups.contains(group)) {
             groups.add(group);
@@ -73,5 +98,25 @@ public class Course {
 
     public void removeGroup(CourseGroup group) {
         groups.remove(group);
+    }
+
+    private List<Integer> normalizeWeights(List<Integer> source) {
+        if (source == null || source.isEmpty()) {
+            return defaultWeightList();
+        }
+        List<Integer> normalized = defaultWeightList();
+        for (int i = 0; i < normalized.size() && i < source.size(); i++) {
+            Integer value = source.get(i);
+            normalized.set(i, value != null && value > 0 ? value : 0);
+        }
+        return normalized;
+    }
+
+    private List<Integer> defaultWeightList() {
+        List<Integer> defaults = new ArrayList<>(3);
+        defaults.add(0);
+        defaults.add(0);
+        defaults.add(0);
+        return defaults;
     }
 }

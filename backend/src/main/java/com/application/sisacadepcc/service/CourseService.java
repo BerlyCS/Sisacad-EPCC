@@ -1,5 +1,6 @@
 package com.application.sisacadepcc.service;
 
+import com.application.sisacadepcc.domain.model.Classroom;
 import com.application.sisacadepcc.domain.model.Course;
 import com.application.sisacadepcc.domain.model.CourseGroup;
 import com.application.sisacadepcc.domain.model.CourseSchedule;
@@ -11,14 +12,17 @@ import com.application.sisacadepcc.domain.repository.ClassroomRepository;
 import com.application.sisacadepcc.domain.repository.EnrollmentRepository;
 import com.application.sisacadepcc.presentation.dto.CourseScheduleSlotRequest;
 import com.application.sisacadepcc.presentation.dto.CreateCourseGroupRequest;
+import com.application.sisacadepcc.presentation.dto.ProfessorScheduleEntry;
 import com.application.sisacadepcc.service.dto.CourseDetails;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -32,6 +36,17 @@ public class CourseService {
     private final ClassroomRepository classroomRepository;
 
     private static final DateTimeFormatter TIME_FORMATTER = DateTimeFormatter.ofPattern("HH:mm");
+    private static final Map<String, Integer> DAY_ORDER = Map.of(
+            "LUNES", 1,
+            "MARTES", 2,
+            "MIERCOLES", 3,
+            "MIÉRCOLES", 3,
+            "JUEVES", 4,
+            "VIERNES", 5,
+            "SABADO", 6,
+            "SÁBADO", 6,
+            "DOMINGO", 7
+    );
 
     public CourseService(CourseRepository repository,
                          com.application.sisacadepcc.domain.repository.CourseGroupRepository courseGroupRepository,
@@ -61,6 +76,51 @@ public class CourseService {
                 .filter(Objects::nonNull)
                 .distinct()
                 .collect(Collectors.toList());
+    }
+
+    public List<ProfessorScheduleEntry> getScheduleForProfessor(Long professorId) {
+        if (professorId == null) {
+            return List.of();
+        }
+
+        List<CourseGroup> groups = courseGroupRepository.findByTeacherId(professorId);
+        if (groups.isEmpty()) {
+            return List.of();
+        }
+
+        List<ProfessorScheduleEntry> entries = new ArrayList<>();
+        for (CourseGroup group : groups) {
+            if (group == null || group.getCourseSchedules() == null) {
+                continue;
+            }
+
+            Course course = resolveCourse(group);
+            for (CourseSchedule courseSchedule : group.getCourseSchedules()) {
+                if (courseSchedule == null || courseSchedule.getSchedule() == null) {
+                    continue;
+                }
+
+                Schedule schedule = courseSchedule.getSchedule();
+                entries.add(new ProfessorScheduleEntry(
+                        resolveCourseId(course, courseSchedule),
+                        resolveCourseCode(course),
+                        buildCourseDisplayName(course, group),
+                        group.getLetter(),
+                        group.getType(),
+                        normalizeDay(schedule.getDayOfWeek()),
+                        formatTime(schedule.getStartTime()),
+                        formatTime(schedule.getEndTime()),
+                        resolveClassroomName(courseSchedule.getClassroomId())
+                ));
+            }
+        }
+
+        entries.sort(Comparator
+                .comparing((ProfessorScheduleEntry entry) -> DAY_ORDER.getOrDefault(entry.getDayOfWeek(), Integer.MAX_VALUE))
+                .thenComparing(ProfessorScheduleEntry::getStartTime, Comparator.nullsLast(String::compareTo))
+                .thenComparing(ProfessorScheduleEntry::getCourseName));
+
+        return entries;
     }
 
     public Optional<CourseDetails> getCourseDetails(Long groupId) {
@@ -218,6 +278,57 @@ public class CourseService {
         schedule.setScheduleType(ScheduleType.COURSE);
         assignment.setSchedule(schedule);
         return assignment;
+    }
+
+    private Course resolveCourse(CourseGroup group) {
+        if (group == null) {
+            return null;
+        }
+        Course course = group.getCourse();
+        if (course != null) {
+            return course;
+        }
+        Long courseId = group.getCourseId();
+        if (courseId == null) {
+            return null;
+        }
+        return repository.findById(courseId).orElse(null);
+    }
+
+    private Long resolveCourseId(Course course, CourseSchedule courseSchedule) {
+        if (course != null && course.getCourseId() != null) {
+            return course.getCourseId();
+        }
+        return courseSchedule != null ? courseSchedule.getCourseId() : null;
+    }
+
+    private Long resolveCourseCode(Course course) {
+        if (course == null || course.getCourseCode() == null) {
+            return null;
+        }
+        return course.getCourseCode().longValue();
+    }
+
+    private String buildCourseDisplayName(Course course, CourseGroup group) {
+        String baseName = course != null && course.getName() != null ? course.getName() : "Curso";
+        String letter = group != null ? group.getLetter() : null;
+        if (letter != null && !letter.isBlank()) {
+            return baseName + " (" + letter + ")";
+        }
+        return baseName;
+    }
+
+    private String resolveClassroomName(Long classroomId) {
+        if (classroomId == null) {
+            return "Aula sin asignar";
+        }
+        return classroomRepository.findById(classroomId)
+                .map(Classroom::getDisplayName)
+                .orElse("Aula " + classroomId);
+    }
+
+    private String formatTime(LocalTime time) {
+        return time != null ? TIME_FORMATTER.format(time) : null;
     }
 
     private String normalizeLetter(String value) {

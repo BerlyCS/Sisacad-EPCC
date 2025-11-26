@@ -208,6 +208,7 @@ export const useStudentService = () => {
       }
     } catch (err) {
       console.error('Error fetching student courses:', err)
+      throw err instanceof Error ? err : new Error('No se pudieron cargar los cursos del estudiante')
     }
   }
 
@@ -243,6 +244,7 @@ export const useStudentService = () => {
       }
     } catch (err) {
       console.error('Error fetching student courses:', err)
+      throw err instanceof Error ? err : new Error('No se pudieron cargar los cursos')
     }
   }
 
@@ -278,6 +280,7 @@ export const useStudentService = () => {
       }
     } catch (err) {
       console.error('Error fetching student schedule:', err)
+      throw err instanceof Error ? err : new Error('No se pudo cargar el horario del estudiante')
     }
   }
 
@@ -311,6 +314,7 @@ export const useStudentService = () => {
       }
     } catch (err) {
       console.error('Error fetching student schedule:', err)
+      throw err instanceof Error ? err : new Error('No se pudo cargar el horario del estudiante')
     }
   }
 

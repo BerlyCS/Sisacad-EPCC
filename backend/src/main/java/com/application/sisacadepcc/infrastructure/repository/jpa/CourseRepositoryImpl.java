@@ -72,6 +72,16 @@ public class CourseRepositoryImpl implements CourseRepository {
         course.setPracticeHours(entity.getPracticeHours() != null ? entity.getPracticeHours() : 0);
         course.setTheoryHours(entity.getTheoryHours() != null ? entity.getTheoryHours() : 0);
         course.setSemesterNumber(entity.getSemesterNumber() != null ? entity.getSemesterNumber() : 0);
+        course.setContinuousGradeWeights(extractWeightList(
+            entity.getContinuousWeight1(),
+            entity.getContinuousWeight2(),
+            entity.getContinuousWeight3()
+        ));
+        course.setExamGradeWeights(extractWeightList(
+            entity.getExamWeight1(),
+            entity.getExamWeight2(),
+            entity.getExamWeight3()
+        ));
         course.setGroups(mapGroupsToDomain(entity.getGroups()));
         return course;
     }
@@ -135,7 +145,35 @@ public class CourseRepositoryImpl implements CourseRepository {
         entity.setPracticeHours(course.getPracticeHours());
         entity.setTheoryHours(course.getTheoryHours());
         entity.setSemesterNumber(course.getSemesterNumber());
+        List<Integer> continuousWeights = course.getContinuousGradeWeights();
+        List<Integer> examWeights = course.getExamGradeWeights();
+        entity.setContinuousWeight1(resolveWeight(continuousWeights, 0));
+        entity.setContinuousWeight2(resolveWeight(continuousWeights, 1));
+        entity.setContinuousWeight3(resolveWeight(continuousWeights, 2));
+        entity.setExamWeight1(resolveWeight(examWeights, 0));
+        entity.setExamWeight2(resolveWeight(examWeights, 1));
+        entity.setExamWeight3(resolveWeight(examWeights, 2));
         // Note: groups mapping may need to be handled separately for persistence
         return entity;
+    }
+
+    private List<Integer> extractWeightList(Integer w1, Integer w2, Integer w3) {
+        List<Integer> weights = new ArrayList<>(3);
+        weights.add(valueOrZero(w1));
+        weights.add(valueOrZero(w2));
+        weights.add(valueOrZero(w3));
+        return weights;
+    }
+
+    private Integer resolveWeight(List<Integer> weights, int index) {
+        if (weights == null || index < 0 || index >= weights.size()) {
+            return 0;
+        }
+        Integer value = weights.get(index);
+        return value != null ? value : 0;
+    }
+
+    private Integer valueOrZero(Integer candidate) {
+        return candidate != null ? candidate : 0;
     }
 }

@@ -60,23 +60,23 @@ public class StudentCourseController {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         }
 
-        if (request == null || request.courseId() == null || !request.hasStudentIdentifier()) {
+        if (request == null || request.courseGroupId() == null || !request.hasStudentIdentifier()) {
             return ResponseEntity.badRequest()
-                    .body(EnrollmentResponse.failure("Debe proporcionar el identificador del estudiante y el curso", null, request != null ? request.courseId() : null));
+                    .body(EnrollmentResponse.failure("Debe proporcionar el identificador del estudiante y el grupo de curso", null, request != null ? request.courseGroupId() : null));
         }
 
         Long studentId = resolveStudentId(request);
         if (studentId == null) {
             return ResponseEntity.badRequest()
-                    .body(EnrollmentResponse.failure("No se encontró al estudiante solicitado", null, request.courseId()));
+                    .body(EnrollmentResponse.failure("No se encontró al estudiante solicitado", null, request.courseGroupId()));
         }
 
         try {
-            studentCourseService.enrollStudentInCourse(studentId, request.courseId());
-            return ResponseEntity.ok(EnrollmentResponse.success(studentId, request.courseId()));
+            studentCourseService.enrollStudentInCourseGroup(studentId, request.courseGroupId());
+            return ResponseEntity.ok(EnrollmentResponse.success(studentId, request.courseGroupId()));
         } catch (IllegalArgumentException | IllegalStateException ex) {
             return ResponseEntity.badRequest()
-                    .body(EnrollmentResponse.failure(ex.getMessage(), studentId, request.courseId()));
+                    .body(EnrollmentResponse.failure(ex.getMessage(), studentId, request.courseGroupId()));
         }
     }
 

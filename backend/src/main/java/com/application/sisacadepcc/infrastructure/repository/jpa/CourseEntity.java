@@ -38,6 +38,24 @@ public class CourseEntity {
     @Column(name = "semester_number", nullable = true)
     private Integer semesterNumber;
 
+    @Column(name = "continuous_weight_1")
+    private Integer continuousWeight1;
+
+    @Column(name = "continuous_weight_2")
+    private Integer continuousWeight2;
+
+    @Column(name = "continuous_weight_3")
+    private Integer continuousWeight3;
+
+    @Column(name = "exam_weight_1")
+    private Integer examWeight1;
+
+    @Column(name = "exam_weight_2")
+    private Integer examWeight2;
+
+    @Column(name = "exam_weight_3")
+    private Integer examWeight3;
+
     @OneToMany(mappedBy = "course", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     private List<CourseGroupEntity> groups = new ArrayList<>();
 
@@ -115,6 +133,54 @@ public class CourseEntity {
 
     public void setSemesterNumber(Integer semesterNumber) {
         this.semesterNumber = semesterNumber;
+    }
+
+    public Integer getContinuousWeight1() {
+        return continuousWeight1;
+    }
+
+    public void setContinuousWeight1(Integer continuousWeight1) {
+        this.continuousWeight1 = continuousWeight1;
+    }
+
+    public Integer getContinuousWeight2() {
+        return continuousWeight2;
+    }
+
+    public void setContinuousWeight2(Integer continuousWeight2) {
+        this.continuousWeight2 = continuousWeight2;
+    }
+
+    public Integer getContinuousWeight3() {
+        return continuousWeight3;
+    }
+
+    public void setContinuousWeight3(Integer continuousWeight3) {
+        this.continuousWeight3 = continuousWeight3;
+    }
+
+    public Integer getExamWeight1() {
+        return examWeight1;
+    }
+
+    public void setExamWeight1(Integer examWeight1) {
+        this.examWeight1 = examWeight1;
+    }
+
+    public Integer getExamWeight2() {
+        return examWeight2;
+    }
+
+    public void setExamWeight2(Integer examWeight2) {
+        this.examWeight2 = examWeight2;
+    }
+
+    public Integer getExamWeight3() {
+        return examWeight3;
+    }
+
+    public void setExamWeight3(Integer examWeight3) {
+        this.examWeight3 = examWeight3;
     }
 
     public List<CourseGroupEntity> getGroups() {

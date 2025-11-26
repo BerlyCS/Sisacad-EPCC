@@ -5,6 +5,7 @@ public record CourseRosterEntryResponse(
         String studentCui,
         String fullName,
         String email,
+        Long groupId,
         Long courseId,
         String courseCode,
         String groupLetter,

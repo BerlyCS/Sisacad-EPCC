@@ -5,7 +5,7 @@ import jakarta.validation.constraints.NotNull;
 public record EnrollStudentRequest(
         Long studentId,
         String studentCui,
-        @NotNull Long courseId
+        @NotNull Long courseGroupId
 ) {
     public boolean hasStudentIdentifier() {
         return studentId != null || (studentCui != null && !studentCui.isBlank());

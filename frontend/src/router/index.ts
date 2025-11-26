@@ -52,6 +52,18 @@ const router = createRouter({
       meta: { requiresAuth: true, allowedRoles: ['PROFESSOR', 'ADMIN'] }
     },
     {
+      path: '/professor/exams',
+      name: 'professor-exams',
+      component: () => import('@/views/ProfessorExamUploadsView.vue'),
+      meta: { requiresAuth: true, allowedRoles: ['PROFESSOR', 'ADMIN'] }
+    },
+    {
+      path: '/professor/schedule',
+      name: 'professor-schedule',
+      component: () => import('@/views/ProfessorScheduleView.vue'),
+      meta: { requiresAuth: true, allowedRoles: ['PROFESSOR', 'ADMIN'] }
+    },
+    {
       path: '/professor/syllabus',
       name: 'professor-syllabus',
       component: () => import('@/views/ProfessorSyllabusView.vue'),

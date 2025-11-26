@@ -3,6 +3,7 @@ package com.application.sisacadepcc.presentation;
 import com.application.sisacadepcc.config.security.RequiresAdministratorAccess;
 import com.application.sisacadepcc.domain.model.Course;
 import com.application.sisacadepcc.domain.model.Professor;
+import com.application.sisacadepcc.presentation.dto.ProfessorScheduleEntry;
 import com.application.sisacadepcc.service.AuthorizationService;
 import com.application.sisacadepcc.service.CourseService;
 import com.application.sisacadepcc.service.ProfessorService;
@@ -78,6 +79,17 @@ public class ProfessorController {
 
         return authorizationService.getAuthenticatedProfessor(authentication)
                 .map(professor -> ResponseEntity.ok(courseService.getCoursesForProfessor(professor.getUserId())))
+                .orElseGet(() -> ResponseEntity.status(404).build());
+    }
+
+    @GetMapping("/me/schedule")
+    public ResponseEntity<List<ProfessorScheduleEntry>> getProfessorSchedule(Authentication authentication) {
+        if (!authorizationService.hasRole(authentication, UserRole.PROFESSOR)) {
+            return ResponseEntity.status(403).build();
+        }
+
+        return authorizationService.getAuthenticatedProfessor(authentication)
+                .map(professor -> ResponseEntity.ok(courseService.getScheduleForProfessor(professor.getUserId())))
                 .orElseGet(() -> ResponseEntity.status(404).build());
     }
 }

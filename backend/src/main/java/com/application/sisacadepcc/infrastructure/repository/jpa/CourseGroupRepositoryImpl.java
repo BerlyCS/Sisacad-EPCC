@@ -1,7 +1,8 @@
 package com.application.sisacadepcc.infrastructure.repository.jpa;
 
-import com.application.sisacadepcc.domain.model.CourseGroup;
 import com.application.sisacadepcc.domain.model.Course;
+import com.application.sisacadepcc.domain.model.CourseGroup;
+import com.application.sisacadepcc.domain.model.CourseGroupExamsPdf;
 import com.application.sisacadepcc.domain.model.CourseSchedule;
 import com.application.sisacadepcc.domain.model.Schedule;
 import com.application.sisacadepcc.domain.model.valueobject.ScheduleType;
@@ -81,6 +82,7 @@ public class CourseGroupRepositoryImpl implements CourseGroupRepository {
         group.setAvailableCapacity(entity.getAvailableCapacity());
         group.setTeacherId(entity.getTeacherId());
         group.setCourseSchedules(mapCourseSchedulesToDomain(entity.getScheduleAssignments()));
+        group.setExamPdfs(mapExamPdfsToDomain(entity.getExamPdfs()));
         // Enrollments are lazy loaded, so set to empty list to avoid overhead
         // group.setEnrollments(new ArrayList<>());
         // map the owning Course (keep a lightweight Course domain object)
@@ -138,6 +140,7 @@ public class CourseGroupRepositoryImpl implements CourseGroupRepository {
         entity.setMaxCapacity(courseGroup.getMaxCapacity());
         entity.setAvailableCapacity(courseGroup.getAvailableCapacity());
         entity.setScheduleAssignments(mapCourseSchedulesToEntity(courseGroup.getCourseSchedules(), entity));
+        entity.setExamPdfs(mapExamPdfsToEntity(courseGroup.getExamPdfs(), entity));
         entity.setTeacherId(courseGroup.getTeacherId());
         // If the domain Course reference exists, set a lightweight CourseEntity reference by id
         if (courseGroup.getCourse() != null && courseGroup.getCourse().getCourseId() != null) {
@@ -191,6 +194,41 @@ public class CourseGroupRepositoryImpl implements CourseGroupRepository {
             entity.setSchedule(scheduleEntity);
             entity.setSequence(assignment.getSequenceOrder());
 
+            entities.add(entity);
+        }
+        return entities;
+    }
+
+    private List<CourseGroupExamsPdf> mapExamPdfsToDomain(List<CourseGroupExamsPdfEntity> entities) {
+        if (entities == null || entities.isEmpty()) {
+            return new ArrayList<>();
+        }
+        List<CourseGroupExamsPdf> summaries = new ArrayList<>();
+        for (CourseGroupExamsPdfEntity entity : entities) {
+            CourseGroupExamsPdf summary = new CourseGroupExamsPdf();
+            summary.setId(entity.getId());
+            summary.setCourseGroupId(entity.getCourseGroup() != null ? entity.getCourseGroup().getId() : null);
+            summary.setExamNumber(entity.getExamNumber());
+            summary.setSummaryType(entity.getSummaryType());
+            summary.setContent(entity.getContent());
+            summaries.add(summary);
+        }
+        return summaries;
+    }
+
+    private List<CourseGroupExamsPdfEntity> mapExamPdfsToEntity(List<CourseGroupExamsPdf> summaries,
+                                                                CourseGroupEntity parent) {
+        List<CourseGroupExamsPdfEntity> entities = new ArrayList<>();
+        if (summaries == null) {
+            return entities;
+        }
+        for (CourseGroupExamsPdf summary : summaries) {
+            CourseGroupExamsPdfEntity entity = new CourseGroupExamsPdfEntity();
+            entity.setId(summary.getId());
+            entity.setCourseGroup(parent);
+            entity.setExamNumber(summary.getExamNumber());
+            entity.setSummaryType(summary.getSummaryType());
+            entity.setContent(summary.getContent());
             entities.add(entity);
         }
         return entities;

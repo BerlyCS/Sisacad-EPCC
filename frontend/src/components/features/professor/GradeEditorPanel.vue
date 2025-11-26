@@ -6,8 +6,8 @@
         <h2 class="text-2xl font-bold text-gray-900">{{ student?.fullName || 'Selecciona un estudiante' }}</h2>
         <span v-if="student" class="text-xs font-semibold text-gray-500">{{ student.studentUserId }}</span>
       </div>
-      <p class="text-sm text-gray-500" v-if="student">
-        Grupo {{ student.groupLetter }} · {{ student.courseType === 'LAB' ? 'Laboratorio' : 'Teoría' }}
+      <p v-if="student" class="text-xs text-gray-500">
+        La nota final es única por estudiante y se guarda para todo el curso.
       </p>
     </header>
 
@@ -17,7 +17,7 @@
 
     <template v-else>
       <div v-if="readOnly" class="rounded-xl border border-yellow-200 bg-yellow-50 px-3 py-2 text-sm text-yellow-800">
-        Este grupo es de solo lectura. Puedes revisar sus notas, pero no registrarlas.
+        Este curso está configurado como lectura. Puedes revisar las notas registradas.
       </div>
 
       <div v-if="!rubric && !rubricLoading" class="rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-800">
@@ -75,12 +75,13 @@
 
         <div class="rounded-2xl border border-gray-100 bg-gray-50 p-4 flex flex-col gap-2">
           <div class="flex items-center justify-between">
-            <p class="text-sm font-semibold text-gray-600">Nota calculada</p>
-            <p class="text-3xl font-bold text-gray-900">{{ formattedFinalGrade }}</p>
+            <p class="text-sm font-semibold text-gray-600">Nota final (entera)</p>
+            <p class="text-3xl font-bold text-gray-900">{{ formattedRoundedFinalGrade }}</p>
           </div>
-          <p class="text-xs text-gray-500">El cálculo usa los pesos de la rúbrica actual.</p>
+          <p class="text-xs text-gray-500">Precisión decimal: {{ formattedExactGrade }}</p>
+          <p class="text-xs text-gray-400">El cálculo usa los pesos de la rúbrica actual y se redondea hacia arriba.</p>
           <p class="text-xs text-gray-400" v-if="student.finalGrade != null">
-            Nota registrada actualmente: <span class="font-semibold text-gray-600">{{ Number(student.finalGrade).toFixed(2) }}</span>
+            Nota registrada actualmente: <span class="font-semibold text-gray-600">{{ registeredFinalGradeLabel }}</span>
           </p>
         </div>
 
@@ -221,11 +222,32 @@ const weightedAverage = (values: number[], weights: number[]) => {
   return total
 }
 
-const formattedFinalGrade = computed(() => {
+const roundedFinalGrade = computed(() => {
+  if (calculatedFinalGrade.value == null) {
+    return null
+  }
+  return Math.ceil(calculatedFinalGrade.value)
+})
+
+const formattedRoundedFinalGrade = computed(() => {
+  if (roundedFinalGrade.value == null) {
+    return '--'
+  }
+  return roundedFinalGrade.value.toString()
+})
+
+const formattedExactGrade = computed(() => {
   if (calculatedFinalGrade.value == null) {
     return '--'
   }
   return calculatedFinalGrade.value.toFixed(2)
+})
+
+const registeredFinalGradeLabel = computed(() => {
+  if (!props.student || props.student.finalGrade == null) {
+    return '--'
+  }
+  return Math.ceil(Number(props.student.finalGrade)).toString()
 })
 
 const handleSubmit = (status: 'SUBMITTED' | 'DRAFT') => {

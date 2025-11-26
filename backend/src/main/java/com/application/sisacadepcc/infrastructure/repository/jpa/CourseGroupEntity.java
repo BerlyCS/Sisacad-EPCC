@@ -44,6 +44,9 @@ public class CourseGroupEntity {
     @OneToMany(mappedBy = "courseGroup", fetch = FetchType.LAZY)
     private List<EnrollmentEntity> enrollments = new ArrayList<>();
 
+    @OneToMany(mappedBy = "courseGroup", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<CourseGroupExamsPdfEntity> examPdfs = new ArrayList<>();
+
     public Long getId() {
         return id;
     }
@@ -122,5 +125,13 @@ public class CourseGroupEntity {
 
     public void setEnrollments(List<EnrollmentEntity> enrollments) {
         this.enrollments = enrollments;
+    }
+
+    public List<CourseGroupExamsPdfEntity> getExamPdfs() {
+        return examPdfs;
+    }
+
+    public void setExamPdfs(List<CourseGroupExamsPdfEntity> examPdfs) {
+        this.examPdfs = examPdfs;
     }
 }

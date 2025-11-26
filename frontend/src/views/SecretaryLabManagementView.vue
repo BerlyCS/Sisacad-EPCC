@@ -391,7 +391,7 @@ const normalizeClassroomKey = (value: string) => {
   if (!value) {
     return ''
   }
-  let normalized = value
+  const normalized = value
     .normalize('NFD')
     .replace(/[^\p{ASCII}]/gu, '')
     .toUpperCase()

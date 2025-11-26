@@ -3,7 +3,6 @@
     <!-- Header -->
     <div class="bg-slate-50 px-6 py-4 border-b border-slate-200">
       <h3 class="text-lg font-semibold text-slate-800">Horario Semanal</h3>
-      <p class="text-sm text-slate-600 mt-1">Visualiza tu horario en formato de tabla profesional</p>
     </div>
 
     <!-- Loading State -->
@@ -86,8 +85,24 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
-import type { StudentScheduleEntry, TimeSlot } from '@/services/studentScheduleService'
+
+type ScheduleDay = 'LUNES' | 'MARTES' | 'MIERCOLES' | 'JUEVES' | 'VIERNES'
+
+interface ScheduleEntry {
+  courseId?: number | null
+  courseCode?: number | null
+  courseName: string
+  courseType?: string
+  dayOfWeek: string
+  startTime: string
+  endTime: string
+  classroomName?: string
+}
+
+interface TimeSlot {
+  startTime: string
+  endTime: string
+}
 
 const CLASS_TYPE_LABEL: Record<string, string> = {
   THEORY: 'Teoría',
@@ -95,9 +110,7 @@ const CLASS_TYPE_LABEL: Record<string, string> = {
   PRACTICE: 'Práctica'
 }
 
-type DayKey = 'LUNES' | 'MARTES' | 'MIERCOLES' | 'JUEVES' | 'VIERNES'
-
-const weekDays: { key: DayKey; label: string }[] = [
+const weekDays: { key: ScheduleDay; label: string }[] = [
   { key: 'LUNES', label: 'Lunes' },
   { key: 'MARTES', label: 'Martes' },
   { key: 'MIERCOLES', label: 'Miércoles' },
@@ -106,7 +119,7 @@ const weekDays: { key: DayKey; label: string }[] = [
 ]
 
 const props = defineProps<{
-  schedule: StudentScheduleEntry[]
+  schedule: ScheduleEntry[]
   timeSlots: TimeSlot[]
   loading: boolean
   error: string
@@ -129,15 +142,20 @@ const getCourseTypeLabel = (type?: string): string => {
   return CLASS_TYPE_LABEL[type.toUpperCase()] || type
 }
 
-const getCourse = (slot: TimeSlot, day: DayKey): StudentScheduleEntry | undefined => {
+const normalizeDay = (value: string): string =>
+  value
+    ? value.toUpperCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+    : ''
+
+const getCourse = (slot: TimeSlot, day: ScheduleDay): ScheduleEntry | undefined => {
   return props.schedule.find(entry => 
-    entry.dayOfWeek.toUpperCase() === day &&
+    normalizeDay(entry.dayOfWeek) === day &&
     entry.startTime === slot.startTime &&
     entry.endTime === slot.endTime
   )
 }
 
-const getCellClasses = (slot: TimeSlot, day: DayKey): string => {
+const getCellClasses = (slot: TimeSlot, day: ScheduleDay): string => {
   const hasCourse = !!getCourse(slot, day)
   return hasCourse 
     ? 'bg-slate-100 hover:bg-slate-200 transition-colors cursor-pointer' 

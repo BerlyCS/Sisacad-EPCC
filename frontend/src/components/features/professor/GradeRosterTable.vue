@@ -3,7 +3,7 @@
     <header class="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
       <div>
         <p class="text-sm font-semibold text-blue-500 uppercase tracking-wide">Listado de estudiantes</p>
-        <p class="text-xs text-gray-500">Hasta 150 estudiantes por grupo.</p>
+        <p class="text-xs text-gray-500">Cada estudiante tiene una única calificación final.</p>
       </div>
       <input
         v-model="query"
@@ -22,7 +22,6 @@
         <thead class="bg-gray-50 text-gray-500">
           <tr>
             <th class="px-3 py-2 text-left font-medium">Estudiante</th>
-            <th class="px-3 py-2 text-left font-medium">Grupo</th>
             <th class="px-3 py-2 text-left font-medium">Estado</th>
             <th class="px-3 py-2 text-right font-medium">Nota final</th>
           </tr>
@@ -37,12 +36,6 @@
             <td class="px-3 py-2">
               <p class="font-semibold text-gray-900">{{ student.fullName }}</p>
               <p class="text-xs text-gray-500">{{ student.studentCui || student.studentUserId }}</p>
-            </td>
-            <td class="px-3 py-2 text-gray-600">
-              <span class="font-semibold">{{ student.groupLetter }}</span>
-              <span class="ml-2 text-xs uppercase tracking-wide" :class="student.canGrade ? 'text-green-600' : 'text-yellow-600'">
-                {{ student.canGrade ? 'Teoría' : 'Lab' }}
-              </span>
             </td>
             <td class="px-3 py-2">
               <span :class="statusClass(student.submissionStatus)">{{ formatStatus(student.submissionStatus) }}</span>
@@ -87,7 +80,7 @@ const filteredStudents = computed(() => {
   })
 })
 
-const rowKey = (student: CourseRosterEntry) => `${student.courseId}-${student.studentUserId}`
+const rowKey = (student: CourseRosterEntry) => `${student.groupId}-${student.studentUserId}`
 
 const select = (student: CourseRosterEntry) => {
   emit('select', student)
@@ -131,6 +124,6 @@ const formatGrade = (grade: number | null | undefined) => {
   if (grade == null || Number.isNaN(grade)) {
     return '--'
   }
-  return Number(grade).toFixed(2)
+  return Math.ceil(Number(grade)).toString()
 }
 </script>

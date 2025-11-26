@@ -83,15 +83,22 @@ const formatGrade = (value?: number): string => {
   return value.toFixed(1)
 }
 
+const roundedFinalGrade = computed(() => {
+  if (props.grade.finalGrade == null) {
+    return null
+  }
+  return Math.ceil(props.grade.finalGrade)
+})
+
 const finalGradeLabel = computed(() => {
-  return props.grade.finalGrade != null ? props.grade.finalGrade.toFixed(2) : '--'
+  return roundedFinalGrade.value != null ? roundedFinalGrade.value.toString() : '--'
 })
 
 const finalGradeClass = computed(() => {
-  if (props.grade.finalGrade == null) {
+  if (roundedFinalGrade.value == null) {
     return 'text-gray-400'
   }
-  return props.grade.finalGrade >= 10.5 ? 'text-green-600' : 'text-red-500'
+  return roundedFinalGrade.value >= 11 ? 'text-green-600' : 'text-red-500'
 })
 
 const continuousBreakdown = computed(() => buildBreakdown(props.grade.continuousGrades, props.grade.continuousWeights, 'Continuo'))

@@ -1,6 +1,7 @@
 package com.application.sisacadepcc.domain.model;
 
 import com.application.sisacadepcc.domain.model.valueobject.CourseType;
+import com.application.sisacadepcc.domain.model.valueobject.ExamStatisticType;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -20,10 +21,12 @@ public class CourseGroup {
     private Long courseId;
     private List<CourseSchedule> courseSchedules;
     private List<Enrollment> enrollments;
+    private List<CourseGroupExamsPdf> examPdfs;
 
     public CourseGroup() {
         this.courseSchedules = new ArrayList<>();
         this.enrollments = new ArrayList<>();
+        this.examPdfs = new ArrayList<>();
     }
 
     public CourseGroup(String letter, CourseType type, int maxCapacity, int availableCapacity, Course course) {
@@ -177,6 +180,52 @@ public class CourseGroup {
 
     public void removeEnrollment(Enrollment enrollment) {
         enrollments.remove(enrollment);
+    }
+
+    public List<CourseGroupExamsPdf> getExamPdfs() {
+        return Collections.unmodifiableList(examPdfs);
+    }
+
+    public void setExamPdfs(List<CourseGroupExamsPdf> examPdfs) {
+        if (examPdfs == null) {
+            this.examPdfs = new ArrayList<>();
+            return;
+        }
+        this.examPdfs = new ArrayList<>(examPdfs);
+    }
+
+    public CourseGroupExamsPdf findExamPdf(int examNumber, ExamStatisticType summaryType) {
+        if (examPdfs == null || summaryType == null) {
+            return null;
+        }
+        return examPdfs.stream()
+                .filter(summary -> summary.getExamNumber() == examNumber && summary.getSummaryType() == summaryType)
+                .findFirst()
+                .orElse(null);
+    }
+
+    public void upsertExamPdf(CourseGroupExamsPdf summary) {
+        if (summary == null) {
+            return;
+        }
+        for (int i = 0; i < examPdfs.size(); i++) {
+            CourseGroupExamsPdf existing = examPdfs.get(i);
+            boolean sameIdentity = (summary.getId() != null && Objects.equals(summary.getId(), existing.getId()))
+                    || (existing.getSummaryType() == summary.getSummaryType()
+                    && existing.getExamNumber() == summary.getExamNumber());
+            if (sameIdentity) {
+                examPdfs.set(i, summary);
+                return;
+            }
+        }
+        examPdfs.add(summary);
+    }
+
+    public void removeExamPdf(Long summaryId) {
+        if (summaryId == null) {
+            return;
+        }
+        examPdfs.removeIf(summary -> Objects.equals(summary.getId(), summaryId));
     }
 
     @Override

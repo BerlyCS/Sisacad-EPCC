@@ -10,16 +10,26 @@
         :courses="courses"
         :loading="coursesLoading"
         :error="coursesError || ''"
+        description="Solo se mostrarán los cursos teóricos donde estás asignado para calificar."
         @select="handleSelectCourse"
         @retry="loadCourses"
       />
+
+      <p
+        v-if="showTheoryRestrictionMessage"
+        class="rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900"
+      >
+        Solo los profesores asignados a grupos teóricos pueden registrar calificaciones en esta vista. Si no ves cursos
+        disponibles, solicita al coordinador académico que te asigne un grupo teórico.
+      </p>
 
       <section v-if="selectedCourse" class="space-y-4">
         <div class="rounded-2xl border border-blue-100 bg-blue-50 px-4 py-3 flex flex-col gap-1 md:flex-row md:items-center md:justify-between">
           <div>
             <p class="text-xs font-semibold text-blue-600 uppercase tracking-wide">Curso activo</p>
             <p class="text-lg font-semibold text-gray-900">{{ selectedCourse.courseName }} ({{ selectedCourse.courseCode }})</p>
-            <p class="text-sm text-gray-600">Gestiona hasta {{ rosterEntries.length }} estudiantes en los grupos seleccionados.</p>
+            <p class="text-sm text-gray-600">Gestiona notas únicas para {{ rosterEntries.length }} estudiantes matriculados.</p>
+            <p class="text-xs text-gray-500">Las calificaciones calculadas se redondean hacia arriba para alinearse con el sistema institucional.</p>
           </div>
           <div class="flex gap-2">
             <button
@@ -136,6 +146,19 @@ const {
 const hasAttemptedInitialLoad = ref(false)
 const rolesWithGradeAccess = new Set(['PROFESSOR', 'ADMIN'])
 const statsDrawerOpen = ref(false)
+const resolvedUserRole = computed(() => {
+  const role = authStore.userRole
+  if (typeof role === 'string') {
+    return role
+  }
+  if (role && typeof role === 'object' && 'value' in role) {
+    return (role as { value?: string }).value ?? ''
+  }
+  return ''
+})
+const showTheoryRestrictionMessage = computed(() => {
+  return resolvedUserRole.value === 'PROFESSOR' && !coursesLoading.value && !coursesError.value && courses.value.length === 0
+})
 
 const canLoadProfessorCourses = computed(() => {
   if (!authStore.isAuthenticated) {
@@ -198,7 +221,7 @@ const selectedStudentKey = computed(() => {
   if (!selectedRosterStudent.value) {
     return null
   }
-  return `${selectedRosterStudent.value.courseId}-${selectedRosterStudent.value.studentUserId}`
+  return `${selectedRosterStudent.value.groupId}-${selectedRosterStudent.value.studentUserId}`
 })
 
 const isReadonlyPanel = computed(() => {
@@ -214,7 +237,7 @@ const handleSubmitGrade = async (payload: { continuousGrades: number[]; examGrad
   }
   await submitGrade({
     studentUserId: selectedRosterStudent.value.studentUserId,
-    groupId: selectedRosterStudent.value.courseId,
+    groupId: selectedRosterStudent.value.groupId,
     continuousGrades: payload.continuousGrades,
     examGrades: payload.examGrades,
     status: payload.status

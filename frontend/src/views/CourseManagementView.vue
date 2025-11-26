@@ -44,7 +44,6 @@
                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Nombre</th>
                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Créditos</th>
                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase"># Estudiantes</th>
-                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Docentes asignados</th>
                 <th v-if="canAssignProfessors" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Acciones</th>
               </tr>
             </thead>
@@ -57,18 +56,6 @@
                 </td>
                 <td class="px-6 py-4 text-sm text-gray-700">
                   {{ course.enrolledStudentIDs?.length || 0 }}
-                </td>
-                <td class="px-6 py-4 text-sm text-gray-700">
-                  <div class="flex flex-wrap gap-2">
-                    <span
-                      v-for="professorId in course.teacherIDs"
-                      :key="`${course.courseId}-${professorId}`"
-                      class="inline-flex items-center gap-1 rounded-full bg-blue-50 px-3 py-1 text-xs font-medium text-blue-700"
-                    >
-                      {{ resolveProfessorName(professorId) }}
-                    </span>
-                    <span v-if="(course.teacherIDs?.length || 0) === 0" class="text-xs text-gray-400">Sin docentes asignados</span>
-                  </div>
                 </td>
                 <td v-if="canAssignProfessors" class="px-6 py-4 text-sm">
                   <div class="flex flex-wrap gap-2">
@@ -404,7 +391,7 @@
               >
                 <p class="text-xs uppercase tracking-wide text-gray-500">Horas {{ courseTypeLabels[type] }}</p>
                 <p class="text-2xl font-semibold text-gray-800">
-                  {{ courseHourSummary[type] || 0 }} h
+                  {{ courseHourSummary[type] || 0 }}
                 </p>
               </div>
             </div>
@@ -736,14 +723,6 @@ const professorFullName = (professor: Professor) => {
     .join(' ')
 }
 
-const resolveProfessorName = (professorId: number) => {
-  const professor = professorDirectory.value.get(professorId)
-  if (!professor) {
-    return `Docente #${professorId}`
-  }
-  return professorFullName(professor)
-}
-
 const suggestedGroupLetter = computed(() => {
   const usedLetters = new Set(
     courseGroups.value
@@ -855,7 +834,7 @@ const validScheduleSlots = computed(() =>
 const plannedBlocks = computed(() => validScheduleSlots.value.length)
 const plannedMinutes = computed(() => plannedBlocks.value * scheduleBlockMinutes)
 const plannedHoursDisplay = computed(() => (plannedMinutes.value / 60).toFixed(2))
-const remainingMinutes = computed(() => Math.max(activeTypeHours.value * 60 - plannedMinutes.value, 0))
+const remainingMinutes = computed(() => Math.max(activeTypeHours.value * 50 - plannedMinutes.value, 0))
 const remainingBlocks = computed(() => (remainingMinutes.value <= 0 ? 0 : Math.ceil(remainingMinutes.value / scheduleBlockMinutes)))
 
 const openAssignmentModal = async (courseId: number) => {

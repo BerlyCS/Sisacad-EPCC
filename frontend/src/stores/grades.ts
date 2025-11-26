@@ -1,4 +1,4 @@
-import { computed, ref } from 'vue'
+import { computed, ref, type ComputedRef } from 'vue'
 import { defineStore } from 'pinia'
 import type {
   CourseGradeStats,
@@ -159,6 +159,18 @@ export const useGradeStore = defineStore('grades', () => {
     statsByCourse.value = nextStats
   }
 
+  const resolveUserRole = (): string => {
+    const roleSource = authStore.userRole as string | ComputedRef<string>
+    if (typeof roleSource === 'string') {
+      return roleSource
+    }
+    if (roleSource && typeof roleSource === 'object' && 'value' in roleSource) {
+      const resolved = roleSource.value
+      return typeof resolved === 'string' ? resolved : ''
+    }
+    return ''
+  }
+
   const ensureSelectionConsistency = () => {
     if (!selectedCourseCode.value) {
       return
@@ -179,7 +191,11 @@ export const useGradeStore = defineStore('grades', () => {
     professorCoursesError.value = ''
 
     try {
-      professorCourses.value = await gradeService.fetchProfessorCourseSummaries()
+      const fetched = await gradeService.fetchProfessorCourseSummaries()
+      const role = resolveUserRole()
+      professorCourses.value = role === 'PROFESSOR'
+        ? fetched.filter(course => course.courseType === 'THEORY')
+        : fetched
     } catch (error) {
       console.error('Error while loading professor courses', error)
       professorCoursesError.value = error instanceof Error ? error.message : 'No se pudieron cargar los cursos asignados'
@@ -232,17 +248,25 @@ export const useGradeStore = defineStore('grades', () => {
     courseGroupsLoading.value = true
     courseGroupsError.value = ''
     try {
-      courseGroups.value = await gradeService.fetchCourseGroups(courseId)
+      const fetchedGroups = await gradeService.fetchCourseGroups(courseId)
+      const role = resolveUserRole()
+      const filteredGroups = role === 'PROFESSOR'
+        ? fetchedGroups.filter(group => group.courseType === 'THEORY' && group.canGrade)
+        : fetchedGroups
+
+      if (role === 'PROFESSOR' && fetchedGroups.length && !filteredGroups.length) {
+        courseGroupsError.value = 'Este curso no tiene grupos teóricos asignados para tus calificaciones.'
+      }
+
+      courseGroups.value = filteredGroups
       const sanitizedSelection = selectedGroupIds.value.filter(groupId =>
-        courseGroups.value.some(group => group.courseId === groupId)
+        courseGroups.value.some(group => group.groupId === groupId)
       )
       if (sanitizedSelection.length) {
         selectedGroupIds.value = sanitizedSelection
       } else if (courseGroups.value.length) {
-        const preferred = courseGroups.value.find(group => group.canGrade) ??
-          courseGroups.value.find(group => group.courseId === courseId) ??
-          courseGroups.value[0]
-        selectedGroupIds.value = preferred ? [preferred.courseId] : []
+        const preferred = courseGroups.value.find(group => group.canGrade) ?? courseGroups.value[0]
+        selectedGroupIds.value = preferred ? [preferred.groupId] : []
       } else {
         selectedGroupIds.value = []
       }
@@ -291,7 +315,7 @@ export const useGradeStore = defineStore('grades', () => {
       if (selectedRosterStudent.value) {
         const refreshed = response.students.find(
           entry => entry.studentUserId === selectedRosterStudent.value?.studentUserId &&
-            entry.courseId === selectedRosterStudent.value?.courseId
+            entry.groupId === selectedRosterStudent.value?.groupId
         )
         selectedRosterStudent.value = refreshed ?? (response.students[0] ?? null)
       } else if (response.students.length) {
@@ -358,7 +382,7 @@ export const useGradeStore = defineStore('grades', () => {
       )
 
       rosterEntries.value = rosterEntries.value.map(entry => {
-        if (entry.studentUserId === response.studentUserId && entry.courseId === payload.groupId) {
+        if (entry.studentUserId === response.studentUserId && entry.groupId === response.groupId) {
           const updated: CourseRosterEntry = {
             ...entry,
             continuousGrades: response.continuousGrades,
@@ -367,7 +391,7 @@ export const useGradeStore = defineStore('grades', () => {
             submissionStatus: response.status
           }
           if (selectedRosterStudent.value?.studentUserId === updated.studentUserId &&
-            selectedRosterStudent.value?.courseId === updated.courseId) {
+            selectedRosterStudent.value?.groupId === updated.groupId) {
             selectedRosterStudent.value = updated
           }
           return updated

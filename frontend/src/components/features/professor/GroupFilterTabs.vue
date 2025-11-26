@@ -15,15 +15,16 @@
     <div v-else class="flex flex-wrap gap-3">
       <button
         v-for="group in groups"
-        :key="group.courseId"
+        :key="group.groupId"
         type="button"
-        :class="groupButtonClass(group.courseId)"
-        @click="toggleGroup(group.courseId)"
+        :class="groupButtonClass(group.groupId)"
+        @click="toggleGroup(group.groupId)"
       >
         <div class="flex items-center justify-between w-full">
           <div>
             <p class="text-sm font-semibold text-gray-900">Grupo {{ group.groupLetter }}</p>
             <p class="text-xs text-gray-500">{{ group.studentCount }}/{{ group.maxCapacity }} estudiantes</p>
+            <p class="text-[11px] text-gray-400 mt-0.5">{{ resolveCourseTypeLabel(group.courseType) }}</p>
           </div>
           <span
             v-if="!group.canGrade"
@@ -57,7 +58,7 @@ const toggleGroup = (groupId: number) => {
     nextSelection = props.selectedIds.filter(id => id !== groupId)
     if (!nextSelection.length && props.groups.length) {
       const fallback = props.groups.find(group => group.canGrade) ?? props.groups[0]
-      nextSelection = fallback ? [fallback.courseId] : []
+      nextSelection = fallback ? [fallback.groupId] : []
     }
   } else {
     nextSelection = [...props.selectedIds, groupId]
@@ -73,5 +74,18 @@ const groupButtonClass = (groupId: number) => {
       ? 'border-blue-500 bg-blue-50 shadow-sm'
       : 'border-gray-200 hover:border-blue-300 hover:bg-gray-50'
   ]
+}
+
+const COURSE_TYPE_LABEL: Record<string, string> = {
+  THEORY: 'Teoría',
+  PRACTICE: 'Práctica',
+  LAB: 'Laboratorio'
+}
+
+const resolveCourseTypeLabel = (type?: string) => {
+  if (!type) {
+    return COURSE_TYPE_LABEL.THEORY
+  }
+  return COURSE_TYPE_LABEL[type.toUpperCase()] ?? COURSE_TYPE_LABEL.THEORY
 }
 </script>

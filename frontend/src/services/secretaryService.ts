@@ -13,7 +13,7 @@ export interface Secretary {
 export interface EnrollmentPayload {
   studentId?: number
   studentCui?: string
-  courseId: number
+  courseGroupId: number
 }
 
 export interface EnrollmentResponse {
@@ -50,8 +50,8 @@ export const useSecretaryService = () => {
   }
 
   const enrollStudentInCourse = async (payload: EnrollmentPayload): Promise<EnrollmentResponse> => {
-    if (!payload.courseId) {
-      throw new Error('Debe seleccionar un curso')
+    if (!payload.courseGroupId) {
+      throw new Error('Debe seleccionar un grupo de curso')
     }
 
     const response = await fetch(`${API_BASE_URL}/secretary/enrollments`, {
