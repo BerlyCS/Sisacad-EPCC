@@ -48,6 +48,16 @@ public class AttendanceController {
         return service.getAll();
     }
 
+    @GetMapping("/history")
+    public List<ProfessorAttendance> getHistory(
+            @RequestParam(required = false) Long professorId,
+            @RequestParam(required = false) Long courseId,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate
+    ) {
+        return service.getHistory(professorId, courseId, startDate, endDate);
+    }
+
     @GetMapping("/{id}")
     public ResponseEntity<ProfessorAttendance> get(@PathVariable Long id) {
         ProfessorAttendance attendance = service.getById(id);
@@ -69,7 +79,8 @@ public class AttendanceController {
                 request.timestamp,
                 request.date,
                 request.classType,
-                request.todo
+                request.todo,
+                request.scheduledStartTime
         );
         return new ResponseEntity<>(created, HttpStatus.CREATED);
     }
@@ -96,7 +107,7 @@ public class AttendanceController {
             .map(s -> StudentAttendance.pendingFor(s.studentId, s.status))
                 .collect(Collectors.toList());
 
-            ProfessorAttendance created = service.createSession(session, students);
+            ProfessorAttendance created = service.createSession(session, students, request.scheduledStartTime);
         return new ResponseEntity<>(created, HttpStatus.CREATED);
     }
 
@@ -124,6 +135,8 @@ public class AttendanceController {
         public LocalDate date;
         public ClassType classType;
         public String todo;
+        @DateTimeFormat(iso = DateTimeFormat.ISO.TIME)
+        public java.time.LocalTime scheduledStartTime;
     }
 
     public static class SessionRequest {
@@ -138,6 +151,8 @@ public class AttendanceController {
         public LocalDate date;
         public ClassType classType;
         public String todo;
+        @DateTimeFormat(iso = DateTimeFormat.ISO.TIME)
+        public java.time.LocalTime scheduledStartTime;
         public List<StudentAttendanceRequest> students;
     }
 

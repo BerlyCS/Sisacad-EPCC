@@ -61,6 +61,22 @@ public class AttendanceRepositoryImpl implements AttendanceRepository {
         return jpaRepository.findByProfessorIdAndDate(professorId, date).stream().map(this::toDomain).collect(Collectors.toList());
     }
 
+    @Override
+    public List<ProfessorAttendance> findByCourseIdAndDateBetween(Long courseId, java.time.LocalDate startDate, java.time.LocalDate endDate) {
+        return jpaRepository.findByCourseIdAndDateBetween(courseId, startDate, endDate)
+                .stream()
+                .map(this::toDomain)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<ProfessorAttendance> findByProfessorIdAndDateBetween(Long professorId, java.time.LocalDate startDate, java.time.LocalDate endDate) {
+        return jpaRepository.findByProfessorIdAndDateBetween(professorId, startDate, endDate)
+                .stream()
+                .map(this::toDomain)
+                .collect(Collectors.toList());
+    }
+
     private ProfessorAttendance toDomain(AttendanceEntity e) {
         return new ProfessorAttendance(
                 e.getAttendanceId(),

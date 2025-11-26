@@ -376,7 +376,8 @@ const handleProfessorAttendance = async () => {
       classType: classType.value,
       date: sessionDate.value,
       timestamp: new Date().toISOString(),
-      todo: professorNote.value
+      todo: professorNote.value,
+      scheduledStartTime: selectedTimeSlot.value.startTime
     })
     professorAttendanceSuccess.value = true
   } catch (error) {
@@ -410,6 +411,7 @@ const submitAttendance = async () => {
       date: sessionDate.value,
       classType: classType.value,
       todo: professorNote.value,
+      scheduledStartTime: selectedTimeSlot.value.startTime,
       students: attendanceList.value.map(student => ({
         studentId: student.studentId,
         status: student.status

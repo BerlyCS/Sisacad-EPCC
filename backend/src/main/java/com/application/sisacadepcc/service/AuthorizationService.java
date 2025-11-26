@@ -27,9 +27,9 @@ public class AuthorizationService {
     private final StudentRepository studentRepository;
 
     public AuthorizationService(AdministratorRepository administratorRepository,
-                                ProfessorRepository professorRepository,
-                                SecretaryRepository secretaryRepository,
-                                StudentRepository studentRepository) {
+            ProfessorRepository professorRepository,
+            SecretaryRepository secretaryRepository,
+            StudentRepository studentRepository) {
         this.administratorRepository = administratorRepository;
         this.professorRepository = professorRepository;
         this.secretaryRepository = secretaryRepository;
@@ -143,6 +143,14 @@ public class AuthorizationService {
 
         return extractEmail(authentication)
                 .flatMap(administratorRepository::findByInstitutionalEmail);
+    }
+
+    public Long getAuthenticatedUserId(Authentication authentication) {
+        return getAuthenticatedProfessor(authentication).map(Professor::getUserId)
+                .or(() -> getAuthenticatedStudent(authentication).map(Student::getUserId))
+                .or(() -> getAuthenticatedAdministrator(authentication).map(Administrator::getUserId))
+                .or(() -> getAuthenticatedSecretary(authentication).map(Secretary::getUserId))
+                .orElse(null);
     }
 
     private Optional<UserRole> deriveRoleFromRepositories(Authentication authentication) {

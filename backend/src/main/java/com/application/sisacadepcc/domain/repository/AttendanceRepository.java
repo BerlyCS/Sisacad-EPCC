@@ -15,4 +15,6 @@ public interface AttendanceRepository {
     List<ProfessorAttendance> findByCourseGroupId(Long courseGroupId);
     List<ProfessorAttendance> findByCourseId(Long courseId);
     List<ProfessorAttendance> findByProfessorIdAndDate(Long professorId, LocalDate date);
+    List<ProfessorAttendance> findByCourseIdAndDateBetween(Long courseId, LocalDate startDate, LocalDate endDate);
+    List<ProfessorAttendance> findByProfessorIdAndDateBetween(Long professorId, LocalDate startDate, LocalDate endDate);
 }

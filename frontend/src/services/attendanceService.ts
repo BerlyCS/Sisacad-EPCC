@@ -50,6 +50,7 @@ export interface SessionRequest {
   date?: string
   classType: ClassType
   todo: string
+  scheduledStartTime?: string
   students: StudentAttendanceRequest[]
 }
 
@@ -64,6 +65,7 @@ export interface ProfessorAttendanceRequest {
   todo?: string
   latitude?: number
   longitude?: number
+  scheduledStartTime?: string
 }
 
 const requestJson = async (url: string) => {
@@ -94,5 +96,14 @@ export const attendanceService = {
 
   async getStudentAttendance(studentId: string, courseId: number): Promise<StudentAttendanceDTO[]> {
     return requestJson(`${API_BASE_URL}/attendances/student/${encodeURIComponent(studentId)}/course/${courseId}`)
+  },
+
+  async getHistory(professorId?: number, courseId?: number, startDate?: string, endDate?: string): Promise<ProfessorAttendanceRecord[]> {
+    const params = new URLSearchParams()
+    if (professorId) params.append('professorId', String(professorId))
+    if (courseId) params.append('courseId', String(courseId))
+    if (startDate) params.append('startDate', startDate)
+    if (endDate) params.append('endDate', endDate)
+    return requestJson(`${API_BASE_URL}/attendances/history?${params.toString()}`)
   }
 }

@@ -18,6 +18,7 @@
             </div>
           </div>
           <div class="flex items-center md:justify-normal justify-between space-x-4">
+            <NotificationBell v-if="user && user.authenticated" />
             <span class="text-gray-700">Hola, {{ user && user.authenticated && user.name ? user.name : 'Usuario' }}</span>
             <button 
               v-if="user && user.authenticated"
@@ -44,6 +45,7 @@ import { computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { storeToRefs } from 'pinia'
 import { useAuthStore } from '@/stores/auth'
+import NotificationBell from '@/components/ui/NotificationBell.vue'
 
 const router = useRouter()
 const authStore = useAuthStore()

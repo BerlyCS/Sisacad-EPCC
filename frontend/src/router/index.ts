@@ -76,6 +76,18 @@ const router = createRouter({
       meta: { requiresAuth: true, allowedRoles: ['PROFESSOR', 'ADMIN'] }
     },
     {
+      path: '/professor/attendance/history',
+      name: 'professor-attendance-history',
+      component: () => import('@/views/AttendanceHistoryView.vue'),
+      meta: { requiresAuth: true, allowedRoles: ['PROFESSOR', 'ADMIN'] }
+    },
+    {
+      path: '/professor/reports',
+      name: 'professor-reports',
+      component: () => import('@/views/ReportsView.vue'),
+      meta: { requiresAuth: true, allowedRoles: ['PROFESSOR', 'ADMIN'] }
+    },
+    {
       path: '/admin/students',
       name: 'students',
       component: StudentManagementView,
