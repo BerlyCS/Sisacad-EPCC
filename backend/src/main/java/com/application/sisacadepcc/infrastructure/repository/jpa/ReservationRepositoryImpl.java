@@ -38,7 +38,6 @@ public class ReservationRepositoryImpl implements ReservationRepository {
         reservation.setReservationDate(entity.getReservationDate());
 
         reservation.setCreatedAt(entity.getCreatedAt());
-        reservation.setStatus(entity.getStatus());
 
         return reservation;
     }
@@ -68,13 +67,6 @@ public class ReservationRepositoryImpl implements ReservationRepository {
             entity.setCreatedAt(java.time.LocalDateTime.now());
         } else {
             entity.setCreatedAt(reservation.getCreatedAt());
-        }
-
-        // CORRECCIÓN: Asegurar que status nunca sea null
-        if (reservation.getStatus() == null) {
-            entity.setStatus("PENDING"); // Valor por defecto
-        } else {
-            entity.setStatus(reservation.getStatus());
         }
 
         entity.setClassroomId(reservation.getClassroomId());
@@ -121,12 +113,5 @@ public class ReservationRepositoryImpl implements ReservationRepository {
     @Override
     public void deleteById(Long id) {
         jpaRepository.deleteById(id);
-    }
-
-    @Override
-    public List<Reservation> findByStatus(String status) {
-        return jpaRepository.findByStatus(status).stream()
-                .map(this::toDomain)
-                .collect(Collectors.toList());
     }
 }

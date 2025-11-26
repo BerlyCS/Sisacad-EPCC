@@ -3,11 +3,21 @@ import type { TopicScheduleStatus } from './syllabusService'
 
 const API_BASE_URL = 'http://localhost:8080/api'
 
-export type CourseType = 'THEORY' | 'LAB'
+export type CourseType = 'THEORY' | 'LAB' | 'PRACTICE'
 
 const COURSE_TYPE_LABEL: Record<CourseType, string> = {
   THEORY: 'Teoría',
-  LAB: 'Laboratorio'
+  LAB: 'Laboratorio',
+  PRACTICE: 'Práctica'
+}
+
+export interface CourseScheduleSlotSummary {
+  scheduleId: number | null
+  dayOfWeek: string
+  startTime: string
+  endTime: string
+  classroomId: number | null
+  sequenceOrder: number | null
 }
 
 export interface Course {
@@ -33,6 +43,7 @@ export interface CourseGroupSummary {
   maxCapacity: number | null
   availableCapacity: number | null
   teacherId: number | null
+  scheduleSlots?: CourseScheduleSlotSummary[]
 }
 
 export interface CourseStudentSummary {
@@ -100,6 +111,26 @@ const resolveCourseTypeLabel = (type?: CourseType | string | null): string => {
   return COURSE_TYPE_LABEL[normalized as CourseType] ?? COURSE_TYPE_LABEL.THEORY
 }
 
+export interface CourseScheduleSlotPayload {
+  dayOfWeek: string
+  startTime: string
+  endTime: string
+  classroomId: number | null
+}
+
+export interface CreateCourseGroupPayload {
+  letter: string
+  type: CourseType
+  capacity: number
+  scheduleSlots: CourseScheduleSlotPayload[]
+}
+
+export interface CourseTimeSlot {
+  startTime: string
+  endTime: string
+  label: string
+}
+
 export const useCourseService = () => {
   const courses = ref<Course[]>([])
   const loading = ref(false)
@@ -111,6 +142,9 @@ export const useCourseService = () => {
   const courseGroups = ref<CourseGroupSummary[]>([])
   const courseGroupsLoading = ref(false)
   const courseGroupsError = ref('')
+  const courseTimeSlots = ref<CourseTimeSlot[]>([])
+  const courseTimeSlotsLoading = ref(false)
+  const courseTimeSlotsError = ref('')
 
   const fetchCourses = async () => {
     loading.value = true
@@ -302,6 +336,63 @@ export const useCourseService = () => {
     return response.json()
   }
 
+  const createCourseGroup = async (courseId: number, payload: CreateCourseGroupPayload) => {
+    if (!courseId) {
+      throw new Error('Curso inválido')
+    }
+
+    const response = await fetch(`${API_BASE_URL}/courses/${courseId}/groups`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      credentials: 'include',
+      body: JSON.stringify({
+        letter: payload.letter,
+        type: payload.type,
+        capacity: payload.capacity,
+        scheduleSlots: payload.scheduleSlots
+      })
+    })
+
+    if (!response.ok) {
+      const body = await response.json().catch(() => ({}))
+      const message = body?.message || body?.error || 'No se pudo crear el grupo'
+      throw new Error(message)
+    }
+
+    return response.json()
+  }
+
+  const fetchCourseTimeSlots = async () => {
+    if (courseTimeSlotsLoading.value) return
+
+    courseTimeSlotsLoading.value = true
+    courseTimeSlotsError.value = ''
+    try {
+      const response = await fetch(`${API_BASE_URL}/courses/timeslots`, {
+        credentials: 'include'
+      })
+
+      if (!response.ok) {
+        throw new Error('Error al obtener los bloques horarios')
+      }
+
+      const data: Array<{ startTime: string; endTime: string }> = await response.json()
+      courseTimeSlots.value = data.map(slot => ({
+        startTime: slot.startTime,
+        endTime: slot.endTime,
+        label: `${slot.startTime} - ${slot.endTime}`
+      }))
+    } catch (err) {
+      courseTimeSlotsError.value = 'No se pudieron cargar los bloques horarios'
+      console.error('Error fetching course time slots:', err)
+      courseTimeSlots.value = []
+    } finally {
+      courseTimeSlotsLoading.value = false
+    }
+  }
+
   const createCourse = async (course: Omit<Course, 'courseId' | 'syllabusId'>): Promise<Course> => {
     const response = await fetch(`${API_BASE_URL}/courses`, {
       method: 'POST',
@@ -355,6 +446,11 @@ export const useCourseService = () => {
     fetchCourseDetails,
     assignProfessorToCourse,
     removeProfessorFromCourse,
-    createCourse
+    createCourse,
+    createCourseGroup,
+    courseTimeSlots,
+    courseTimeSlotsLoading,
+    courseTimeSlotsError,
+    fetchCourseTimeSlots
   }
 }

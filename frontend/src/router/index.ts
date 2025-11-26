@@ -89,13 +89,13 @@ const router = createRouter({
       path: '/classrooms',
       name: 'ClassroomList',
       component: () => import('@/views/ClassroomListView.vue'),
-      meta: { requiresAuth: true }
+      meta: { requiresAuth: true, allowedRoles: ['ADMIN', 'SECRETARY', 'PROFESSOR', 'STUDENT'] }
     },
     {
       path: '/classroom-schedule/:classroomName',
       name: 'ClassroomSchedule',
       component: () => import('@/views/ClassroomScheduleView.vue'),
-      meta: { requiresAuth: true }
+      meta: { requiresAuth: true, allowedRoles: ['ADMIN', 'SECRETARY', 'PROFESSOR', 'STUDENT'] }
     },
     {
       path: '/courses/:courseId',
@@ -107,7 +107,7 @@ const router = createRouter({
       path: '/reservation-management',
       name: 'ReservationManagement',
       component: () => import('@/views/ReservationManagementView.vue'),
-      meta: { requiresAuth: true }
+      meta: { requiresAuth: true, allowedRoles: ['ADMIN', 'SECRETARY', 'PROFESSOR'] }
     },
     {
       path: '/students/:cui/profile',

@@ -12,7 +12,6 @@ public class Reservation {
     private Schedule schedule;
     private LocalDate reservationDate; // specific date for reservation (optional)
     private LocalDateTime createdAt;
-    private String status; // PENDING, APPROVED, REJECTED
 
     public Reservation() {}
 
@@ -23,7 +22,6 @@ public class Reservation {
         this.schedule = schedule;
         this.reservationDate = reservationDate;
         this.createdAt = LocalDateTime.now();
-        this.status = "PENDING";
     }
 
     // Getters and Setters
@@ -41,6 +39,4 @@ public class Reservation {
     public void setReservationDate(LocalDate reservationDate) { this.reservationDate = reservationDate; }
     public LocalDateTime getCreatedAt() { return createdAt; }
     public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
-    public String getStatus() { return status; }
-    public void setStatus(String status) { this.status = status; }
 }

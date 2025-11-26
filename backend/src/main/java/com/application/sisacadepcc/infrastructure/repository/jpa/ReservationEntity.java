@@ -27,10 +27,7 @@ public class ReservationEntity {
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
 
-    @Column(nullable = false)
-    private String status;
-
-    @Column(name = "reservation_date")
+    @Column(name = "reservation_date", nullable = false)
     private LocalDate reservationDate;
 
     public ReservationEntity() {}
@@ -48,9 +45,6 @@ public class ReservationEntity {
     public void setPurpose(String purpose) { this.purpose = purpose; }
     public LocalDateTime getCreatedAt() { return createdAt; }
     public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
-    public String getStatus() { return status; }
-    public void setStatus(String status) { this.status = status; }
-
     public LocalDate getReservationDate() { return reservationDate; }
     public void setReservationDate(LocalDate reservationDate) { this.reservationDate = reservationDate; }
 }

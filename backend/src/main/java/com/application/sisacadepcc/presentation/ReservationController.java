@@ -4,7 +4,6 @@ import com.application.sisacadepcc.presentation.dto.ClassroomScheduleResponse;
 import com.application.sisacadepcc.presentation.dto.CreateReservationRequest;
 import com.application.sisacadepcc.presentation.dto.ReservationAvailabilityResponse;
 import com.application.sisacadepcc.presentation.dto.ReservationResponse;
-import com.application.sisacadepcc.presentation.dto.UpdateReservationStatusRequest;
 import com.application.sisacadepcc.presentation.dto.WeeklyAvailabilityResponse;
 import com.application.sisacadepcc.domain.model.Reservation;
 import com.application.sisacadepcc.service.AuthorizationService;
@@ -19,15 +18,16 @@ import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 import java.util.List;
 import java.util.Locale;
 import java.util.stream.Collectors;
@@ -86,35 +86,26 @@ public class ReservationController {
     public ResponseEntity<ReservationResponse> createReservation(@RequestBody CreateReservationRequest request,
                                                                  Authentication authentication) {
         ensureReservationActor(authentication);
-        if (request == null || request.getSchedule() == null) {
+        if (request == null || request.getReservationDate() == null ||
+                request.getStartTime() == null || request.getEndTime() == null) {
             return ResponseEntity.badRequest().build();
         }
-        var schedule = request.getSchedule();
         try {
+            LocalDate reservationDate = LocalDate.parse(request.getReservationDate());
             Reservation reservation = reservationService.createReservation(
                     request.getClassroomName(),
                     request.getPurpose(),
-                    schedule.getDayOfWeek(),
-                    schedule.getStartTime(),
-                    schedule.getEndTime(),
+                    reservationDate,
+                    request.getStartTime(),
+                    request.getEndTime(),
                     authentication
             );
             return ResponseEntity.status(HttpStatus.CREATED).body(toResponse(reservation));
+        } catch (DateTimeParseException ex) {
+            return ResponseEntity.badRequest().build();
         } catch (IllegalArgumentException ex) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
         }
-    }
-
-    @PutMapping("/{id}/status")
-    public ResponseEntity<ReservationResponse> updateStatus(@PathVariable Long id,
-                                                            @RequestBody UpdateReservationStatusRequest request,
-                                                            Authentication authentication) {
-        ensureAdministrator(authentication);
-        if (request == null || request.getStatus() == null) {
-            return ResponseEntity.badRequest().build();
-        }
-        Reservation updated = reservationService.updateReservationStatus(id, request.getStatus().toUpperCase(), authentication);
-        return ResponseEntity.ok(toResponse(updated));
     }
 
     @DeleteMapping("/{id}")
@@ -168,16 +159,19 @@ public class ReservationController {
 
     @GetMapping("/availability/{classroomName}")
     public ResponseEntity<ReservationAvailabilityResponse> checkAvailability(@PathVariable String classroomName,
-                                                                             @RequestParam String dayOfWeek,
+                                                                             @RequestParam String reservationDate,
                                                                              @RequestParam String startTime,
                                                                              @RequestParam String endTime,
                                                                              Authentication authentication) {
-                                            ensureReservationActor(authentication);
+        ensureReservationActor(authentication);
         try {
             LocalTime start = LocalTime.parse(startTime, TIME_FORMATTER);
             LocalTime end = LocalTime.parse(endTime, TIME_FORMATTER);
-            boolean available = reservationService.isTimeSlotAvailable(classroomName, dayOfWeek, start, end);
+            LocalDate date = LocalDate.parse(reservationDate);
+            boolean available = reservationService.isTimeSlotAvailable(classroomName, date, start, end);
             return ResponseEntity.ok(new ReservationAvailabilityResponse(available));
+        } catch (DateTimeParseException ex) {
+            return ResponseEntity.badRequest().build();
         } catch (IllegalArgumentException ex) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
         }
@@ -187,7 +181,6 @@ public class ReservationController {
         ReservationResponse response = new ReservationResponse();
         response.setId(reservation.getId());
         response.setPurpose(reservation.getPurpose());
-        response.setStatus(reservation.getStatus());
         response.setCreatedAt(reservation.getCreatedAt());
         response.setReservationDate(reservation.getReservationDate());
         response.setClassroomName(reservationService.getClassroomDisplayName(reservation.getClassroomId()));
@@ -209,12 +202,6 @@ public class ReservationController {
 
     private void ensureAdministratorOrSecretary(Authentication authentication) {
         if (!authorizationService.hasAnyRole(authentication, UserRole.ADMIN, UserRole.SECRETARY)) {
-            throw new SecurityException("No autorizado");
-        }
-    }
-
-    private void ensureAdministrator(Authentication authentication) {
-        if (!authorizationService.isAdministrator(authentication)) {
             throw new SecurityException("No autorizado");
         }
     }

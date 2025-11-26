@@ -17,6 +17,7 @@ import com.application.sisacadepcc.domain.repository.CourseRepository;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -89,22 +90,33 @@ public class ReservationService {
 
     public Reservation createReservation(String classroomName,
                                          String purpose,
-                                         String dayOfWeek,
+                                         LocalDate reservationDate,
                                          String startTime,
                                          String endTime,
                                          Authentication authentication) {
+        if (reservationDate == null) {
+            throw new IllegalArgumentException("La fecha de la reserva es obligatoria");
+        }
+
         Classroom classroom = requireClassroom(classroomName);
-        Schedule schedule = createReservationSchedule(dayOfWeek, startTime, endTime);
-        Reservation reservation = new Reservation(classroom.getClassroomID(), null, purpose, schedule, null);
+        java.time.LocalTime start = parseTime(startTime);
+        java.time.LocalTime end = parseTime(endTime);
+
+        if (!end.isAfter(start)) {
+            throw new IllegalArgumentException("La hora de fin debe ser posterior a la hora de inicio");
+        }
+
+        Schedule schedule = createReservationSchedule(reservationDate, start, end);
+        Reservation reservation = new Reservation(classroom.getClassroomID(), null, purpose, schedule, reservationDate);
         return persistReservation(reservation, authentication);
     }
 
     public boolean isTimeSlotAvailable(String classroomName,
-                                       String dayOfWeek,
+                                       LocalDate reservationDate,
                                        LocalTime startTime,
                                        LocalTime endTime) {
         Classroom classroom = requireClassroom(classroomName);
-        return isTimeSlotAvailable(classroom.getClassroomID(), dayOfWeek, startTime, endTime);
+        return isTimeSlotAvailable(classroom.getClassroomID(), reservationDate, startTime, endTime);
     }
 
     public List<CourseScheduleEntry> getCourseScheduleEntries(String classroomName) {
@@ -143,25 +155,18 @@ public class ReservationService {
             throw new IllegalArgumentException("El aula no está disponible en este horario");
         }
 
+        if (reservation.getReservationDate() == null) {
+            throw new IllegalArgumentException("Las reservas deben incluir una fecha específica");
+        }
+
+        if (reservation.getSchedule() == null) {
+            throw new IllegalArgumentException("Las reservas deben incluir un rango horario");
+        }
+
         Long userId = getUserId(authentication);
         reservation.setUserId(userId);
 
         return reservationRepository.save(reservation);
-    }
-
-    public Reservation updateReservationStatus(Long id, String status, Authentication authentication) {
-        // Solo administradores pueden cambiar el estado
-        if (!authorizationService.isAdministrator(authentication)) {
-            throw new SecurityException("Solo los administradores pueden cambiar el estado de las reservas");
-        }
-
-        Optional<Reservation> reservationOpt = reservationRepository.findById(id);
-        if (reservationOpt.isPresent()) {
-            Reservation reservation = reservationOpt.get();
-            reservation.setStatus(status);
-            return reservationRepository.save(reservation);
-        }
-        throw new IllegalArgumentException("Reserva no encontrada");
     }
 
     public void deleteReservation(Long id, Authentication authentication) {
@@ -180,15 +185,23 @@ public class ReservationService {
         }
     }
 
-    private boolean isTimeSlotAvailable(Long classroomId, String dayOfWeek, LocalTime startTime, LocalTime endTime) {
-        // Verificar en las reservas existentes
+    private boolean isTimeSlotAvailable(Long classroomId, LocalDate reservationDate, LocalTime startTime, LocalTime endTime) {
+        if (classroomId == null || reservationDate == null) {
+            return false;
+        }
+        if (startTime == null || endTime == null || !endTime.isAfter(startTime)) {
+            throw new IllegalArgumentException("Horario inválido para la reserva");
+        }
         List<Reservation> reservations = getReservationsByClassroomId(classroomId);
-        return reservations.stream().noneMatch(reservation -> {
-            if ("REJECTED".equals(reservation.getStatus())) return false;
-            String reservationDay = reservation.getReservationDate() != null ? dayOfWeekInSpanish(reservation.getReservationDate()) : (reservation.getSchedule() != null ? reservation.getSchedule().getDayOfWeek() : null);
-            if (reservationDay == null || !reservationDay.equalsIgnoreCase(dayOfWeek)) return false;
-            LocalTime rs = reservation.getSchedule().getStartTime();
-            LocalTime re = reservation.getSchedule().getEndTime();
+        return reservations.stream().noneMatch(existing -> {
+            if (existing.getReservationDate() == null || existing.getSchedule() == null) {
+                return false;
+            }
+            if (!existing.getReservationDate().equals(reservationDate)) {
+                return false;
+            }
+            LocalTime rs = existing.getSchedule().getStartTime();
+            LocalTime re = existing.getSchedule().getEndTime();
             return rs.isBefore(endTime) && re.isAfter(startTime);
         });
     }
@@ -229,10 +242,7 @@ public class ReservationService {
 
     private boolean hasExistingReservation(Long classroomId, Reservation requested) {
         List<Reservation> reservations = getReservationsByClassroomId(classroomId);
-        return reservations.stream().anyMatch(existing -> {
-            if ("REJECTED".equals(existing.getStatus())) return false;
-            return reservationOverlaps(existing, requested);
-        });
+        return reservations.stream().anyMatch(existing -> reservationOverlaps(existing, requested));
     }
 
     private boolean isClassroomAvailable(Long classroomId, Reservation requested) {
@@ -244,14 +254,10 @@ public class ReservationService {
     }
     private boolean overlaps(Schedule existing, Reservation requested) {
         // Determine requested day string (use reservationDate if present to compute day)
-        String requestedDay;
-        if (requested.getReservationDate() != null) {
-            requestedDay = dayOfWeekInSpanish(requested.getReservationDate());
-        } else if (requested.getSchedule() != null) {
-            requestedDay = requested.getSchedule().getDayOfWeek();
-        } else {
+        if (requested.getReservationDate() == null || requested.getSchedule() == null) {
             return false;
         }
+        String requestedDay = dayOfWeekInSpanish(requested.getReservationDate());
 
         String existingDay = existing.getDayOfWeek();
         if (existingDay == null || requestedDay == null || !existingDay.equalsIgnoreCase(requestedDay)) {
@@ -268,9 +274,13 @@ public class ReservationService {
 
     private boolean reservationOverlaps(Reservation existing, Reservation requested) {
         // Determine day strings
-        String existingDay = existing.getReservationDate() != null ? dayOfWeekInSpanish(existing.getReservationDate()) : (existing.getSchedule() != null ? existing.getSchedule().getDayOfWeek() : null);
-        String requestedDay = requested.getReservationDate() != null ? dayOfWeekInSpanish(requested.getReservationDate()) : (requested.getSchedule() != null ? requested.getSchedule().getDayOfWeek() : null);
-        if (existingDay == null || requestedDay == null || !existingDay.equalsIgnoreCase(requestedDay)) {
+        if (existing.getReservationDate() == null || requested.getReservationDate() == null) {
+            return false;
+        }
+        if (!existing.getReservationDate().equals(requested.getReservationDate())) {
+            return false;
+        }
+        if (existing.getSchedule() == null || requested.getSchedule() == null) {
             return false;
         }
         LocalTime existingStart = existing.getSchedule().getStartTime();
@@ -280,31 +290,17 @@ public class ReservationService {
         return existingStart.isBefore(requestedEnd) && existingEnd.isAfter(requestedStart);
     }
 
-    // Método helper para crear Schedule for reservation from strings
-    public Schedule createReservationSchedule(String dayOfWeek, String startTime, String endTime) {
-        try {
-            Schedule s = new Schedule(dayOfWeek,
-                    LocalTime.parse(startTime, TIME_FORMATTER),
-                    LocalTime.parse(endTime, TIME_FORMATTER));
-            s.setScheduleType(ScheduleType.RESERVATION);
-            return s;
-        } catch (Exception e) {
-            throw new IllegalArgumentException("Formato de hora inválido: " + e.getMessage());
+    // Método helper para crear Schedule para reservas con fecha específica
+    public Schedule createReservationSchedule(LocalDate date, LocalTime startTime, LocalTime endTime) {
+        if (date == null) {
+            throw new IllegalArgumentException("La fecha de la reserva es obligatoria");
         }
-    }
-
-    // Método helper para crear Schedule for a specific date (reservationDate should be set on Reservation)
-    public Schedule createSpecificDateSchedule(java.time.LocalDate date, String startTime, String endTime) {
-        try {
-            String day = dayOfWeekInSpanish(date);
-            Schedule s = new Schedule(day,
-                    LocalTime.parse(startTime, TIME_FORMATTER),
-                    LocalTime.parse(endTime, TIME_FORMATTER));
-            s.setScheduleType(ScheduleType.RESERVATION);
-            return s;
-        } catch (Exception e) {
-            throw new IllegalArgumentException("Formato de hora inválido: " + e.getMessage());
+        if (startTime == null || endTime == null) {
+            throw new IllegalArgumentException("El horario de la reserva es obligatorio");
         }
+        Schedule schedule = new Schedule(dayOfWeekInSpanish(date), startTime, endTime);
+        schedule.setScheduleType(ScheduleType.RESERVATION);
+        return schedule;
     }
 
     public static class CourseScheduleEntry {
@@ -422,12 +418,11 @@ public class ReservationService {
         return idx >= 0 ? idx : Integer.MAX_VALUE;
     }
 
-    private List<List<Boolean>> buildAvailabilityMatrix(List<CourseScheduleEntry> courseEntries, List<Reservation> reservations) {
+        private List<List<Boolean>> buildAvailabilityMatrix(List<CourseScheduleEntry> courseEntries, List<Reservation> reservations) {
         Map<String, List<CourseScheduleEntry>> courseByDay = courseEntries.stream()
                 .collect(Collectors.groupingBy(entry -> normalizeDay(entry.getDayOfWeek()), LinkedHashMap::new, Collectors.toList()));
         Map<String, List<Reservation>> reservationsByDay = reservations.stream()
-                .filter(reservation -> reservation.getSchedule() != null && reservation.getStatus() != null)
-                .filter(reservation -> !"REJECTED".equalsIgnoreCase(reservation.getStatus()))
+            .filter(reservation -> reservation.getSchedule() != null)
                 .collect(Collectors.groupingBy(reservation -> normalizeDay(reservation.getSchedule().getDayOfWeek()), LinkedHashMap::new, Collectors.toList()));
 
         List<List<Boolean>> matrix = new ArrayList<>();
@@ -478,7 +473,7 @@ public class ReservationService {
         return eventStart.isBefore(slotEnd) && eventEnd.isAfter(slotStart);
     }
 
-    private String dayOfWeekInSpanish(java.time.LocalDate date) {
+    private String dayOfWeekInSpanish(LocalDate date) {
         return switch (date.getDayOfWeek()) {
             case MONDAY -> "LUNES";
             case TUESDAY -> "MARTES";

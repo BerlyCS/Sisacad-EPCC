@@ -12,8 +12,16 @@ export interface Reservation {
     startTime: string;
     endTime: string;
   };
+  reservationDate?: string;
   createdAt?: string;
-  status: string;
+}
+
+export interface CreateReservationPayload {
+  classroomName: string;
+  purpose: string;
+  reservationDate: string; // yyyy-MM-dd
+  startTime: string; // HH:mm
+  endTime: string;   // HH:mm
 }
 
 export interface ClassroomSchedule {
@@ -66,13 +74,13 @@ class ReservationService {
   }
 
   async checkAvailability(
-    classroomName: string, 
-    dayOfWeek: string, 
-    startTime: string, 
+    classroomName: string,
+    reservationDate: string,
+    startTime: string,
     endTime: string
   ): Promise<boolean> {
     const params = new URLSearchParams({
-      dayOfWeek,
+      reservationDate,
       startTime,
       endTime
     });
@@ -83,10 +91,10 @@ class ReservationService {
     return response.available;
   }
 
-  async createReservation(reservation: Omit<Reservation, 'id' | 'reservedBy' | 'createdAt'>): Promise<Reservation> {
+  async createReservation(payload: CreateReservationPayload): Promise<Reservation> {
     return this.fetchWithAuth('/reservations', {
       method: 'POST',
-      body: JSON.stringify(reservation),
+      body: JSON.stringify(payload),
     });
   }
 
@@ -96,13 +104,6 @@ class ReservationService {
 
   async getAllReservations(): Promise<Reservation[]> {
     return this.fetchWithAuth('/reservations');
-  }
-
-  async updateReservationStatus(id: number, status: string): Promise<Reservation> {
-    return this.fetchWithAuth(`/reservations/${id}/status`, {
-      method: 'PUT',
-      body: JSON.stringify({ status }),
-    });
   }
 
   async getReservationsByClassroom(classroomName: string): Promise<Reservation[]> {

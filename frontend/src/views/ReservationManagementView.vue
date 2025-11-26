@@ -1,139 +1,99 @@
-<!-- frontend/src/views/ReservationManagementView.vue -->
 <template>
   <AdminLayout>
     <div class="reservation-management-container">
-      <div class="header">
-        <h1>Gestión de Reservas</h1>
-        <p>Administra y aprueba las reservas de aulas pendientes</p>
-      </div>
-
-      <!-- Filtros -->
-      <div class="filters">
-        <div class="filter-group">
-          <label>Filtrar por estado:</label>
-          <select v-model="statusFilter" @change="loadReservations">
-            <option value="ALL">Todas</option>
-            <option value="PENDING">Pendientes</option>
-            <option value="APPROVED">Aprobadas</option>
-            <option value="REJECTED">Rechazadas</option>
-          </select>
+      <section class="header">
+        <div>
+          <h1>Reservas de aulas</h1>
+          <p>Registra y consulta reservas confirmadas al instante.</p>
         </div>
-      </div>
+      </section>
 
-      <!-- Lista de Reservas -->
-      <div class="reservations-list">
-        <div v-if="loading" class="loading">
-          <i class="fas fa-spinner fa-spin"></i>
-          Cargando reservas...
-        </div>
+      <section class="card">
+        <h2>Nueva reserva</h2>
+        <form class="form-grid" @submit.prevent="submitReservation">
+          <label>
+            Aula
+            <select v-model="form.classroomName" required>
+              <option value="" disabled>Seleccione un aula</option>
+              <option v-for="room in classrooms" :key="room" :value="room">{{ room }}</option>
+            </select>
+          </label>
 
-        <div v-else-if="reservations.length === 0" class="empty-state">
-          <i class="fas fa-calendar-times"></i>
-          <p>No hay reservas {{ statusFilter !== 'ALL' ? statusFilter.toLowerCase() : '' }}</p>
-        </div>
+          <label>
+            Fecha
+            <input v-model="form.reservationDate" type="date" required />
+          </label>
 
-        <div v-else class="reservation-cards">
-          <div 
-            v-for="reservation in reservations" 
-            :key="reservation.id"
-            class="reservation-card"
-            :class="reservation.status.toLowerCase()"
-          >
-            <div class="reservation-header">
-              <h3>{{ reservation.classroomName }}</h3>
-              <span class="status-badge" :class="reservation.status.toLowerCase()">
-                {{ getStatusText(reservation.status) }}
+          <label>
+            Inicio
+            <input v-model="form.startTime" type="time" step="60" required />
+          </label>
+
+          <label>
+            Fin
+            <input v-model="form.endTime" type="time" step="60" required />
+          </label>
+
+          <label class="full-width">
+            Propósito
+            <textarea v-model="form.purpose" rows="3" placeholder="Describe el motivo" required />
+          </label>
+
+          <div class="form-actions full-width">
+            <button type="submit" :disabled="creating">
+              <span v-if="creating">
+                <i class="fas fa-spinner fa-spin" /> Procesando...
               </span>
-            </div>
-
-            <div class="reservation-details">
-              <div class="detail-item">
-                <i class="fas fa-user"></i>
-                <span><strong>Solicitado por:</strong> {{ reservation.reservedBy }}</span>
-              </div>
-              <div class="detail-item">
-                <i class="fas fa-calendar"></i>
-                <span><strong>Día:</strong> {{ reservation.schedule.dayOfWeek }}</span>
-              </div>
-              <div class="detail-item">
-                <i class="fas fa-clock"></i>
-                <span><strong>Horario:</strong> {{ reservation.schedule.startTime }} - {{ reservation.schedule.endTime }}</span>
-              </div>
-              <div class="detail-item">
-                <i class="fas fa-file-alt"></i>
-                <span><strong>Propósito:</strong> {{ reservation.purpose }}</span>
-              </div>
-              <div class="detail-item">
-                <i class="fas fa-calendar-plus"></i>
-                <span><strong>Solicitado:</strong> {{ formatDate(reservation.createdAt) }}</span>
-              </div>
-            </div>
-
-            <!-- Acciones para reservas pendientes -->
-            <div v-if="reservation.status === 'PENDING'" class="reservation-actions">
-              <button 
-                class="btn-approve"
-                @click="updateReservationStatus(reservation.id, 'APPROVED')"
-                :disabled="updating"
-              >
-                <i class="fas fa-check"></i>
-                Aprobar
-              </button>
-              <button 
-                class="btn-reject"
-                @click="updateReservationStatus(reservation.id, 'REJECTED')"
-                :disabled="updating"
-              >
-                <i class="fas fa-times"></i>
-                Rechazar
-              </button>
-            </div>
-
-            <!-- Información para reservas aprobadas/rechazadas -->
-            <div v-else class="reservation-info">
-              <p><strong>Estado:</strong> {{ getStatusText(reservation.status) }}</p>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Modal de confirmación -->
-      <div v-if="showConfirmModal" class="modal-overlay">
-        <div class="modal-content">
-          <div class="modal-header">
-            <h3>Confirmar acción</h3>
-            <button class="close-button" @click="showConfirmModal = false">
-              <i class="fas fa-times"></i>
+              <span v-else>Guardar</span>
             </button>
           </div>
-          <div class="modal-body">
-            <p>¿Estás seguro de que deseas {{ pendingAction === 'APPROVED' ? 'aprobar' : 'rechazar' }} esta reserva?</p>
-            <div class="modal-actions">
-              <button class="btn-secondary" @click="showConfirmModal = false">
-                Cancelar
-              </button>
-              <button 
-                class="btn-primary" 
-                :class="pendingAction === 'APPROVED' ? 'btn-approve' : 'btn-reject'"
-                @click="confirmStatusUpdate"
-                :disabled="updating"
-              >
-                <span v-if="updating">
-                  <i class="fas fa-spinner fa-spin"></i>
-                  Procesando...
-                </span>
-                <span v-else>
-                  {{ pendingAction === 'APPROVED' ? 'Aprobar' : 'Rechazar' }}
-                </span>
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
+        </form>
+        <p class="helper-text">Los horarios no requieren aprobación previa; evita choques con cursos y otras reservas.</p>
+      </section>
 
-      <!-- Error Message -->
-      <div v-if="error" class="error-message">
-        <i class="fas fa-exclamation-triangle"></i>
+      <section class="card">
+        <div class="filters">
+          <div>
+            <label>Aula</label>
+            <select v-model="filters.classroom">
+              <option value="ALL">Todas</option>
+              <option v-for="room in classrooms" :key="room" :value="room">{{ room }}</option>
+            </select>
+          </div>
+          <div>
+            <label>Fecha</label>
+            <input v-model="filters.date" type="date" />
+          </div>
+          <button type="button" class="reset" @click="resetFilters" :disabled="filters.classroom === 'ALL' && !filters.date">
+            Limpiar filtros
+          </button>
+        </div>
+
+        <div v-if="loading" class="state">
+          <i class="fas fa-spinner fa-spin" /> Cargando reservas...
+        </div>
+        <div v-else-if="filteredReservations.length === 0" class="state">
+          <i class="fas fa-calendar-times" /> No hay reservas que coincidan.
+        </div>
+        <div v-else class="reservation-list">
+          <article v-for="reservation in filteredReservations" :key="reservation.id" class="reservation-card">
+            <header>
+              <div>
+                <p class="classroom">{{ reservation.classroomName }}</p>
+                <p class="date">{{ formatDate(reservation.reservationDate) }}</p>
+              </div>
+              <p class="time">{{ reservation.schedule.startTime }} - {{ reservation.schedule.endTime }}</p>
+            </header>
+            <p class="purpose">{{ reservation.purpose }}</p>
+            <footer>
+              Reservado por {{ reservation.reservedBy || 'Usuario' }}
+            </footer>
+          </article>
+        </div>
+      </section>
+
+      <div v-if="error" class="error">
+        <i class="fas fa-exclamation-triangle" />
         {{ error }}
       </div>
     </div>
@@ -141,109 +101,127 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
+import { computed, onMounted, ref } from 'vue';
 import AdminLayout from '@/components/ui/TopBar.vue';
-import { reservationService, type Reservation } from '@/services/reservationService';
+import { reservationService, type Reservation, type CreateReservationPayload } from '@/services/reservationService';
+import { useAuthStore } from '@/stores/auth';
 
+const auth = useAuthStore();
+const canViewAll = computed(() => auth.isAdmin || auth.isSecretary);
+
+const classrooms = ref<string[]>([]);
 const reservations = ref<Reservation[]>([]);
 const loading = ref(false);
-const updating = ref(false);
+const creating = ref(false);
 const error = ref('');
-const statusFilter = ref('PENDING');
-const showConfirmModal = ref(false);
-const pendingReservationId = ref<number | null>(null);
-const pendingAction = ref<'APPROVED' | 'REJECTED'>('APPROVED');
+
+const form = ref<CreateReservationPayload>({
+  classroomName: '',
+  reservationDate: '',
+  startTime: '',
+  endTime: '',
+  purpose: ''
+});
+
+const filters = ref({
+  classroom: 'ALL',
+  date: ''
+});
+
+const filteredReservations = computed(() => {
+  return reservations.value
+    .filter(reservation => {
+      const matchesClassroom = filters.value.classroom === 'ALL' || reservation.classroomName === filters.value.classroom;
+      const matchesDate = !filters.value.date || reservation.reservationDate === filters.value.date;
+      return matchesClassroom && matchesDate;
+    })
+    .sort((a, b) => {
+      const aKey = `${a.reservationDate ?? ''} ${a.schedule?.startTime ?? ''}`;
+      const bKey = `${b.reservationDate ?? ''} ${b.schedule?.startTime ?? ''}`;
+      return bKey.localeCompare(aKey);
+    });
+});
+
+const resetFilters = () => {
+  filters.value = { classroom: 'ALL', date: '' };
+};
+
+const loadClassrooms = async () => {
+  try {
+    classrooms.value = await reservationService.getAvailableClassrooms();
+    if (!form.value.classroomName && classrooms.value.length) {
+      form.value.classroomName = classrooms.value[0] ?? '';
+    }
+  } catch (err) {
+    error.value = 'No se pudieron cargar las aulas disponibles.';
+    console.error(err);
+  }
+};
 
 const loadReservations = async () => {
   try {
     loading.value = true;
     error.value = '';
-    
-    const allReservations = await reservationService.getAllReservations();
-    
-    if (statusFilter.value === 'ALL') {
-      reservations.value = allReservations;
-    } else {
-      reservations.value = allReservations.filter(
-        reservation => reservation.status === statusFilter.value
-      );
-    }
-    
-    // Ordenar por fecha de creación (más recientes primero)
-    reservations.value.sort((a, b) => {
-      const bTime = b.createdAt ? new Date(b.createdAt).getTime() : 0;
-      const aTime = a.createdAt ? new Date(a.createdAt).getTime() : 0;
-      return bTime - aTime;
-    });
-    
+    const data = canViewAll.value
+      ? await reservationService.getAllReservations()
+      : await reservationService.getMyReservations();
+    reservations.value = data;
   } catch (err) {
-    error.value = 'Error al cargar las reservas';
-    console.error('Error loading reservations:', err);
+    error.value = 'No se pudieron cargar las reservas.';
+    console.error(err);
   } finally {
     loading.value = false;
   }
 };
 
-const updateReservationStatus = (reservationId: number | undefined, status: 'APPROVED' | 'REJECTED') => {
-  if (reservationId === undefined || reservationId === null) {
-    error.value = 'No se pudo identificar la reserva seleccionada.';
+const submitReservation = async () => {
+  if (!form.value.classroomName || !form.value.reservationDate || !form.value.startTime || !form.value.endTime || !form.value.purpose) {
+    error.value = 'Complete todos los campos antes de crear la reserva.';
     return;
   }
 
-  pendingReservationId.value = reservationId;
-  pendingAction.value = status;
-  showConfirmModal.value = true;
-};
-
-const confirmStatusUpdate = async () => {
-  if (pendingReservationId.value === null) return;
-  
   try {
-    updating.value = true;
+    creating.value = true;
     error.value = '';
-    
-    await reservationService.updateReservationStatus(pendingReservationId.value, pendingAction.value);
-    
-    // Recargar la lista
+
+    const available = await reservationService.checkAvailability(
+      form.value.classroomName,
+      form.value.reservationDate,
+      form.value.startTime,
+      form.value.endTime
+    );
+
+    if (!available) {
+      error.value = 'El aula no está disponible en ese horario.';
+      return;
+    }
+
+    await reservationService.createReservation({ ...form.value });
+    form.value.reservationDate = '';
+    form.value.startTime = '';
+    form.value.endTime = '';
+    form.value.purpose = '';
     await loadReservations();
-    
-    showConfirmModal.value = false;
-    pendingReservationId.value = null;
-    
   } catch (err: any) {
-    error.value = err.message || 'Error al actualizar el estado de la reserva';
-    console.error('Error updating reservation status:', err);
+    error.value = err?.message || 'No se pudo crear la reserva.';
+    console.error(err);
   } finally {
-    updating.value = false;
+    creating.value = false;
   }
 };
 
-const getStatusText = (status: string) => {
-  const statusMap: { [key: string]: string } = {
-    'PENDING': 'Pendiente',
-    'APPROVED': 'Aprobada',
-    'REJECTED': 'Rechazada'
-  };
-  return statusMap[status] || status;
-};
-
-const formatDate = (dateString?: string) => {
-  if (!dateString) {
-    return 'Sin fecha';
-  }
-
-  const date = new Date(dateString);
-  return date.toLocaleDateString('es-ES', {
+const formatDate = (value?: string) => {
+  if (!value) return 'Sin fecha';
+  return new Date(value).toLocaleDateString('es-PE', {
+    weekday: 'long',
     year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit'
+    month: 'short',
+    day: 'numeric'
   });
 };
 
-onMounted(() => {
-  loadReservations();
+onMounted(async () => {
+  await Promise.all([loadClassrooms(), loadReservations()]);
 });
 </script>
 
@@ -251,330 +229,176 @@ onMounted(() => {
 .reservation-management-container {
   max-width: 1200px;
   margin: 0 auto;
-  padding: 20px;
-}
-
-.header {
-  text-align: center;
-  margin-bottom: 30px;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
 }
 
 .header h1 {
+  margin: 0;
   color: #2c3e50;
-  margin-bottom: 10px;
 }
 
 .header p {
-  color: #7f8c8d;
-  font-size: 1.1em;
+  margin: 6px 0 0;
+  color: #6c757d;
+}
+
+.card {
+  background: #fff;
+  border-radius: 14px;
+  padding: 24px;
+  box-shadow: 0 6px 24px rgba(15, 23, 42, 0.08);
+}
+
+.card h2 {
+  margin: 0;
+  color: #34495e;
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px;
+  margin-top: 16px;
+}
+
+label {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-weight: 600;
+  color: #495057;
+}
+
+select,
+input,
+textarea {
+  padding: 10px;
+  border-radius: 10px;
+  border: 1px solid #dce1e7;
+  font-size: 0.95rem;
+}
+
+textarea {
+  resize: vertical;
+}
+
+.full-width {
+  grid-column: 1 / -1;
+}
+
+.form-actions {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.form-actions button {
+  background: #3498db;
+  color: #fff;
+  border: none;
+  border-radius: 10px;
+  padding: 12px 20px;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.form-actions button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.helper-text {
+  margin-top: 12px;
+  color: #6c757d;
+  font-size: 0.9rem;
 }
 
 .filters {
-  margin-bottom: 30px;
-  padding: 20px;
-  background: white;
-  border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-}
-
-.filter-group {
   display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.filter-group label {
-  font-weight: 600;
-  color: #2c3e50;
-}
-
-.filter-group select {
-  padding: 8px 12px;
-  border: 2px solid #e9ecef;
-  border-radius: 6px;
-  font-size: 1em;
-}
-
-.reservations-list {
-  min-height: 400px;
-}
-
-.loading, .empty-state {
-  text-align: center;
-  padding: 60px 20px;
-  color: #7f8c8d;
-  font-size: 1.1em;
-}
-
-.empty-state i {
-  font-size: 3em;
+  flex-wrap: wrap;
+  gap: 16px;
+  align-items: flex-end;
   margin-bottom: 20px;
-  color: #bdc3c7;
 }
 
-.reservation-cards {
+.filters .reset {
+  padding: 10px 16px;
+  border-radius: 10px;
+  border: 1px solid #dce1e7;
+  background: transparent;
+  cursor: pointer;
+}
+
+.state {
+  text-align: center;
+  color: #6c757d;
+  padding: 40px 10px;
+}
+
+.reservation-list {
   display: grid;
-  gap: 20px;
+  gap: 16px;
 }
 
 .reservation-card {
-  background: white;
+  border: 1px solid #edf1f7;
   border-radius: 12px;
-  padding: 24px;
-  box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-  border-left: 6px solid #f39c12;
-  transition: all 0.3s ease;
-}
-
-.reservation-card.pending {
-  border-left-color: #f39c12;
-}
-
-.reservation-card.approved {
-  border-left-color: #2ecc71;
-}
-
-.reservation-card.rejected {
-  border-left-color: #e74c3c;
-}
-
-.reservation-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 20px rgba(0,0,0,0.15);
-}
-
-.reservation-header {
+  padding: 18px;
   display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 16px;
-}
-
-.reservation-header h3 {
-  margin: 0;
-  color: #2c3e50;
-  font-size: 1.3em;
-}
-
-.status-badge {
-  padding: 6px 12px;
-  border-radius: 20px;
-  font-size: 0.85em;
-  font-weight: 600;
-  text-transform: uppercase;
-}
-
-.status-badge.pending {
-  background: #fff3cd;
-  color: #856404;
-}
-
-.status-badge.approved {
-  background: #d4edda;
-  color: #155724;
-}
-
-.status-badge.rejected {
-  background: #f8d7da;
-  color: #721c24;
-}
-
-.reservation-details {
-  margin-bottom: 20px;
-}
-
-.detail-item {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin-bottom: 8px;
-  color: #495057;
-}
-
-.detail-item i {
-  width: 16px;
-  color: #6c757d;
-}
-
-.reservation-actions {
-  display: flex;
-  gap: 10px;
-  margin-top: 20px;
-}
-
-.btn-approve, .btn-reject {
-  padding: 10px 20px;
-  border: none;
-  border-radius: 6px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  display: flex;
-  align-items: center;
+  flex-direction: column;
   gap: 8px;
 }
 
-.btn-approve {
-  background: #28a745;
-  color: white;
-}
-
-.btn-approve:hover:not(:disabled) {
-  background: #218838;
-  transform: translateY(-1px);
-}
-
-.btn-reject {
-  background: #dc3545;
-  color: white;
-}
-
-.btn-reject:hover:not(:disabled) {
-  background: #c82333;
-  transform: translateY(-1px);
-}
-
-.btn-approve:disabled, .btn-reject:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-  transform: none;
-}
-
-.reservation-info {
-  margin-top: 20px;
-  padding-top: 20px;
-  border-top: 1px solid #e9ecef;
-  color: #495057;
-}
-
-/* Modal Styles */
-.modal-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0, 0, 0, 0.5);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 1000;
-  padding: 20px;
-}
-
-.modal-content {
-  background: white;
-  border-radius: 12px;
-  width: 100%;
-  max-width: 500px;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
-}
-
-.modal-header {
+.reservation-card header {
   display: flex;
   justify-content: space-between;
-  align-items: center;
-  padding: 20px;
-  border-bottom: 1px solid #e9ecef;
+  align-items: baseline;
 }
 
-.modal-header h3 {
+.reservation-card .classroom {
   margin: 0;
+  font-weight: 600;
   color: #2c3e50;
 }
 
-.close-button {
-  background: none;
-  border: none;
-  font-size: 1.2em;
+.reservation-card .date {
+  margin: 0;
   color: #6c757d;
-  cursor: pointer;
-  padding: 5px;
+  text-transform: capitalize;
 }
 
-.close-button:hover {
+.reservation-card .time {
+  font-weight: 600;
+  color: #0d6efd;
+}
+
+.reservation-card .purpose {
+  margin: 0;
   color: #495057;
 }
 
-.modal-body {
-  padding: 20px;
+.reservation-card footer {
+  color: #6c757d;
+  font-size: 0.9rem;
 }
 
-.modal-actions {
-  display: flex;
-  gap: 10px;
-  justify-content: flex-end;
-  margin-top: 20px;
-}
-
-.btn-primary, .btn-secondary {
-  padding: 12px 24px;
-  border: none;
-  border-radius: 6px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.btn-primary {
-  background: #3498db;
-  color: white;
-}
-
-.btn-primary:hover:not(:disabled) {
-  background: #2980b9;
-}
-
-.btn-primary:disabled {
-  background: #bdc3c7;
-  cursor: not-allowed;
-}
-
-.btn-secondary {
-  background: #6c757d;
-  color: white;
-}
-
-.btn-secondary:hover:not(:disabled) {
-  background: #5a6268;
-}
-
-.error-message {
+.error {
   background: #f8d7da;
   color: #721c24;
-  padding: 15px;
-  border-radius: 8px;
-  margin-top: 20px;
+  padding: 16px;
+  border-radius: 12px;
   border-left: 4px solid #e74c3c;
 }
 
-.error-message i {
-  margin-right: 10px;
-}
-
 @media (max-width: 768px) {
-  .reservation-management-container {
-    padding: 10px;
+  .form-actions {
+    justify-content: stretch;
   }
-  
-  .reservation-header {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 10px;
-  }
-  
-  .reservation-actions {
-    flex-direction: column;
-  }
-  
-  .modal-actions {
-    flex-direction: column;
-  }
-  
-  .detail-item {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 5px;
+
+  .form-actions button {
+    width: 100%;
   }
 }
 </style>

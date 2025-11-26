@@ -11,7 +11,6 @@ public class ReservationResponse {
     private String purpose;
     private ScheduleDto schedule;
     private LocalDateTime createdAt;
-    private String status;
     private LocalDate reservationDate;
 
     public Long getId() {
@@ -60,14 +59,6 @@ public class ReservationResponse {
 
     public void setCreatedAt(LocalDateTime createdAt) {
         this.createdAt = createdAt;
-    }
-
-    public String getStatus() {
-        return status;
-    }
-
-    public void setStatus(String status) {
-        this.status = status;
     }
 
     public LocalDate getReservationDate() {

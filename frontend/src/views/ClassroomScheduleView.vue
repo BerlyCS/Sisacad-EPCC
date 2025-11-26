@@ -1,787 +1,806 @@
 <template>
   <AdminLayout>
-    <div class="p-5">
-      <!-- Header -->
-      <div class="flex justify-between items-start mb-8 flex-wrap gap-6">
-        <button class="flex items-center gap-2 bg-gray-400 hover:bg-gray-500 transition-all duration-200 px-4 py-2 text-white rounded-xl cursor-pointer text-md" @click="$router.push('/classrooms')">
-          <ArrowLeftIcon class="w-5 h-5"/>
-          Volver
-        </button>
-        <div>
-          <h1 class="text-gray-700 m-0 text-2xl">{{ classroomName }}</h1>
-          <p class="text-gray-600 mt-1 text-md">Horario semanal - Seleccione un espacio disponible para reservar</p>
-        </div>
-        <div class="flex lg:flex-col lg:gap-2 gap-5">
-          <div class="flex items-center gap-2 text-sm">
-            <div class="w-5 h-5 rounded-md border-1 border-gray-300 bg-red-500"></div>
-            <span>Ocupado (Horario fijo)</span>
-          </div>
-          <div class="flex items-center gap-2 text-sm">
-            <div class="w-5 h-5 rounded-md border-1 border-gray-300 bg-green-500"></div>
-            <span>Disponible</span>
-          </div>
-          <div class="flex items-center gap-2 text-sm">
-            <div class="w-5 h-5 rounded-md border-1 border-gray-300 bg-yellow-500"></div>
-            <span>Reservado</span>
-          </div>
-          <div class="flex items-center gap-2 text-sm">
-            <div class="w-5 h-5 rounded-md border-1 border-gray-300 bg-white"></div>
-            <span>Pendiente de aprobación</span>
+    <div class="schedule-page">
+      <header class="page-header">
+        <div class="page-header__left">
+          <button class="back-button" @click="router.back()">
+            <span aria-hidden="true">←</span>
+            Volver
+          </button>
+          <div>
+            <p class="eyebrow">Agenda semanal</p>
+            <h1>{{ classroomName }}</h1>
+            <p class="subtitle">Disponible para estudiantes, profesores y secretaría.</p>
           </div>
         </div>
-      </div>
+        <div class="week-controls">
+          <div class="week-nav">
+            <button class="nav" @click="prevWeek" aria-label="Semana anterior">‹</button>
+            <div class="week-pill">
+              <div class="week-label">{{ formatWeekRange(currentWeekStart) }}</div>
+              <button class="today-btn" @click="goToToday" title="Ir a la semana actual">Hoy</button>
+            </div>
+            <button class="nav" @click="nextWeek" aria-label="Siguiente semana">›</button>
+          </div>
+          <label class="week-picker" aria-hidden="true">
+            <input type="date" :value="isoDateForInput(currentWeekStart)" @change="onDateChange" aria-label="Seleccionar fecha" />
+          </label>
+          <button v-if="canReserve" class="primary-button" @click="toggleReservationForm">
+            <i class="fas fa-plus"></i>
+            {{ showReservationForm ? 'Ocultar formulario' : 'Nueva reserva' }}
+          </button>
+        </div>
+      </header>
 
-      <!-- Schedule Table -->
-      <div class="flex bg-white rounded-2xl shadow-lg overflow-hidden">
-        <div class="w-30 flex-shrink-0 bg-gray-100 border-r-2 border-gray-200">
-          <div class="p-5 bg-[#3498db] text-white font-bold text-center h-15">Hora</div>
-          <div 
-            v-for="timeSlot in timeSlots" 
-            :key="timeSlot"
-            class="px-4 py-3 border-b border-gray-200 text-center text-sm font-medium text-gray-700 h-15 flex items-center justify-center"
-          >
-            {{ timeSlot }}
+      <transition name="fade-slide">
+        <section v-if="canReserve && showReservationForm" class="card reservation-card">
+          <h2>Crear reserva</h2>
+          <form class="form-grid" @submit.prevent="submitReservation">
+            <label>
+              Fecha
+              <input v-model="form.reservationDate" type="date" required />
+            </label>
+            <label>
+              Inicio
+              <input v-model="form.startTime" type="time" step="300" required />
+            </label>
+            <label>
+              Fin
+              <input v-model="form.endTime" type="time" step="300" required />
+            </label>
+            <label class="full-width">
+              Propósito
+              <textarea v-model="form.purpose" rows="3" placeholder="Ej. Ensayo, asesoría, práctica extraordinaria" required />
+            </label>
+            <div class="form-actions full-width">
+              <button type="submit" :disabled="creating">
+                <span v-if="creating">
+                  <i class="fas fa-spinner fa-spin" /> Registrando...
+                </span>
+                <span v-else>Confirmar reserva</span>
+              </button>
+            </div>
+          </form>
+        </section>
+      </transition>
+
+      <section class="card schedule-card">
+        <div class="schedule-card__header">
+          <div>
+            <h2>Calendario de lunes a viernes</h2>
+            <p>Los cursos y las reservas confirmadas aparecen con colores diferentes.</p>
+          </div>
+          <div class="legend">
+            <span><span class="legend-dot course"></span> Curso programado</span>
+            <span><span class="legend-dot reservation"></span> Reserva confirmada</span>
           </div>
         </div>
 
-        <div class="flex">
-          <div 
-            v-for="day in days" 
-            :key="day"
-            class="flex-1 min-w-0"
-          >
-            <div class="p-5 bg-[#3498db] text-white font-bold text-center h-15">{{ day }}</div>
+        <div v-if="gridLoading" class="state">
+          <i class="fas fa-spinner fa-spin" /> Cargando horario...
+        </div>
+        <div v-else class="schedule-grid" role="table" aria-label="Horario semanal">
+          <div class="times-column" role="rowgroup">
+            <div class="day-header-placeholder"></div>
             <div
-              v-for="timeSlot in timeSlots"
-              :key="`${day}-${timeSlot}`"
-              class="schedule-cell"
-              :class="getCellClass(day, timeSlot)"
-              @click="handleCellClick(day, timeSlot)"
-              @mouseenter="showTooltip(day, timeSlot, $event)"
-              @mouseleave="hideTooltip"
+              v-for="segment in timeSegments"
+              :key="segment.startMinutes"
+              class="time-slot"
+              role="rowheader"
             >
-              <div class="cell-content">
-                <div v-if="getCellContent(day, timeSlot)" class="course-name">
-                  {{ getCellContent(day, timeSlot) }}
-                </div>
-                <div v-else-if="isAvailable(day, timeSlot)" class="available-label">
-                  <i class="fas fa-plus"></i>
-                  Disponible
-                </div>
-                <div v-else class="no-class">
-                  -
+              {{ segment.label }}
+            </div>
+          </div>
+          <div class="day-columns" role="rowgroup">
+            <div
+              v-for="day in DAYS"
+              :key="day"
+              class="day-column"
+              role="column"
+            >
+              <div class="day-header">{{ formatDayLabel(day) }}</div>
+              <div class="day-body" :style="slotCountStyle">
+                <div
+                  v-for="segment in timeSegments"
+                  :key="segment.startMinutes"
+                  class="slot-guide"
+                ></div>
+                <div
+                  v-for="event in eventsByDay[day]"
+                  :key="event.id"
+                  class="event-block"
+                  :class="event.type"
+                  :style="eventStyle(event)"
+                >
+                  <p class="event-title">{{ event.title }}</p>
+                  <p class="event-time">{{ event.start }} - {{ event.end }}</p>
                 </div>
               </div>
             </div>
           </div>
         </div>
-      </div>
+      </section>
 
-      <!-- Tooltip -->
-      <div v-if="showTooltipContent" class="tooltip" :style="tooltipStyle">
-        <strong>{{ tooltipContent.courseName }}</strong>
-        <br>
-        {{ tooltipContent.day }} {{ tooltipContent.timeSlot }}
-      </div>
-
-      <!-- Reservation Modal -->
-      <div v-if="showReservationModal" class="modal-overlay">
-        <div class="modal-content">
-          <div class="modal-header">
-            <h3>Reservar Aula</h3>
-            <button class="close-button" @click="closeModal">
-              <XMarkIcon class="w-5 h-5"/>
-            </button>
-          </div>
-          
-          <div class="modal-body">
-            <div class="reservation-info">
-              <p><strong>Aula:</strong> {{ classroomName }}</p>
-              <p><strong>Día:</strong> {{ selectedSlot?.day }}</p>
-              <p><strong>Horario:</strong> {{ selectedSlot?.timeSlot }}</p>
-            </div>
-
-            <form @submit.prevent="submitReservation" class="reservation-form">
-              <div class="form-group">
-                <label for="purpose">Propósito de la reserva:</label>
-                <textarea
-                  id="purpose"
-                  v-model="reservationForm.purpose"
-                  placeholder="Describa el propósito de esta reserva..."
-                  rows="4"
-                  required
-                ></textarea>
-              </div>
-
-              <div class="form-actions">
-                <button 
-                  type="button" 
-                  class="btn-secondary" 
-                  @click="closeModal"
-                  :disabled="loading"
-                >
-                  Cancelar
-                </button>
-                <button 
-                  type="submit" 
-                  class="btn-primary" 
-                  :disabled="loading || !reservationForm.purpose"
-                >
-                  <span v-if="loading">
-                    <i class="fas fa-spinner fa-spin"></i>
-                    Procesando...
-                  </span>
-                  <span v-else>
-                    <i class="fas fa-calendar-plus"></i>
-                    Confirmar Reserva
-                  </span>
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      </div>
-
-      <!-- Loading State -->
-      <div v-if="loading" class="text-center p-10 text-blue-500 text-md">
-        <i class="fas fa-spinner fa-spin"></i>
-        Cargando horario...
-      </div>
-
-      <!-- Error State -->
-      <div v-if="error" class="text-center p-5 bg-[#f8d7da] text-[#721c24] rounded-lg mt-5">
-        <ExclamationTriangleIcon class="w-10 h-10 inline-block mb-3"/>
-        <p>{{ error }}</p>
+      <div v-if="error" class="error">
+        <i class="fas fa-exclamation-triangle" />
+        {{ error }}
       </div>
     </div>
-  </AdminLayout>  
+  </AdminLayout>
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue';
+import { computed, onMounted, ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
-import AdminLayout from '../components/ui/TopBar.vue';
-import { reservationService, type Reservation } from '@/services/reservationService';
-import { ArrowLeftIcon, XMarkIcon, ExclamationTriangleIcon } from '@heroicons/vue/16/solid';
+import AdminLayout from '@/components/ui/TopBar.vue';
+import { reservationService, type Reservation, type ClassroomSchedule, type CreateReservationPayload } from '@/services/reservationService';
+import { useAuthStore } from '@/stores/auth';
+
+const DAYS = ['LUNES', 'MARTES', 'MIERCOLES', 'JUEVES', 'VIERNES'] as const;
+const START_MINUTES = 7 * 60;
+const END_MINUTES = 21 * 60;
+const SLOT_INTERVAL = 60; // minutes (1 hour)
 
 const route = useRoute();
 const router = useRouter();
+const auth = useAuthStore();
+const classroomName = ref(decodeURIComponent(route.params.classroomName as string));
 
-const classroomName = ref('');
-const scheduleData = ref<any>({});
-const reservations = ref<Reservation[]>([]); // ← NUEVO: Reservas de la BD
-const loading = ref(false);
-const error = ref('');
-const showReservationModal = ref(false);
-const selectedSlot = ref<{day: string; timeSlot: string} | null>(null);
-const reservationForm = ref({
+const canReserve = computed(() => auth.isAdmin || auth.isSecretary || auth.isProfessor);
+const showReservationForm = ref(false);
+
+const form = ref<CreateReservationPayload>({
+  classroomName: classroomName.value,
+  reservationDate: '',
+  startTime: '',
+  endTime: '',
   purpose: ''
 });
 
-// Estados para el tooltip
-const showTooltipContent = ref(false);
-const tooltipContent = ref({
-  courseName: '',
-  day: '',
-  timeSlot: '',
-  type: '' // ← NUEVO: Tipo de ocupación
-});
-const tooltipStyle = ref({
-  left: '0px',
-  top: '0px'
-});
+const creating = ref(false);
+const error = ref('');
+const gridLoading = ref(true);
+const reservations = ref<Reservation[]>([]);
+const courseSlots = ref<Array<{ id: string; day: string; start: string; end: string; title: string }>>([]);
 
-// Días y horarios predefinidos
-const days = ['LUNES', 'MARTES', 'MIERCOLES', 'JUEVES', 'VIERNES'];
-const timeSlots = [
-  '7:00-7:50', '7:50-8:40', '8:50-09:40', '09:40-10:30',
-  '10:40-11:30', '11:30-12:20', '12:20-13:10', '13:10-14:00',
-  '14:00-14:50', '14:50-15:40', '15:50-16:40', '16:40-17:30',
-  '17:40-18:30', '18:30-19:20', '19:20-20:10'
-];
+const timeSegments = computed(() => buildTimeSegments(START_MINUTES, END_MINUTES, SLOT_INTERVAL));
+const slotCountStyle = computed(() => ({ '--slots-count': timeSegments.value.length }));
 
-// Mapeo de timeSlots a rangos de tiempo para búsqueda
-const timeSlotMap = computed(() => {
-  const map: { [key: string]: { start: string; end: string } } = {};
-  timeSlots.forEach(slot => {
-    const [start = '', end = ''] = slot.split('-');
-    map[slot] = { start, end };
+// Week selector state: current week start (Monday)
+const today = new Date();
+const currentWeekStart = ref(startOfWeek(today));
+
+function startOfWeek(d: Date) {
+  const copy = new Date(d);
+  const day = (copy.getDay() + 6) % 7; // make Monday=0
+  copy.setDate(copy.getDate() - day);
+  copy.setHours(0, 0, 0, 0);
+  return copy;
+}
+
+function addDays(date: Date, days: number) {
+  const r = new Date(date);
+  r.setDate(r.getDate() + days);
+  return r;
+}
+
+const formatWeekRange = (weekStart: Date) => {
+  const start = weekStart;
+  const end = addDays(weekStart, 4); // Monday..Friday
+  const options: Intl.DateTimeFormatOptions = { day: '2-digit', month: 'short' };
+  return `${start.toLocaleDateString('es-PE', options)} — ${end.toLocaleDateString('es-PE', options)}`;
+};
+
+const prevWeek = () => {
+  currentWeekStart.value = startOfWeek(addDays(currentWeekStart.value, -7));
+};
+const nextWeek = () => {
+  currentWeekStart.value = startOfWeek(addDays(currentWeekStart.value, 7));
+};
+
+const goToToday = () => {
+  currentWeekStart.value = startOfWeek(new Date());
+};
+
+const isoDateForInput = (d: Date) => {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
+};
+
+const onDateChange = (e: Event) => {
+  const input = e.target as HTMLInputElement;
+  if (!input?.value) return;
+  const chosen = new Date(input.value + 'T00:00:00');
+  currentWeekStart.value = startOfWeek(chosen);
+};
+
+type CalendarEvent = {
+  id: string;
+  day: string;
+  start: string;
+  end: string;
+  title: string;
+  type: 'course' | 'reservation';
+  startMinutes: number;
+  endMinutes: number;
+};
+
+const eventsByDay = computed<Record<string, CalendarEvent[]>>(() => {
+  const map: Record<string, CalendarEvent[]> = Object.fromEntries(DAYS.map(day => [day, []]));
+  const courseEvents = courseSlots.value.map(slot => toCalendarEvent(slot, 'course'));
+  const reservationEvents = reservations.value
+    .map(reservation => reservationToEvent(reservation))
+    .filter((event): event is CalendarEvent => Boolean(event));
+
+  [...courseEvents, ...reservationEvents].forEach(event => {
+    const column = map[event.day];
+    if (!column) return;
+    column.push(event);
   });
+
+  Object.values(map).forEach(list => list.sort((a, b) => a.startMinutes - b.startMinutes));
   return map;
 });
 
-const loadSchedule = async () => {
+const toggleReservationForm = () => {
+  showReservationForm.value = !showReservationForm.value;
+};
+
+const loadReservations = async () => {
   try {
-    loading.value = true;
-    error.value = '';
-    const classroom = decodeURIComponent(route.params.classroomName as string);
-    classroomName.value = classroom;
-    
-    // Cargar horario fijo del Excel
-    const schedule = await reservationService.getClassroomSchedule(classroom);
-    scheduleData.value = schedule;
-    
-    // ← NUEVO: Cargar reservas de la base de datos
-    const classroomReservations = await reservationService.getReservationsByClassroom(classroom);
-    reservations.value = classroomReservations.filter(reservation => 
-      reservation.status !== 'REJECTED' // Solo mostrar reservas activas
-    );
-    
-    console.log('Loaded schedule:', schedule);
-    console.log('Loaded reservations:', reservations.value);
-    
+    const data = await reservationService.getReservationsByClassroom(classroomName.value);
+    reservations.value = data;
   } catch (err) {
-    error.value = 'Error al cargar el horario del aula';
-    console.error('Error loading schedule:', err);
-  } finally {
-    loading.value = false;
+    error.value = 'No se pudieron cargar las reservas del aula.';
+    console.error(err);
   }
 };
 
-// ← NUEVO: Buscar reserva en un horario específico
-const getReservationForTimeSlot = (day: string, timeSlot: string) => {
-  const slotInfo = timeSlotMap.value[timeSlot];
-  if (!slotInfo) return null;
-
-  return reservations.value.find(reservation => 
-    reservation.schedule.dayOfWeek === day &&
-    reservation.schedule.startTime === slotInfo.start &&
-    reservation.schedule.endTime === slotInfo.end
-  );
-};
-
-const getCourseForTimeSlot = (day: string, timeSlot: string) => {
-  if (!scheduleData.value.schedule || !scheduleData.value.schedule[day]) {
-    return null;
-  }
-
-  const slotInfo = timeSlotMap.value[timeSlot];
-  if (!slotInfo) return null;
-
-  const daySchedule = scheduleData.value.schedule[day];
-  
-  // Buscar el curso que coincide con este horario exacto
-  return daySchedule.find((course: any) => 
-    course.startTime === slotInfo.start && 
-    course.endTime === slotInfo.end
-  );
-};
-
-// ← MODIFICADO: Ahora también muestra información de reservas
-const getCellContent = (day: string, timeSlot: string) => {
-  const course = getCourseForTimeSlot(day, timeSlot);
-  if (course) {
-    return course.courseName;
-  }
-  
-  const reservation = getReservationForTimeSlot(day, timeSlot);
-  if (reservation) {
-    if (reservation.status === 'PENDING') {
-      return '⏳ Pendiente';
-    } else if (reservation.status === 'APPROVED') {
-      return `📅 ${reservation.purpose.substring(0, 20)}${reservation.purpose.length > 20 ? '...' : ''}`;
-    }
-  }
-  
-  return '';
-};
-
-// ← MODIFICADO: Verificar disponibilidad considerando reservas
-const isAvailable = (day: string, timeSlot: string) => {
-  const course = getCourseForTimeSlot(day, timeSlot);
-  if (course) return false; // Ocupado por curso fijo
-  
-  const reservation = getReservationForTimeSlot(day, timeSlot);
-  if (reservation) return false; // Ocupado por reserva
-  
-  return true; // Realmente disponible
-};
-
-// ← MODIFICADO: Nueva lógica para clases de celdas
-const getCellClass = (day: string, timeSlot: string) => {
-  const course = getCourseForTimeSlot(day, timeSlot);
-  if (course) {
-    return 'occupied'; // Curso fijo del Excel
-  }
-  
-  const reservation = getReservationForTimeSlot(day, timeSlot);
-  if (reservation) {
-    if (reservation.status === 'PENDING') {
-      return 'pending'; // Reserva pendiente
-    } else if (reservation.status === 'APPROVED') {
-      return 'reserved'; // Reserva aprobada
-    }
-  }
-  
-  return 'available'; // Disponible
-};
-
-// ← MODIFICADO: Manejar click en celda
-const handleCellClick = async (day: string, timeSlot: string) => {
-  const course = getCourseForTimeSlot(day, timeSlot);
-  const reservation = getReservationForTimeSlot(day, timeSlot);
-  
-  // Si está ocupado, no hacer nada
-  if (course || reservation) {
-    return;
-  }
-  
-  // Verificar disponibilidad específica
-  const slotInfo = timeSlotMap.value[timeSlot];
-  if (!slotInfo) {
-    error.value = 'Horario inválido';
-    return;
-  }
+const loadCourseSchedule = async () => {
   try {
-    const available = await reservationService.checkAvailability(
-      classroomName.value,
-      day,
-      slotInfo.start,
-      slotInfo.end
-    );
-    
-    if (available) {
-      selectedSlot.value = { day, timeSlot };
-      reservationForm.value.purpose = '';
-      showReservationModal.value = true;
-    } else {
-      error.value = 'Este horario ya no está disponible';
-    }
+    const schedule: ClassroomSchedule = await reservationService.getClassroomSchedule(classroomName.value);
+    const entries: Array<{ id: string; day: string; start: string; end: string; title: string }> = [];
+    Object.entries(schedule.schedule ?? {}).forEach(([day, slots]) => {
+      slots.forEach(slot => {
+        if (slot.type === 'FIXED') {
+          entries.push({
+            id: `course-${day}-${slot.startTime}-${slot.endTime}-${slot.courseName}`,
+            day: normalizeDay(day),
+            start: slot.startTime,
+            end: slot.endTime,
+            title: slot.courseName ?? 'Curso'
+          });
+        }
+      });
+    });
+    courseSlots.value = entries;
   } catch (err) {
-    error.value = 'Error al verificar disponibilidad';
-    console.error('Error checking availability:', err);
+    error.value = 'No se pudo obtener el horario oficial del aula.';
+    console.error(err);
   }
-};
-
-const showTooltip = (day: string, timeSlot: string, event: MouseEvent) => {
-  const course = getCourseForTimeSlot(day, timeSlot);
-  const reservation = getReservationForTimeSlot(day, timeSlot);
-  
-  if (course) {
-    tooltipContent.value = {
-      courseName: course.courseName,
-      day: day,
-      timeSlot: timeSlot,
-      type: 'CURSO_FIJO'
-    };
-  } else if (reservation) {
-    let statusText = '';
-    if (reservation.status === 'PENDING') {
-      statusText = '⏳ Pendiente de aprobación';
-    } else if (reservation.status === 'APPROVED') {
-      statusText = '✅ Reserva aprobada';
-    }
-    
-    tooltipContent.value = {
-      courseName: `${reservation.purpose} (${statusText})`,
-      day: day,
-      timeSlot: timeSlot,
-      type: 'RESERVA'
-    };
-  } else {
-    return; // No mostrar tooltip para celdas disponibles
-  }
-  
-  tooltipStyle.value = {
-    left: `${event.clientX + 10}px`,
-    top: `${event.clientY + 10}px`
-  };
-  
-  showTooltipContent.value = true;
-};
-
-const hideTooltip = () => {
-  showTooltipContent.value = false;
 };
 
 const submitReservation = async () => {
-  if (!selectedSlot.value) return;
-  
+  if (!canReserve.value) {
+    error.value = 'No tiene permisos para reservar.';
+    return;
+  }
+
+  if (!form.value.reservationDate || !form.value.startTime || !form.value.endTime || !form.value.purpose) {
+    error.value = 'Complete todos los campos para crear la reserva.';
+    return;
+  }
+
   try {
-    loading.value = true;
-    const slotInfo = timeSlotMap.value[selectedSlot.value.timeSlot];
-    if (!slotInfo) {
-      error.value = 'Horario inválido';
+    creating.value = true;
+    error.value = '';
+    form.value.classroomName = classroomName.value;
+
+    const available = await reservationService.checkAvailability(
+      classroomName.value,
+      form.value.reservationDate,
+      form.value.startTime,
+      form.value.endTime
+    );
+
+    if (!available) {
+      error.value = 'El aula no está disponible en ese horario.';
       return;
     }
-    
-    await reservationService.createReservation({
-      classroomName: classroomName.value,
-      purpose: reservationForm.value.purpose,
-      schedule: {
-        dayOfWeek: selectedSlot.value.day,
-        startTime: slotInfo.start,
-        endTime: slotInfo.end
-      },
-      status: 'PENDING'
-    });
-    
-    closeModal();
-    // Recargar el horario para reflejar la nueva reserva
-    await loadSchedule();
-    
-    // Mostrar mensaje de éxito
-    alert('Reserva creada exitosamente. Está pendiente de aprobación.');
-    
+
+    await reservationService.createReservation({ ...form.value });
+    form.value.reservationDate = '';
+    form.value.startTime = '';
+    form.value.endTime = '';
+    form.value.purpose = '';
+    await Promise.all([loadReservations()]);
   } catch (err: any) {
-    error.value = err.message || 'Error al crear la reserva';
-    console.error('Error creating reservation:', err);
+    error.value = err?.message || 'No se pudo registrar la reserva.';
+    console.error(err);
   } finally {
-    loading.value = false;
+    creating.value = false;
   }
 };
 
-const closeModal = () => {
-  showReservationModal.value = false;
-  selectedSlot.value = null;
-  reservationForm.value.purpose = '';
+const formatDayLabel = (day: string) => {
+  const labels: Record<string, string> = {
+    LUNES: 'Lunes',
+    MARTES: 'Martes',
+    MIERCOLES: 'Miércoles',
+    JUEVES: 'Jueves',
+    VIERNES: 'Viernes'
+  };
+  return labels[day] ?? day;
 };
 
-onMounted(() => {
-  loadSchedule();
+const eventStyle = (event: CalendarEvent) => {
+  const totalMinutes = END_MINUTES - START_MINUTES;
+  const clampedStart = Math.max(event.startMinutes, START_MINUTES);
+  const clampedEnd = Math.min(event.endMinutes, END_MINUTES);
+  const top = ((clampedStart - START_MINUTES) / totalMinutes) * 100;
+  const height = Math.max(((clampedEnd - clampedStart) / totalMinutes) * 100, 4);
+  return {
+    top: `${top}%`,
+    height: `${height}%`
+  };
+};
+
+const isDateInWeek = (dateStr: string | undefined, weekStart: Date) => {
+  if (!dateStr) return false;
+  const d = new Date(dateStr);
+  d.setHours(0, 0, 0, 0);
+  const weekEnd = addDays(weekStart, 4);
+  return d >= weekStart && d <= weekEnd;
+};
+
+const reservationToEvent = (reservation: Reservation): CalendarEvent | null => {
+  if (!reservation.schedule) return null;
+  if (!isDateInWeek(reservation.reservationDate, currentWeekStart.value)) return null;
+  const day = resolveDay(reservation);
+  if (!day || !DAYS.includes(day as typeof DAYS[number])) return null;
+  return {
+    id: `reservation-${reservation.id}`,
+    day,
+    start: reservation.schedule.startTime,
+    end: reservation.schedule.endTime,
+    title: reservation.purpose,
+    type: 'reservation',
+    startMinutes: timeToMinutes(reservation.schedule.startTime),
+    endMinutes: timeToMinutes(reservation.schedule.endTime)
+  };
+};
+
+const toCalendarEvent = (
+  slot: { id: string; day: string; start: string; end: string; title: string },
+  type: 'course' | 'reservation'
+): CalendarEvent => ({
+  id: slot.id,
+  day: slot.day,
+  start: slot.start,
+  end: slot.end,
+  title: slot.title,
+  type,
+  startMinutes: timeToMinutes(slot.start),
+  endMinutes: timeToMinutes(slot.end)
+});
+
+const buildTimeSegments = (start: number, end: number, interval: number) => {
+  const segments: Array<{ label: string; startMinutes: number; endMinutes: number }> = [];
+  for (let minutes = start; minutes < end; minutes += interval) {
+    segments.push({
+      label: formatMinutes(minutes),
+      startMinutes: minutes,
+      endMinutes: minutes + interval
+    });
+  }
+  return segments;
+};
+
+const formatMinutes = (minutes: number) => {
+  const hours = Math.floor(minutes / 60)
+    .toString()
+    .padStart(2, '0');
+  const mins = (minutes % 60).toString().padStart(2, '0');
+  return `${hours}:${mins}`;
+};
+
+const timeToMinutes = (value: string) => {
+  const [hoursPart, minutesPart] = value.split(':');
+  const hours = Number(hoursPart ?? 0);
+  const minutes = Number(minutesPart ?? 0);
+  return hours * 60 + minutes;
+};
+
+const normalizeDay = (value: string) =>
+  value
+    .trim()
+    .toUpperCase()
+    .normalize('NFD')
+    .replace(/\p{Diacritic}/gu, '');
+
+const resolveDay = (reservation: Reservation) => {
+  if (reservation.reservationDate) {
+    const date = new Date(reservation.reservationDate);
+    return normalizeDay(date.toLocaleDateString('es-PE', { weekday: 'long' }));
+  }
+  return reservation.schedule?.dayOfWeek ? normalizeDay(reservation.schedule.dayOfWeek) : '';
+};
+
+onMounted(async () => {
+  if (!classroomName.value) {
+    router.push('/classrooms');
+    return;
+  }
+  gridLoading.value = true;
+  try {
+    await Promise.all([loadReservations(), loadCourseSchedule()]);
+  } finally {
+    gridLoading.value = false;
+  }
 });
 </script>
 
 <style scoped>
-.color-box {
-  width: 20px;
-  height: 20px;
-  border-radius: 4px;
-  border: 1px solid #ddd;
-}
-
-.color-box.occupied {
-  background: #e74c3c;
-}
-
-.color-box.available {
-  background: #2ecc71;
-}
-
-.color-box.reserved {
-  background: #f39c12;
-}
-
-.schedule-cell {
-  height: 60px;
-  border-bottom: 1px solid #e9ecef;
-  border-right: 1px solid #e9ecef;
-  padding: 5px;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  position: relative;
-}
-
-.schedule-cell:hover {
-  transform: scale(1.02);
-  z-index: 1;
-}
-
-.schedule-cell.available {
-  background: #d4edda;
-  border: 2px solid #c3e6cb;
-}
-
-.schedule-cell.available:hover {
-  background: #c3e6cb;
-  box-shadow: 0 2px 8px rgba(46, 204, 113, 0.3);
-}
-
-.schedule-cell.occupied {
-  background: #f8d7da;
-  border: 2px solid #f5c6cb;
-  cursor: not-allowed;
-}
-
-.schedule-cell.reserved {
-  background: #fff3cd;
-  border: 2px solid #ffeaa7;
-  cursor: not-allowed;
-}
-
-.cell-content {
-  height: 100%;
+.schedule-page {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 24px;
   display: flex;
-  align-items: center;
-  justify-content: center;
-  text-align: center;
-  padding: 5px;
-  font-size: 0.8em;
+  flex-direction: column;
+  gap: 24px;
 }
 
-/* ESTILOS NUEVOS PARA LOS NOMBRES DE CURSOS */
-.course-name {
-  color: #721c24;
-  font-weight: 500;
-  line-height: 1.2;
-  font-size: 0.75em;
-  overflow: hidden;
-  display: -webkit-box;
-  line-clamp: 3;
-  -webkit-line-clamp: 3;
-  -webkit-box-orient: vertical;
-  max-height: 50px;
-}
-
-.no-class {
-  color: #6c757d;
-  font-style: italic;
-  font-size: 0.8em;
-}
-
-.available-label {
-  color: #155724;
-  font-weight: 500;
-  display: flex;
-  align-items: center;
-  gap: 5px;
-  font-size: 0.8em;
-}
-
-/* ESTILOS PARA EL TOOLTIP */
-.tooltip {
-  position: fixed;
-  background: rgba(0, 0, 0, 0.9);
-  color: white;
-  padding: 12px 16px;
-  border-radius: 8px;
-  font-size: 0.85em;
-  z-index: 1000;
-  pointer-events: none;
-  max-width: 300px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-  backdrop-filter: blur(4px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-}
-
-.tooltip strong {
-  color: #3498db;
-  display: block;
-  margin-bottom: 4px;
-  font-size: 0.9em;
-}
-
-/* MEJORAS VISUALES PARA LAS CELDAS OCUPADAS */
-.schedule-cell.occupied .cell-content {
-  background: rgba(231, 76, 60, 0.1);
-  border-radius: 4px;
-  height: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 8px 4px;
-}
-
-.schedule-cell.available .cell-content {
-  background: rgba(46, 204, 113, 0.1);
-  border-radius: 4px;
-  height: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 8px 4px;
-}
-
-.schedule-cell.reserved .cell-content {
-  background: rgba(243, 156, 18, 0.1);
-  border-radius: 4px;
-  height: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 8px 4px;
-}
-
-/* MEJORAR LA LEGIBILIDAD DEL TEXTO EN CELDAS OCUPADAS */
-.schedule-cell.occupied {
-  background: linear-gradient(135deg, #f8d7da, #f1b0b7);
-  border: 2px solid #f5c6cb;
-}
-
-.schedule-cell.available {
-  background: linear-gradient(135deg, #d4edda, #c3e6cb);
-  border: 2px solid #c3e6cb;
-}
-
-.schedule-cell.reserved {
-  background: linear-gradient(135deg, #fff3cd, #ffeaa7);
-  border: 2px solid #ffeaa7;
-}
-
-/* EFECTO HOVER MEJORADO */
-.schedule-cell.available:hover {
-  background: linear-gradient(135deg, #c3e6cb, #b1dfbb);
-  box-shadow: 0 4px 12px rgba(46, 204, 113, 0.4);
-  transform: translateY(-1px);
-}
-
-.schedule-cell.occupied:hover {
-  background: linear-gradient(135deg, #f1b0b7, #ea9a9a);
-  transform: translateY(-1px);
-}
-
-.schedule-cell.reserved:hover {
-  background: linear-gradient(135deg, #ffeaa7, #ffdf7e);
-  transform: translateY(-1px);
-}
-
-/* MODAL STYLES */
-.modal-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0, 0, 0, 0.5);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 1000;
-  padding: 20px;
-}
-
-.modal-content {
-  background: white;
-  border-radius: 12px;
-  width: 100%;
-  max-width: 500px;
-  max-height: 90vh;
-  overflow-y: auto;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
-}
-
-.modal-header {
+.page-header {
   display: flex;
   justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 16px;
   align-items: center;
-  padding: 20px;
-  border-bottom: 1px solid #e9ecef;
 }
 
-.modal-header h3 {
+.page-header__left {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.eyebrow {
   margin: 0;
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  color: #6c757d;
+  letter-spacing: 0.08em;
+}
+
+.subtitle {
+  margin: 4px 0 0;
+  color: #6c757d;
+}
+
+.back-button {
+  border: 1px solid #dcdfe3;
+  border-radius: 999px;
+  padding: 8px 16px;
+  background: transparent;
+  cursor: pointer;
   color: #2c3e50;
 }
 
-.close-button {
-  background: none;
+.primary-button {
+  background: #2563eb;
+  color: #fff;
   border: none;
-  font-size: 1.2em;
-  color: #6c757d;
-  cursor: pointer;
-  padding: 5px;
-  border-radius: 4px;
-  transition: background-color 0.2s ease;
-}
-
-.close-button:hover {
-  color: #495057;
-  background: #f8f9fa;
-}
-
-.modal-body {
-  padding: 20px;
-}
-
-.reservation-info {
-  background: #f8f9fa;
-  padding: 15px;
-  border-radius: 8px;
-  margin-bottom: 20px;
-  border-left: 4px solid #3498db;
-}
-
-.reservation-info p {
-  margin: 5px 0;
-  color: #495057;
-  font-size: 0.95em;
-}
-
-.form-group {
-  margin-bottom: 20px;
-}
-
-.form-group label {
-  display: block;
-  margin-bottom: 8px;
+  border-radius: 999px;
+  padding: 12px 20px;
   font-weight: 600;
-  color: #495057;
-  font-size: 0.95em;
+  display: inline-flex;
+  gap: 8px;
+  align-items: center;
+  cursor: pointer;
+  box-shadow: 0 10px 25px rgba(37, 99, 235, 0.25);
 }
 
-.form-group textarea {
-  width: 100%;
+.week-controls {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.week-nav {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.nav {
+  width: 36px;
+  height: 36px;
+  border-radius: 999px;
+  border: none;
+  background: #f1f5f9;
+  color: #0f172a;
+  font-size: 1.1rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.week-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, rgba(37,99,235,0.08), rgba(99,102,241,0.04));
+  border: 1px solid rgba(37,99,235,0.08);
+}
+
+.week-label {
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.today-btn {
+  background: transparent;
+  border: 1px solid rgba(15,23,42,0.06);
+  padding: 6px 8px;
+  border-radius: 8px;
+  font-size: 0.8rem;
+  cursor: pointer;
+}
+
+.week-picker input {
+  border: none;
+  background: transparent;
+  padding: 6px 8px;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  color: #0f172a;
+  cursor: pointer;
+}
+
+.card {
+  background: #fff;
+  border-radius: 16px;
+  padding: 24px;
+  box-shadow: 0 12px 40px rgba(15, 23, 42, 0.08);
+}
+
+.reservation-card {
+  border: 1px solid #e0e7ff;
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 16px;
+}
+
+label {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-weight: 600;
+  color: #475467;
+}
+
+input,
+textarea {
   padding: 12px;
-  border: 2px solid #e9ecef;
-  border-radius: 6px;
-  font-family: inherit;
-  font-size: 1em;
-  resize: vertical;
-  transition: all 0.2s ease;
-  background: #f8f9fa;
+  border-radius: 10px;
+  border: 1px solid #dfe3ec;
+  font-size: 0.95rem;
 }
 
-.form-group textarea:focus {
-  outline: none;
-  border-color: #3498db;
-  background: white;
-  box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+textarea {
+  resize: vertical;
+}
+
+.full-width {
+  grid-column: 1 / -1;
 }
 
 .form-actions {
   display: flex;
-  gap: 10px;
   justify-content: flex-end;
-  margin-top: 25px;
 }
 
-.btn-primary, .btn-secondary {
-  padding: 12px 24px;
+.form-actions button {
   border: none;
-  border-radius: 6px;
-  font-size: 1em;
+  border-radius: 10px;
+  padding: 12px 20px;
+  background: #2563eb;
+  color: #fff;
+  font-weight: 600;
   cursor: pointer;
-  transition: all 0.2s ease;
+}
+
+.form-actions button:disabled {
+  opacity: 0.6;
+}
+
+.schedule-card__header {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.legend {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+  color: #4b5563;
+  font-size: 0.9rem;
+}
+
+.legend-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 999px;
+  display: inline-block;
+  margin-right: 6px;
+}
+
+.legend-dot.course {
+  background: #2563eb;
+}
+
+.legend-dot.reservation {
+  background: #16a34a;
+}
+
+.schedule-grid {
+  display: grid;
+  grid-template-columns: 100px 1fr;
+  gap: 0;
+  margin-top: 24px;
+}
+
+.times-column {
+  display: flex;
+  flex-direction: column;
+}
+
+.day-header-placeholder {
+  height: 48px;
+}
+
+.time-slot {
+  height: 40px;
   display: flex;
   align-items: center;
-  gap: 8px;
+  justify-content: flex-start;
+  padding-right: 12px;
+  color: #94a3b8;
+  font-size: 0.85rem;
+  border-right: 1px solid #e2e8f0;
+}
+
+.day-columns {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  border-left: 1px solid #e2e8f0;
+}
+
+.day-column {
+  display: flex;
+  flex-direction: column;
+  border-right: 1px solid #e2e8f0;
+}
+
+.day-header {
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  color: #1f2937;
+  border-bottom: 1px solid #e2e8f0;
+  background: #f8fafc;
+}
+
+.day-body {
+  position: relative;
+  height: calc(40px * var(--slots-count, 0));
+}
+
+.slot-guide {
+  height: 40px;
+  border-bottom: 1px dashed rgba(226, 232, 240, 0.7);
+}
+
+.event-block {
+  position: absolute;
+  left: 12px;
+  right: 12px;
+  border-radius: 12px;
+  padding: 10px 12px;
+  color: #fff;
+  box-shadow: 0 10px 25px rgba(15, 23, 42, 0.15);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 0.85rem;
+}
+
+.event-block.course {
+  background: linear-gradient(135deg, #2563eb, #3b82f6);
+}
+
+.event-block.reservation {
+  background: linear-gradient(135deg, #16a34a, #22c55e);
+}
+
+.event-title {
+  margin: 0;
   font-weight: 600;
 }
 
-.btn-primary {
-  background: #3498db;
-  color: white;
+.event-time {
+  margin: 0;
+  font-size: 0.8rem;
+  opacity: 0.9;
 }
 
-.btn-primary:hover:not(:disabled) {
-  background: #2980b9;
-  transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(52, 152, 219, 0.3);
+.state {
+  text-align: center;
+  color: #64748b;
+  padding: 40px 0;
 }
 
-.btn-primary:disabled {
-  background: #bdc3c7;
-  cursor: not-allowed;
-  transform: none;
-  box-shadow: none;
+.error {
+  background: #fef2f2;
+  color: #b91c1c;
+  padding: 16px;
+  border-radius: 12px;
+  border-left: 4px solid #dc2626;
 }
 
-.btn-secondary {
-  background: #6c757d;
-  color: white;
+.fade-slide-enter-active,
+.fade-slide-leave-active {
+  transition: all 0.25s ease;
 }
 
-.btn-secondary:hover:not(:disabled) {
-  background: #5a6268;
-  transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(108, 117, 125, 0.3);
+.fade-slide-enter-from,
+.fade-slide-leave-to {
+  opacity: 0;
+  transform: translateY(-12px);
 }
 
-.error-message {
-  background: #f8d7da;
-  color: #721c24;
-  border-radius: 8px;
-  margin: 20px 0;
-  border-left: 4px solid #e74c3c;
+@media (max-width: 900px) {
+  .schedule-grid {
+    grid-template-columns: 70px 1fr;
+  }
+
+  .day-columns {
+    grid-template-columns: repeat(5, minmax(160px, 1fr));
+    overflow-x: auto;
+  }
+
+  .day-column:first-child {
+    border-left: none;
+  }
+}
+
+@media (max-width: 600px) {
+  .page-header__left {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .form-actions {
+    justify-content: stretch;
+  }
+
+  .form-actions button,
+  .primary-button,
+  .back-button {
+    width: 100%;
+    justify-content: center;
+  }
 }
 </style>

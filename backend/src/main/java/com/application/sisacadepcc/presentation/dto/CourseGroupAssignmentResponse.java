@@ -20,7 +20,14 @@ public record CourseGroupAssignmentResponse(
         if (group == null) {
             return null;
         }
-        String label = group.getType() == CourseType.LAB ? "Laboratorio" : "Teoría";
+        String label;
+        if (group.getType() == CourseType.LAB) {
+            label = "Laboratorio";
+        } else if (group.getType() == CourseType.PRACTICE) {
+            label = "Práctica";
+        } else {
+            label = "Teoría";
+        }
         return new CourseGroupAssignmentResponse(
                 group.getId(),
                 group.getCourseId(),

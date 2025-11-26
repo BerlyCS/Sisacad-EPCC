@@ -11,5 +11,4 @@ public interface ReservationRepository {
     List<Reservation> findByClassroomId(Long classroomId);
     Reservation save(Reservation reservation);
     void deleteById(Long id);
-    List<Reservation> findByStatus(String status);
 }
