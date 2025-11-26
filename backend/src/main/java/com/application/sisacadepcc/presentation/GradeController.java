@@ -12,6 +12,7 @@ import com.application.sisacadepcc.presentation.dto.GradeSubmissionResponse;
 import com.application.sisacadepcc.presentation.dto.GradingRubricResponse;
 import com.application.sisacadepcc.presentation.dto.ProfessorCourseGradeStatsResponse;
 import com.application.sisacadepcc.presentation.dto.StudentGradeResponse;
+import com.application.sisacadepcc.presentation.dto.CourseRosterEntryResponse;
 import com.application.sisacadepcc.service.AuthorizationService;
 import com.application.sisacadepcc.service.CourseGroupExamsPdfService;
 import com.application.sisacadepcc.service.GradeQueryService;
@@ -40,8 +41,10 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
-
 import java.util.List;
+import org.apache.poi.ss.usermodel.*;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import org.springframework.core.io.ByteArrayResource;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
@@ -294,6 +297,137 @@ public class GradeController {
         } catch (ExamSummaryNotFoundException ex) {
             return ResponseEntity.notFound().build();
         }
+    }
+
+    @GetMapping("/courses/{courseId}/groups/{groupId}/report")
+    public ResponseEntity<Resource> downloadGradeReport(@PathVariable Long courseId,
+                                                        @PathVariable Long groupId,
+                                                        Authentication authentication) {
+        if (!authorizationService.hasAnyRole(authentication, UserRole.ADMIN, UserRole.PROFESSOR)) {
+            return ResponseEntity.status(403).build();
+        }
+
+        boolean isAdmin = authorizationService.hasRole(authentication, UserRole.ADMIN);
+
+        try {
+            // Obtener roster
+            CourseRosterPageResponse rosterResponse = professorGradingService.getCourseRoster(
+                    courseId,
+                    List.of(groupId),
+                    0,
+                    1000, // Asumir máximo 1000 estudiantes
+                    authorizationService.getAuthenticatedProfessor(authentication).orElse(null),
+                    isAdmin
+            );
+
+            // Obtener info del curso y grupo
+            List<CourseGroupSummaryResponse> groups = professorGradingService.getCourseGroups(
+                    courseId,
+                    authorizationService.getAuthenticatedProfessor(authentication).orElse(null),
+                    isAdmin
+            );
+            CourseGroupSummaryResponse group = groups.stream()
+                    .filter(g -> g.groupId().equals(groupId))
+                    .findFirst()
+                    .orElseThrow(() -> new IllegalArgumentException("Group not found"));
+
+            // Asumir semesterNumber de algún lado; por ahora hardcode o buscar en Course
+            // Para simplicidad, asumir par/impar basado en algo; aquí hardcode A para ejemplo
+            String ciclo = "A"; // Placeholder, ajustar con semesterNumber
+
+            // Generar Excel
+            byte[] excelBytes = generateGradeReportExcel(rosterResponse.students(), group.courseName(), ciclo, group.groupLetter());
+
+            HttpHeaders headers = new HttpHeaders();
+            headers.add(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"reporte_notas.xlsx\"");
+            headers.add(HttpHeaders.CONTENT_TYPE, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+
+            return ResponseEntity.ok()
+                    .headers(headers)
+                    .contentLength(excelBytes.length)
+                    .body(new ByteArrayResource(excelBytes));
+
+        } catch (IllegalArgumentException ex) {
+            return ResponseEntity.notFound().build();
+        } catch (AccessDeniedException ex) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        } catch (Exception ex) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+
+    private byte[] generateGradeReportExcel(List<CourseRosterEntryResponse> students, String courseName, String ciclo, String groupLetter) throws Exception {
+        Workbook workbook = new XSSFWorkbook();
+        Sheet sheet = workbook.createSheet("Calificaciones");
+
+        int rowNum = 0;
+
+        // Fila 0: vacía
+        sheet.createRow(rowNum++);
+
+        // Fila 1: UNIVERSIDAD NACIONAL DE SAN AGUSTIN DE AREQUIPA
+        Row row1 = sheet.createRow(rowNum++);
+        row1.createCell(0).setCellValue("UNIVERSIDAD NACIONAL DE SAN AGUSTIN DE AREQUIPA");
+
+        // Fila 2: ESCUELA PROFESIONAL : CIENCIA DE LA COMPUTACIÓN
+        Row row2 = sheet.createRow(rowNum++);
+        row2.createCell(0).setCellValue("ESCUELA PROFESIONAL : CIENCIA DE LA COMPUTACIÓN");
+
+        // Fila 3: CALIFICACIONES DE ALUMNOS
+        Row row3 = sheet.createRow(rowNum++);
+        row3.createCell(0).setCellValue("CALIFICACIONES DE ALUMNOS");
+
+        // Fila 4: ASIGNATURA : {courseName}
+        Row row4 = sheet.createRow(rowNum++);
+        row4.createCell(0).setCellValue("ASIGNATURA : " + courseName);
+
+        // Fila 5: CICLO : {ciclo} - GRUPO : {groupLetter}
+        Row row5 = sheet.createRow(rowNum++);
+        row5.createCell(0).setCellValue("CICLO : " + ciclo + " - GRUPO : " + groupLetter);
+
+        // Fila 6: FECHA : {fecha}
+        Row row6 = sheet.createRow(rowNum++);
+        row6.createCell(0).setCellValue("FECHA : " + java.time.LocalDate.now());
+
+        // 2 filas vacías
+        sheet.createRow(rowNum++);
+        sheet.createRow(rowNum++);
+
+        // Fila headers
+        Row headerRow = sheet.createRow(rowNum++);
+        String[] headers = {"Nro", "CUI", "Apellidos y Nombres", "Nro. Matricula", "nota continua1", "nota examen 1", "nota continua 2", "nota examen 2", "nota continua 3", "nota examen 3"};
+        for (int i = 0; i < headers.length; i++) {
+            headerRow.createCell(i).setCellValue(headers[i]);
+        }
+
+        // Datos
+        int nro = 1;
+        for (CourseRosterEntryResponse student : students) {
+            Row row = sheet.createRow(rowNum++);
+            row.createCell(0).setCellValue(nro++);
+            row.createCell(1).setCellValue(student.studentCui());
+            row.createCell(2).setCellValue(student.fullName());
+            row.createCell(3).setCellValue(""); // Nro. Matricula
+            // Notas continuas
+            for (int i = 0; i < 3 && i < student.continuousGrades().size(); i++) {
+                row.createCell(4 + i * 2).setCellValue(student.continuousGrades().get(i));
+            }
+            // Notas exámenes
+            for (int i = 0; i < 3 && i < student.examGrades().size(); i++) {
+                row.createCell(5 + i * 2).setCellValue(student.examGrades().get(i));
+            }
+        }
+
+        // Auto-size columns
+        for (int i = 0; i < headers.length; i++) {
+            sheet.autoSizeColumn(i);
+        }
+
+        // Escribir a bytes
+        java.io.ByteArrayOutputStream outputStream = new java.io.ByteArrayOutputStream();
+        workbook.write(outputStream);
+        workbook.close();
+        return outputStream.toByteArray();
     }
 
     private boolean ownsStudentRecord(Long studentId, Authentication authentication) {

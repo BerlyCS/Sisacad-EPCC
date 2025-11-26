@@ -76,6 +76,57 @@
       </div>
     </div>
 
+    <div class="bg-white shadow rounded-lg p-6 space-y-4">
+      <div class="flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <h3 class="text-lg font-semibold text-gray-800">Grupos del curso</h3>
+          <p class="text-sm text-gray-500">Revisa teoría, práctica y laboratorio asignados.</p>
+        </div>
+        <span v-if="groupCountLabel" class="text-sm text-gray-500">{{ groupCountLabel }}</span>
+      </div>
+
+      <p v-if="groupsLoading" class="text-sm text-blue-600">Cargando grupos...</p>
+      <p v-else-if="groupsError" class="text-sm text-red-600">{{ groupsError }}</p>
+      <p v-else-if="!sortedGroups.length" class="text-sm text-gray-500">Aún no hay grupos configurados para este curso.</p>
+
+      <div v-else class="grid gap-4 sm:grid-cols-2">
+        <article
+          v-for="group in sortedGroups"
+          :key="group.groupId ?? `${group.type}-${group.letter}`"
+          class="rounded-xl border border-gray-200 p-4 space-y-3"
+        >
+          <div class="flex items-start justify-between gap-3">
+            <div>
+              <p class="text-sm font-semibold text-gray-900">
+                {{ group.typeLabel || resolveGroupTypeLabel(group.type) }} {{ group.letter || '-' }}
+              </p>
+              <p class="text-xs text-gray-500">{{ formatCapacityLabel(group) }}</p>
+              <p class="text-[11px] text-gray-400">{{ teacherStatusLabel(group.teacherId) }}</p>
+            </div>
+            <span
+              class="inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold"
+              :class="groupBadgeClass(group.type)"
+            >
+              {{ resolveGroupTypeLabel(group.type) }}
+            </span>
+          </div>
+
+          <div>
+            <p class="text-[11px] font-semibold uppercase tracking-wide text-gray-600">Horario</p>
+            <ul v-if="group.scheduleSlots?.length" class="mt-2 space-y-1 text-xs text-gray-700">
+              <li
+                v-for="slot in sortScheduleSlots(group.scheduleSlots)"
+                :key="slot.scheduleId ?? `${slot.dayOfWeek}-${slot.startTime}-${slot.endTime}-${slot.classroomId}`"
+              >
+                {{ formatScheduleSlot(slot) }}
+              </li>
+            </ul>
+            <p v-else class="mt-2 text-xs text-gray-500">Sin horario definido.</p>
+          </div>
+        </article>
+      </div>
+    </div>
+
     <div class="bg-white shadow rounded-lg p-6 space-y-4" v-if="details.syllabus">
       <div class="flex items-center justify-between">
         <h3 class="text-lg font-semibold text-gray-800">Temario del curso</h3>
@@ -170,10 +221,26 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
-import type { CourseDetails, CourseStudentSummary, CourseTopicSummary } from '@/services/courseService'
+import type {
+  CourseDetails,
+  CourseGroupSummary,
+  CourseScheduleSlotSummary,
+  CourseStudentSummary,
+  CourseTopicSummary,
+  CourseType
+} from '@/services/courseService'
 import { syllabusService } from '@/services/syllabusService'
 
-const props = defineProps<{ details: CourseDetails }>()
+const props = withDefaults(defineProps<{
+  details: CourseDetails
+  groups?: CourseGroupSummary[]
+  groupsLoading?: boolean
+  groupsError?: string
+}>(), {
+  groups: () => [],
+  groupsLoading: false,
+  groupsError: ''
+})
 const emit = defineEmits<{ (e: 'open-lab', courseId: number): void }>()
 const router = useRouter()
 
@@ -190,6 +257,46 @@ watch(
   }
 )
 
+const groupsLoading = computed(() => props.groupsLoading)
+const groupsError = computed(() => props.groupsError ?? '')
+
+const COURSE_TYPE_ORDER: Record<CourseType, number> = {
+  THEORY: 0,
+  PRACTICE: 1,
+  LAB: 2
+}
+
+const COURSE_TYPE_BADGE_CLASSES: Record<CourseType, string> = {
+  THEORY: 'bg-blue-100 text-blue-700',
+  PRACTICE: 'bg-amber-100 text-amber-800',
+  LAB: 'bg-purple-100 text-purple-700'
+}
+
+const COURSE_TYPE_LABELS: Record<CourseType, string> = {
+  THEORY: 'Teoría',
+  PRACTICE: 'Práctica',
+  LAB: 'Laboratorio'
+}
+
+const sortedGroups = computed(() => {
+  const groups = props.groups ?? []
+  return [...groups].sort((a, b) => {
+    const typeOrder = (COURSE_TYPE_ORDER[a.type] ?? 99) - (COURSE_TYPE_ORDER[b.type] ?? 99)
+    if (typeOrder !== 0) {
+      return typeOrder
+    }
+    return a.letter.localeCompare(b.letter)
+  })
+})
+
+const groupCountLabel = computed(() => {
+  const count = sortedGroups.value.length
+  if (!count) {
+    return ''
+  }
+  return `${count} grupo${count === 1 ? '' : 's'}`
+})
+
 const formatStudentName = (student: CourseStudentSummary) =>
   [student.firstNames, student.paternalSurname, student.maternalSurname]
     .filter(Boolean)
@@ -200,6 +307,92 @@ const badgeClass = computed(() =>
     ? 'bg-purple-100 text-purple-700'
     : 'bg-blue-100 text-blue-700'
 )
+
+const resolveGroupTypeLabel = (type?: CourseType) => {
+  if (!type) {
+    return COURSE_TYPE_LABELS.THEORY
+  }
+  return COURSE_TYPE_LABELS[type] ?? COURSE_TYPE_LABELS.THEORY
+}
+
+const groupBadgeClass = (type?: CourseType) => {
+  if (!type) {
+    return COURSE_TYPE_BADGE_CLASSES.THEORY
+  }
+  return COURSE_TYPE_BADGE_CLASSES[type] ?? COURSE_TYPE_BADGE_CLASSES.THEORY
+}
+
+const formatCapacityLabel = (group: CourseGroupSummary) => {
+  if (group.maxCapacity == null) {
+    return 'Capacidad no definida'
+  }
+  if (group.availableCapacity == null) {
+    return `${group.maxCapacity} cupos totales`
+  }
+  return `${group.maxCapacity} cupos · ${group.availableCapacity} libres`
+}
+
+const teacherStatusLabel = (teacherId: CourseGroupSummary['teacherId']) =>
+  teacherId ? 'Docente asignado' : 'Docente pendiente'
+
+const DAY_OF_WEEK_LABELS: Record<string, string> = {
+  MONDAY: 'Lunes',
+  TUESDAY: 'Martes',
+  WEDNESDAY: 'Miércoles',
+  THURSDAY: 'Jueves',
+  FRIDAY: 'Viernes',
+  SATURDAY: 'Sábado',
+  SUNDAY: 'Domingo'
+}
+
+const DAY_OF_WEEK_ORDER: Record<string, number> = {
+  MONDAY: 0,
+  TUESDAY: 1,
+  WEDNESDAY: 2,
+  THURSDAY: 3,
+  FRIDAY: 4,
+  SATURDAY: 5,
+  SUNDAY: 6
+}
+
+const normalizeDay = (day?: string) => (typeof day === 'string' ? day.toUpperCase() : '')
+
+const resolveDayLabel = (day?: string) => {
+  const normalized = normalizeDay(day)
+  return DAY_OF_WEEK_LABELS[normalized] ?? day ?? 'Día no definido'
+}
+
+const sortScheduleSlots = (slots?: CourseScheduleSlotSummary[] | null): CourseScheduleSlotSummary[] => {
+  if (!Array.isArray(slots)) {
+    return []
+  }
+  return [...slots].sort((a, b) => {
+    const dayOrder = (DAY_OF_WEEK_ORDER[normalizeDay(a.dayOfWeek)] ?? 7) - (DAY_OF_WEEK_ORDER[normalizeDay(b.dayOfWeek)] ?? 7)
+    if (dayOrder !== 0) {
+      return dayOrder
+    }
+    const startDiff = (a.startTime ?? '').localeCompare(b.startTime ?? '')
+    if (startDiff !== 0) {
+      return startDiff
+    }
+    return (a.endTime ?? '').localeCompare(b.endTime ?? '')
+  })
+}
+
+const formatTime = (time?: string | null) => {
+  if (!time) {
+    return '--:--'
+  }
+  return time.slice(0, 5)
+}
+
+const formatScheduleSlot = (slot: CourseScheduleSlotSummary) => {
+  const dayLabel = resolveDayLabel(slot.dayOfWeek)
+  const start = formatTime(slot.startTime)
+  const end = formatTime(slot.endTime)
+  const classroom = slot.classroomId ? ` · Aula ${slot.classroomId}` : ''
+  return `${dayLabel} ${start} - ${end}${classroom}`
+}
 
 const teacherCountLabel = computed(() => {
   const count = props.details.teacherIds.length

@@ -71,11 +71,15 @@ public class CourseService {
             return List.of();
         }
 
+        // Collect courses from groups but ensure uniqueness by courseId
         return courseGroupRepository.findByTeacherId(professorId).stream()
-                .map(CourseGroup::getCourse)
-                .filter(Objects::nonNull)
-                .distinct()
-                .collect(Collectors.toList());
+            .map(CourseGroup::getCourse)
+            .filter(Objects::nonNull)
+            .filter(course -> course.getCourseId() != null)
+            .collect(Collectors.collectingAndThen(
+                Collectors.toMap(course -> course.getCourseId(), course -> course, (a, b) -> a, java.util.LinkedHashMap::new),
+                map -> map.values().stream().toList()
+            ));
     }
 
     public List<ProfessorScheduleEntry> getScheduleForProfessor(Long professorId) {

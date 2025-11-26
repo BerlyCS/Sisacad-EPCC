@@ -724,8 +724,10 @@ const professorFullName = (professor: Professor) => {
 }
 
 const suggestedGroupLetter = computed(() => {
+  // Suggest a letter that is not already used for the currently selected group type
   const usedLetters = new Set(
     courseGroups.value
+      .filter(group => group.type === groupForm.type)
       .map(group => group.letter?.trim().toUpperCase())
       .filter(Boolean) as string[]
   )
@@ -918,7 +920,8 @@ const handleCreateGroup = async () => {
   const normalizedLetter = groupForm.letter.trim().toUpperCase()
   if (!normalizedLetter) {
     errors.push('Define una letra para el grupo (Ej. A, B, C).')
-  } else if (courseGroups.value.some(group => group.letter?.toUpperCase() === normalizedLetter)) {
+  } else if (courseGroups.value.some(group => group.letter?.toUpperCase() === normalizedLetter && group.type === groupForm.type)) {
+    // Only treat as duplicate when the same letter is already used for the same session type
     errors.push(`La letra ${normalizedLetter} ya está en uso para este curso.`)
   }
 

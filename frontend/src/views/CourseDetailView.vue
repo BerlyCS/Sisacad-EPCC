@@ -43,6 +43,9 @@
       <CourseInfoCard
         v-else-if="courseDetails"
         :details="courseDetails"
+        :groups="courseGroups"
+        :groups-loading="courseGroupsLoading"
+        :groups-error="courseGroupsError || ''"
         @open-lab="openLabCourse"
       />
 
@@ -63,7 +66,16 @@ import { useCourseService } from '@/services/courseService'
 const route = useRoute()
 const router = useRouter()
 
-const { courseDetails, courseDetailsLoading, courseDetailsError, fetchCourseDetails } = useCourseService()
+const {
+  courseDetails,
+  courseDetailsLoading,
+  courseDetailsError,
+  fetchCourseDetails,
+  courseGroups,
+  courseGroupsLoading,
+  courseGroupsError,
+  fetchCourseGroups
+} = useCourseService()
 
 const courseIdParam = computed(() => {
   const raw = route.params.courseId
@@ -85,11 +97,15 @@ watch(
     if (newId === null) {
       courseDetails.value = null
       courseDetailsError.value = 'Identificador de curso inválido'
+      courseGroups.value = []
+      courseGroupsError.value = 'Identificador de curso inválido'
       return
     }
 
     courseDetailsError.value = ''
+    courseGroupsError.value = ''
     fetchCourseDetails(newId)
+    fetchCourseGroups(newId)
   },
   { immediate: true }
 )
@@ -105,6 +121,7 @@ const goBack = () => {
 const retry = () => {
   if (courseId.value !== null) {
     fetchCourseDetails(courseId.value)
+    fetchCourseGroups(courseId.value)
   }
 }
 

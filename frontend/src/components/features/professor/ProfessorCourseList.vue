@@ -28,7 +28,7 @@
     <div v-else-if="!filteredCourses.length" class="text-gray-500 text-sm">No se encontraron cursos.</div>
 
     <ul class="space-y-3" v-else>
-      <li v-for="course in filteredCourses" :key="course.courseCode">
+      <li v-for="course in filteredCourses" :key="`${course.courseId}-${course.groupLetter ?? ''}`">
         <button
           type="button"
           class="w-full text-left rounded-2xl border border-gray-200 px-4 py-3 hover:border-blue-400 hover:bg-blue-50 transition-colors"
