@@ -16,8 +16,13 @@ public class Grade {
     private final List<Integer> continuousGrades;
     private final List<Integer> examGrades;
 
+    private String status = "DRAFT";
+
+    @org.springframework.data.annotation.Version
+    private Long version;
+
     public Grade(Long gradeID, Long studentId, Long courseId, Long professorID,
-                 List<Integer> continuousGrades, List<Integer> examGrades) {
+            List<Integer> continuousGrades, List<Integer> examGrades) {
         this.gradeID = gradeID;
         this.studentId = studentId;
         this.courseId = courseId;
@@ -33,10 +38,21 @@ public class Grade {
     }
 
     // Getters
-    public Long getGradeID() { return gradeID; }
-    public Long getStudentId() { return studentId; }
-    public Long getCourseId() { return courseId; }
-    public Long getProfessorID() { return professorID; }
+    public Long getGradeID() {
+        return gradeID;
+    }
+
+    public Long getStudentId() {
+        return studentId;
+    }
+
+    public Long getCourseId() {
+        return courseId;
+    }
+
+    public Long getProfessorID() {
+        return professorID;
+    }
 
     public List<Integer> getContinuousGrades() {
         return Collections.unmodifiableList(continuousGrades);
@@ -68,5 +84,21 @@ public class Grade {
         if (grade < 0 || grade > 20) {
             throw new IllegalArgumentException("La nota debe estar entre 0 y 20");
         }
+    }
+
+    public String getStatus() {
+        return status;
+    }
+
+    public void setStatus(String status) {
+        this.status = status;
+    }
+
+    public Long getVersion() {
+        return version;
+    }
+
+    public void setVersion(Long version) {
+        this.version = version;
     }
 }

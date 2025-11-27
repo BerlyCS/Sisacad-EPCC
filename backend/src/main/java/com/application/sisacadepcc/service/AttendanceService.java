@@ -20,14 +20,17 @@ public class AttendanceService {
 
     private final AttendanceRepository repository;
     private final StudentAttendanceRepository studentAttendanceRepository;
+    private final AuditService auditService;
     private final SyllabusService syllabusService;
 
     public AttendanceService(AttendanceRepository repository,
             StudentAttendanceRepository studentAttendanceRepository,
-            SyllabusService syllabusService) {
+            SyllabusService syllabusService,
+            AuditService auditService) {
         this.repository = repository;
         this.studentAttendanceRepository = studentAttendanceRepository;
         this.syllabusService = syllabusService;
+        this.auditService = auditService;
     }
 
     public List<ProfessorAttendance> getAll() {
@@ -84,7 +87,12 @@ public class AttendanceService {
                 date != null ? date : LocalDate.now(),
                 classType,
                 todo);
-        return repository.save(attendance);
+        ProfessorAttendance saved = repository.save(attendance);
+
+        auditService.logAction(professorId, "MARK_ATTENDANCE", String.valueOf(saved.getAttendanceId()),
+                "Marked attendance for course " + courseId + " group " + courseGroupId, "UNKNOWN_IP");
+
+        return saved;
     }
 
     @Transactional
@@ -100,6 +108,12 @@ public class AttendanceService {
                 .collect(Collectors.toList());
 
         studentAttendanceRepository.saveAll(studentsWithId);
+
+        auditService.logAction(session.getProfessorId(), "CREATE_SESSION",
+                String.valueOf(savedSession.getAttendanceId()),
+                "Created session for course " + session.getCourseId() + " with " + students.size() + " students",
+                "UNKNOWN_IP");
+
         return savedSession;
     }
 
@@ -118,6 +132,7 @@ public class AttendanceService {
             throw new IllegalArgumentException("Cannot register attendance for dates older than 48 hours.");
         }
 
+        //
         // 2. Tolerance Validation (15 minutes)
         // Only if we are registering for TODAY (real-time)
         if (date.isEqual(LocalDate.now()) && scheduledStartTime != null) {
@@ -128,7 +143,8 @@ public class AttendanceService {
                         "Attendance registration is outside the 15-minute tolerance window.");
             }
         }
-        // Additional validations (e.g., todo matching topics) can be added later if needed.
+        // Additional validations (e.g., todo matching topics) can be added later if
+        // needed.
     }
 
     public List<com.application.sisacadepcc.domain.model.dto.StudentAttendanceDTO> getStudentAttendance(

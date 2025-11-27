@@ -31,11 +31,15 @@ class AttendanceServiceTest {
     @Mock
     private SyllabusService syllabusService;
 
+    @Mock
+    private AuditService auditService;
+
     private AttendanceService attendanceService;
 
     @BeforeEach
     void setUp() {
-        attendanceService = new AttendanceService(repository, studentAttendanceRepository, syllabusService);
+        attendanceService = new AttendanceService(repository, studentAttendanceRepository, syllabusService,
+                auditService);
     }
 
     @Test
@@ -56,7 +60,6 @@ class AttendanceServiceTest {
                 date,
                 ClassType.THEORY,
                 "Tema X",
-                LocalTime.of(9, 0)
-        ));
+                LocalTime.of(9, 0)));
     }
 }

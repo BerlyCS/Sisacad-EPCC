@@ -117,8 +117,8 @@ const mapStudentGrade = (payload: any): StudentGrade => {
   const normalizeArray = (items: unknown[]): number[] => {
     return Array.isArray(items)
       ? items
-          .map(value => toNumber(value))
-          .filter((value): value is number => value !== null)
+        .map(value => toNumber(value))
+        .filter((value): value is number => value !== null)
       : []
   }
 
@@ -206,7 +206,7 @@ const buildHttpError = async (response: Response) => {
   }
 
   const error = new Error(`${message} (HTTP ${response.status})`)
-  ;(error as Error & { status?: number }).status = response.status
+    ; (error as Error & { status?: number }).status = response.status
   return error
 }
 
@@ -300,6 +300,16 @@ export const gradeService = {
     const url = `${API_BASE_URL}/grades/courses/${courseId}/students/${encodeURIComponent(String(studentUserId))}/groups/${groupId}`
     const data = await requestJsonWithBody(url, 'POST', payload)
     return mapGradeSubmissionResponse(data)
+  },
+
+  async submitGradesBulk(courseId: number, groupId: number, payloads: (GradeSubmissionPayload & { studentId: number })[]): Promise<GradeSubmissionResponse[]> {
+    if (!courseId || !groupId || !payloads.length) {
+      throw new Error('Datos incompletos para el registro masivo')
+    }
+
+    const url = `${API_BASE_URL}/grades/courses/${courseId}/groups/${groupId}/bulk`
+    const data = await requestJsonWithBody(url, 'POST', payloads)
+    return Array.isArray(data) ? data.map(mapGradeSubmissionResponse) : []
   },
 
   async fetchGroupExamPdfs(groupId: number): Promise<CourseGroupExamPdf[]> {

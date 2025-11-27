@@ -3,3 +3,4 @@ export { default as ProfessorGradeStatsDrawer } from './ProfessorGradeStatsDrawe
 export { default as GroupFilterTabs } from './GroupFilterTabs.vue'
 export { default as GradeRosterTable } from './GradeRosterTable.vue'
 export { default as GradeEditorPanel } from './GradeEditorPanel.vue'
+export { default as BulkGradeEditor } from './BulkGradeEditor.vue'

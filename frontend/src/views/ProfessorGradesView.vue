@@ -35,6 +35,14 @@
             <button
               type="button"
               class="rounded-xl border border-gray-200 px-3 py-1.5 text-sm font-semibold text-gray-700 hover:bg-white"
+              :class="{ 'bg-blue-50 border-blue-200 text-blue-700': isBulkMode }"
+              @click="isBulkMode = !isBulkMode"
+            >
+              {{ isBulkMode ? 'Modo Individual' : 'Modo Masivo' }}
+            </button>
+            <button
+              type="button"
+              class="rounded-xl border border-gray-200 px-3 py-1.5 text-sm font-semibold text-gray-700 hover:bg-white"
               :disabled="rosterLoading"
               @click="handleRefreshRoster"
             >
@@ -57,7 +65,17 @@
           </div>
         </div>
 
-        <div class="grid gap-6 lg:grid-cols-[minmax(0,0.55fr)_minmax(0,0.45fr)]">
+        <div v-if="isBulkMode" class="h-[600px]">
+          <BulkGradeEditor
+            :students="rosterEntries"
+            :rubric="courseRubric"
+            :read-only="isGroupReadOnly" 
+            :saving="gradeMutationLoading"
+            @save="handleBulkSubmit"
+          />
+        </div>
+
+        <div v-else class="grid gap-6 lg:grid-cols-[minmax(0,0.55fr)_minmax(0,0.45fr)]">
           <div class="space-y-4">
             <GroupFilterTabs
               :groups="courseGroups"
@@ -105,10 +123,9 @@
   </AdminLayout>
 </template>
 
-<script setup lang="ts">
 import { computed, ref, watch, watchEffect } from 'vue'
 import AdminLayout from '@/components/ui/TopBar.vue'
-import { ProfessorCourseList, ProfessorGradeStatsDrawer, GroupFilterTabs, GradeRosterTable, GradeEditorPanel } from '@/components/features/professor'
+import { ProfessorCourseList, ProfessorGradeStatsDrawer, GroupFilterTabs, GradeRosterTable, GradeEditorPanel, BulkGradeEditor } from '@/components/features/professor'
 import { useProfessorGrades } from '@/composables/useProfessorGrades'
 import { useAuthStore } from '@/stores/auth'
 import type { ProfessorCourseSummary } from '@/services/gradeService'
@@ -140,12 +157,15 @@ const {
   updateSelectedGroups,
   refreshRoster,
   selectRosterStudent,
-  submitGrade
+  submitGrade,
+  submitBulkGrades
 } = useProfessorGrades()
 
 const hasAttemptedInitialLoad = ref(false)
 const rolesWithGradeAccess = new Set(['PROFESSOR', 'ADMIN'])
 const statsDrawerOpen = ref(false)
+const isBulkMode = ref(false)
+
 const resolvedUserRole = computed(() => {
   const role = authStore.userRole
   if (typeof role === 'string') {
@@ -224,6 +244,18 @@ const selectedStudentKey = computed(() => {
   return `${selectedRosterStudent.value.groupId}-${selectedRosterStudent.value.studentUserId}`
 })
 
+  return `${selectedRosterStudent.value.groupId}-${selectedRosterStudent.value.studentUserId}`
+})
+
+const isGroupReadOnly = computed(() => {
+  if (!selectedGroupIds.value.length) return true
+  // If any of the selected groups is not gradeable, we treat the bulk operation as read-only (or mixed, but safer to lock)
+  // Or better: check if the *currently displayed* students can be graded.
+  // Since we filter by group, let's check the groups corresponding to selectedGroupIds.
+  const selectedGroups = courseGroups.value.filter(g => selectedGroupIds.value.includes(g.groupId))
+  return selectedGroups.some(g => !g.canGrade)
+})
+
 const isReadonlyPanel = computed(() => {
   if (!selectedRosterStudent.value) {
     return true
@@ -242,6 +274,31 @@ const handleSubmitGrade = async (payload: { continuousGrades: number[]; examGrad
     examGrades: payload.examGrades,
     status: payload.status
   })
+}
+
+const handleBulkSubmit = async (payload: { students: any[], status: 'SUBMITTED' | 'DRAFT' }) => {
+  if (!selectedGroupIds.value.length) return
+  
+  // Assuming bulk edit is for the first selected group if multiple (or we iterate)
+  // For simplicity, let's take the first group ID as the target for now, 
+  // or filter students by group if the backend requires per-group calls.
+  // The backend endpoint is /courses/{courseId}/groups/{groupId}/bulk
+  // So we must group by groupId.
+  
+  const studentsByGroup = payload.students.reduce((acc, student) => {
+    const gid = student.groupId || selectedGroupIds.value[0]
+    if (!acc[gid]) acc[gid] = []
+    acc[gid].push(student)
+    return acc
+  }, {} as Record<number, any[]>)
+
+  for (const groupId of Object.keys(studentsByGroup)) {
+    await submitBulkGrades({
+      groupId: Number(groupId),
+      students: studentsByGroup[Number(groupId)],
+      status: payload.status
+    })
+  }
 }
 
 watch(() => selectedCourse.value, (course) => {

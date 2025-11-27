@@ -43,40 +43,44 @@ public class ProfessorGradingService {
     private final GradeRepository gradeRepository;
     private final GradeComputationService gradeComputationService;
     private final SyllabusService syllabusService;
+    private final AuditService auditService;
 
     public ProfessorGradingService(CourseRepository courseRepository,
-                                   CourseGroupRepository courseGroupRepository,
-                                   EnrollmentRepository enrollmentRepository,
-                                   GradeRepository gradeRepository,
-                                   GradeComputationService gradeComputationService,
-                                   SyllabusService syllabusService) {
+            CourseGroupRepository courseGroupRepository,
+            EnrollmentRepository enrollmentRepository,
+            GradeRepository gradeRepository,
+            GradeComputationService gradeComputationService,
+            SyllabusService syllabusService,
+            AuditService auditService) {
         this.courseRepository = courseRepository;
         this.courseGroupRepository = courseGroupRepository;
         this.enrollmentRepository = enrollmentRepository;
         this.gradeRepository = gradeRepository;
         this.gradeComputationService = gradeComputationService;
         this.syllabusService = syllabusService;
+        this.auditService = auditService;
     }
 
     public List<CourseGroupSummaryResponse> getCourseGroups(Long courseId, Professor professor, boolean isAdmin) {
         Course course = courseRepository.findById(courseId)
-            .orElseThrow(() -> new IllegalArgumentException("No se encontró el curso solicitado"));
+                .orElseThrow(() -> new IllegalArgumentException("No se encontró el curso solicitado"));
 
         List<CourseGroup> courseGroups = courseGroupRepository.findByCourseId(courseId);
         ensureCourseAccess(courseGroups, professor, isAdmin);
 
         return courseGroups.stream()
                 .map(group -> toGroupSummary(course, group, canGradeGroup(group, professor, isAdmin)))
-                .sorted(Comparator.comparing(CourseGroupSummaryResponse::groupLetter, Comparator.nullsLast(String::compareToIgnoreCase)))
+                .sorted(Comparator.comparing(CourseGroupSummaryResponse::groupLetter,
+                        Comparator.nullsLast(String::compareToIgnoreCase)))
                 .toList();
     }
 
     public CourseRosterPageResponse getCourseRoster(Long courseId,
-                                                    List<Long> targetGroupIds,
-                                                    int page,
-                                                    int size,
-                                                    Professor professor,
-                                                    boolean isAdmin) {
+            List<Long> targetGroupIds,
+            int page,
+            int size,
+            Professor professor,
+            boolean isAdmin) {
         Course course = courseRepository.findById(courseId)
                 .orElseThrow(() -> new IllegalArgumentException("No se encontró el curso solicitado"));
 
@@ -129,22 +133,23 @@ public class ProfessorGradingService {
                 course.getCourseId(),
                 String.valueOf(course.getCourseId()),
                 weights.continuousWeights(),
-                weights.examWeights()
-        );
+                weights.examWeights());
     }
 
     public GradeSubmissionResponse submitGrade(Long courseId,
-                                               Long groupId,
-                                               Long studentId,
-                                               GradeSubmissionRequest request,
-                                               Professor professor) {
+            Long groupId,
+            Long studentId,
+            GradeSubmissionRequest request,
+            Professor professor) {
         if (professor == null) {
             throw new AccessDeniedException("Solo los profesores autorizados pueden registrar notas");
         }
 
-        // Enforce syllabus presence: professor cannot submit grades if no syllabus uploaded
+        // Enforce syllabus presence: professor cannot submit grades if no syllabus
+        // uploaded
         syllabusService.getByCourseId(courseId)
-                .orElseThrow(() -> new IllegalArgumentException("Syllabus not found for this course. Please upload a syllabus first."));
+                .orElseThrow(() -> new IllegalArgumentException(
+                        "Syllabus not found for this course. Please upload a syllabus first."));
 
         Course course = courseRepository.findById(courseId)
                 .orElseThrow(() -> new IllegalArgumentException("No se encontró el curso seleccionado"));
@@ -179,27 +184,84 @@ public class ProfessorGradingService {
                 courseId,
                 resolveProfessorId(professor),
                 sanitizedContinuous,
-                sanitizedExam
-        );
+                sanitizedExam);
 
-        gradeRepository.save(grade);
+        if (persisted != null) {
+            grade.setVersion(persisted.getVersion());
+        }
+
+        String status = Optional.ofNullable(request.status()).orElse("SUBMITTED");
+        grade.setStatus(status);
+
+        try {
+            gradeRepository.save(grade);
+        } catch (org.springframework.dao.OptimisticLockingFailureException e) {
+            throw new IllegalStateException(
+                    "Conflicto: la nota cambió en otra sesión. Por favor, recargue y vuelva a intentar.");
+        }
+
+        auditService.logAction(resolveProfessorId(professor), "SUBMIT_GRADE", String.valueOf(grade.getGradeID()),
+                "Submitted grade for student " + studentId + " in course " + courseId + " with status " + status,
+                "UNKNOWN_IP");
 
         BigDecimal finalGrade = gradeComputationService.computeFinalGrade(grade, course);
         return new GradeSubmissionResponse(
                 groupId,
                 courseId,
-            resolveCourseCode(course),
+                resolveCourseCode(course),
                 studentId,
                 sanitizedContinuous,
                 sanitizedExam,
                 finalGrade.doubleValue(),
-                Optional.ofNullable(request.status()).orElse("SUBMITTED")
-        );
+                status);
+    }
+
+    public List<GradeSubmissionResponse> saveGradesBulk(Long courseId, Long groupId,
+            List<com.application.sisacadepcc.presentation.dto.StudentGradeSubmissionRequest> requests,
+            Professor professor) {
+        if (requests == null || requests.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        // Validate course/group access once
+        Course course = courseRepository.findById(courseId)
+                .orElseThrow(() -> new IllegalArgumentException("No se encontró el curso seleccionado"));
+        CourseGroup group = courseGroupRepository.findById(groupId)
+                .orElseThrow(() -> new IllegalArgumentException("No se encontró el grupo especificado"));
+
+        if (!Objects.equals(group.getCourseId(), courseId)) {
+            throw new IllegalArgumentException("El grupo no pertenece al curso indicado");
+        }
+        if (!canGradeGroup(group, professor, false)) {
+            throw new AccessDeniedException("No tienes permiso para registrar notas en este grupo");
+        }
+
+        // Enforce syllabus presence
+        syllabusService.getByCourseId(courseId)
+                .orElseThrow(() -> new IllegalArgumentException(
+                        "Syllabus not found for this course. Please upload a syllabus first."));
+
+        List<GradeSubmissionResponse> responses = new ArrayList<>();
+
+        for (com.application.sisacadepcc.presentation.dto.StudentGradeSubmissionRequest req : requests) {
+            try {
+                GradeSubmissionRequest singleReq = new GradeSubmissionRequest(
+                        req.continuousGrades(),
+                        req.examGrades(),
+                        req.status(),
+                        req.feedback());
+                responses.add(submitGrade(courseId, groupId, req.studentId(), singleReq, professor));
+            } catch (Exception e) {
+                // Propagate exception for now to ensure data consistency or user awareness
+                throw e;
+            }
+        }
+        return responses;
     }
 
     private void ensureCourseAccess(List<CourseGroup> courseGroups,
-                                    Professor professor,
-                                    boolean isAdmin) {
+            Professor professor,
+            boolean isAdmin) {
         if (isAdmin) {
             return;
         }
@@ -258,16 +320,15 @@ public class ProfessorGradingService {
         int capacity = group.getMaxCapacity() > 0 ? group.getMaxCapacity() : MAX_GROUP_CAPACITY;
 
         return new CourseGroupSummaryResponse(
-            group.getId(),
-            course.getCourseId(),
-            resolveCourseCode(course),
+                group.getId(),
+                course.getCourseId(),
+                resolveCourseCode(course),
                 course.getName(),
                 group.getLetter() != null ? group.getLetter() : "-",
                 resolveCourseType(group),
                 canGrade,
                 studentCount,
-                capacity
-        );
+                capacity);
     }
 
     private List<Integer> sanitizeGrades(List<Integer> grades) {
@@ -323,10 +384,10 @@ public class ProfessorGradingService {
     }
 
     private CourseRosterEntryResponse toRosterEntry(Course course,
-                                                    CourseGroup group,
-                                                    StudentEntity student,
-                                                    Grade grade,
-                                                    boolean canGradeGroup) {
+            CourseGroup group,
+            StudentEntity student,
+            Grade grade,
+            boolean canGradeGroup) {
         List<Integer> continuousGrades = grade != null ? grade.getContinuousGrades() : Collections.emptyList();
         List<Integer> examGrades = grade != null ? grade.getExamGrades() : Collections.emptyList();
 
@@ -342,15 +403,14 @@ public class ProfessorGradingService {
                 student.getInstitutionalEmail(),
                 group.getId(),
                 course.getCourseId(),
-            resolveCourseCode(course),
+                resolveCourseCode(course),
                 group.getLetter() != null ? group.getLetter() : "-",
                 resolveCourseType(group),
                 canGradeGroup,
                 continuousGrades,
                 examGrades,
                 finalGrade,
-                grade != null ? "SUBMITTED" : "PENDING"
-        );
+                grade != null ? "SUBMITTED" : "PENDING");
     }
 
     private String resolveCourseType(CourseGroup group) {

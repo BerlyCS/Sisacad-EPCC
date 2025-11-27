@@ -60,11 +60,11 @@ public class GradeController {
     private final CourseGroupExamsPdfService courseGroupExamsPdfService;
 
     public GradeController(GradeService gradeService,
-                           GradeQueryService gradeQueryService,
-                           GradeStatisticsService gradeStatisticsService,
-                           ProfessorGradingService professorGradingService,
-                           AuthorizationService authorizationService,
-                           CourseGroupExamsPdfService courseGroupExamsPdfService) {
+            GradeQueryService gradeQueryService,
+            GradeStatisticsService gradeStatisticsService,
+            ProfessorGradingService professorGradingService,
+            AuthorizationService authorizationService,
+            CourseGroupExamsPdfService courseGroupExamsPdfService) {
         this.gradeService = gradeService;
         this.gradeQueryService = gradeQueryService;
         this.gradeStatisticsService = gradeStatisticsService;
@@ -82,7 +82,7 @@ public class GradeController {
     @GetMapping("/students/{studentId}")
     @RequiresStudentAccess
     public ResponseEntity<List<StudentGradeResponse>> getGradesForStudent(@PathVariable Long studentId,
-                                                                          Authentication authentication) {
+            Authentication authentication) {
         if (!ownsStudentRecord(studentId, authentication)) {
             return ResponseEntity.status(403).build();
         }
@@ -92,8 +92,8 @@ public class GradeController {
     @GetMapping("/students/{studentId}/courses/{courseId}")
     @RequiresStudentAccess
     public ResponseEntity<StudentGradeResponse> getGradeForCourse(@PathVariable Long studentId,
-                                                                  @PathVariable Long courseId,
-                                                                  Authentication authentication) {
+            @PathVariable Long courseId,
+            Authentication authentication) {
         if (!ownsStudentRecord(studentId, authentication)) {
             return ResponseEntity.status(403).build();
         }
@@ -105,7 +105,7 @@ public class GradeController {
 
     @GetMapping("/courses/{courseId}/statistics")
     public ResponseEntity<ProfessorCourseGradeStatsResponse> getCourseStatistics(@PathVariable Long courseId,
-                                                                                Authentication authentication) {
+            Authentication authentication) {
         if (!authorizationService.hasAnyRole(authentication, UserRole.ADMIN, UserRole.PROFESSOR)) {
             return ResponseEntity.status(403).build();
         }
@@ -117,7 +117,7 @@ public class GradeController {
 
     @GetMapping("/courses/{courseId}/groups")
     public ResponseEntity<List<CourseGroupSummaryResponse>> getCourseGroups(@PathVariable Long courseId,
-                                                                            Authentication authentication) {
+            Authentication authentication) {
         if (!authorizationService.hasAnyRole(authentication, UserRole.ADMIN, UserRole.PROFESSOR)) {
             return ResponseEntity.status(403).build();
         }
@@ -128,8 +128,7 @@ public class GradeController {
             return ResponseEntity.ok(professorGradingService.getCourseGroups(
                     courseId,
                     authorizationService.getAuthenticatedProfessor(authentication).orElse(null),
-                    isAdmin
-            ));
+                    isAdmin));
         } catch (IllegalArgumentException ex) {
             return ResponseEntity.notFound().build();
         } catch (AccessDeniedException ex) {
@@ -139,10 +138,10 @@ public class GradeController {
 
     @GetMapping("/courses/{courseId}/students")
     public ResponseEntity<CourseRosterPageResponse> getCourseRoster(@PathVariable Long courseId,
-                                                                    @RequestParam(name = "groupIds", required = false) List<Long> groupIds,
-                                                                    @RequestParam(name = "page", defaultValue = "0") int page,
-                                                                    @RequestParam(name = "size", defaultValue = "150") int size,
-                                                                    Authentication authentication) {
+            @RequestParam(name = "groupIds", required = false) List<Long> groupIds,
+            @RequestParam(name = "page", defaultValue = "0") int page,
+            @RequestParam(name = "size", defaultValue = "150") int size,
+            Authentication authentication) {
         if (!authorizationService.hasAnyRole(authentication, UserRole.ADMIN, UserRole.PROFESSOR)) {
             return ResponseEntity.status(403).build();
         }
@@ -156,8 +155,7 @@ public class GradeController {
                     page,
                     size,
                     authorizationService.getAuthenticatedProfessor(authentication).orElse(null),
-                    isAdmin
-            );
+                    isAdmin);
             return ResponseEntity.ok(response);
         } catch (IllegalArgumentException ex) {
             return ResponseEntity.notFound().build();
@@ -168,7 +166,7 @@ public class GradeController {
 
     @GetMapping("/courses/{courseId}/rubric")
     public ResponseEntity<GradingRubricResponse> getCourseRubric(@PathVariable Long courseId,
-                                                                 Authentication authentication) {
+            Authentication authentication) {
         if (!authorizationService.hasAnyRole(authentication, UserRole.ADMIN, UserRole.PROFESSOR)) {
             return ResponseEntity.status(403).build();
         }
@@ -180,9 +178,7 @@ public class GradeController {
                     professorGradingService.getCourseRubric(
                             courseId,
                             authorizationService.getAuthenticatedProfessor(authentication).orElse(null),
-                            isAdmin
-                    )
-            );
+                            isAdmin));
         } catch (IllegalArgumentException ex) {
             return ResponseEntity.notFound().build();
         } catch (AccessDeniedException ex) {
@@ -192,10 +188,10 @@ public class GradeController {
 
     @PostMapping("/courses/{courseId}/students/{studentId}/groups/{groupId}")
     public ResponseEntity<GradeSubmissionResponse> submitGrade(@PathVariable Long courseId,
-                                                               @PathVariable("studentId") Long studentId,
-                                                               @PathVariable Long groupId,
-                                                               @RequestBody GradeSubmissionRequest request,
-                                                               Authentication authentication) {
+            @PathVariable("studentId") Long studentId,
+            @PathVariable Long groupId,
+            @RequestBody GradeSubmissionRequest request,
+            Authentication authentication) {
         if (!authorizationService.hasRole(authentication, UserRole.PROFESSOR)) {
             return ResponseEntity.status(403).build();
         }
@@ -206,8 +202,7 @@ public class GradeController {
                     groupId,
                     studentId,
                     request,
-                    authorizationService.getAuthenticatedProfessor(authentication).orElse(null)
-            );
+                    authorizationService.getAuthenticatedProfessor(authentication).orElse(null));
             return ResponseEntity.ok(response);
         } catch (IllegalArgumentException ex) {
             return ResponseEntity.badRequest().body(null);
@@ -216,9 +211,32 @@ public class GradeController {
         }
     }
 
+    @PostMapping("/courses/{courseId}/groups/{groupId}/bulk")
+    public ResponseEntity<List<GradeSubmissionResponse>> submitGradesBulk(@PathVariable Long courseId,
+            @PathVariable Long groupId,
+            @RequestBody List<com.application.sisacadepcc.presentation.dto.StudentGradeSubmissionRequest> requests,
+            Authentication authentication) {
+        if (!authorizationService.hasRole(authentication, UserRole.PROFESSOR)) {
+            return ResponseEntity.status(403).build();
+        }
+
+        try {
+            List<GradeSubmissionResponse> responses = professorGradingService.saveGradesBulk(
+                    courseId,
+                    groupId,
+                    requests,
+                    authorizationService.getAuthenticatedProfessor(authentication).orElse(null));
+            return ResponseEntity.ok(responses);
+        } catch (IllegalArgumentException ex) {
+            return ResponseEntity.badRequest().build();
+        } catch (AccessDeniedException ex) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        }
+    }
+
     @GetMapping("/groups/{groupId}/exam-summaries")
     public ResponseEntity<List<ExamSummaryResponse>> listExamSummaries(@PathVariable Long groupId,
-                                                                       Authentication authentication) {
+            Authentication authentication) {
         try {
             List<ExamSummaryResponse> response = courseGroupExamsPdfService.listSummaries(groupId, authentication)
                     .stream()
@@ -234,9 +252,9 @@ public class GradeController {
 
     @PostMapping(value = "/groups/{groupId}/exam-summaries", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<ExamSummaryResponse> uploadExamSummary(@PathVariable Long groupId,
-                                                                 @RequestPart("metadata") @Valid ExamSummaryUploadRequest request,
-                                                                 @RequestPart("file") MultipartFile file,
-                                                                 Authentication authentication) {
+            @RequestPart("metadata") @Valid ExamSummaryUploadRequest request,
+            @RequestPart("file") MultipartFile file,
+            Authentication authentication) {
         try {
             ExamSummaryResponse response = ExamSummaryResponse.from(
                     courseGroupExamsPdfService.uploadSummary(
@@ -244,9 +262,7 @@ public class GradeController {
                             request.examNumber(),
                             request.resolveSummaryType(),
                             file,
-                            authentication
-                    )
-            );
+                            authentication));
             return ResponseEntity.status(HttpStatus.CREATED).body(response);
         } catch (ExamSummaryValidationException ex) {
             return ResponseEntity.badRequest().build();
@@ -259,8 +275,8 @@ public class GradeController {
 
     @DeleteMapping("/groups/{groupId}/exam-summaries/{summaryId}")
     public ResponseEntity<Void> deleteExamSummary(@PathVariable Long groupId,
-                                                  @PathVariable Long summaryId,
-                                                  Authentication authentication) {
+            @PathVariable Long summaryId,
+            Authentication authentication) {
         try {
             courseGroupExamsPdfService.deleteSummary(groupId, summaryId, authentication);
             return ResponseEntity.noContent().build();
@@ -275,8 +291,8 @@ public class GradeController {
 
     @GetMapping("/groups/{groupId}/exam-summaries/{summaryId}/download")
     public ResponseEntity<Resource> downloadExamSummary(@PathVariable Long groupId,
-                                                        @PathVariable Long summaryId,
-                                                        Authentication authentication) {
+            @PathVariable Long summaryId,
+            Authentication authentication) {
         try {
             CourseGroupExamsPdfService.ExamPdfFile file = courseGroupExamsPdfService
                     .downloadSummary(groupId, summaryId, authentication);
@@ -285,7 +301,7 @@ public class GradeController {
                     ? file.summary().getContent().getName()
                     : "exam-summary.pdf";
             headers.add(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + filename + "\"");
-                ResponseEntity.BodyBuilder builder = ResponseEntity.ok()
+            ResponseEntity.BodyBuilder builder = ResponseEntity.ok()
                     .headers(headers)
                     .contentType(Objects.requireNonNull(MediaType.APPLICATION_PDF));
             if (file.summary().getContent() != null && file.summary().getContent().getSizeBytes() != null) {
@@ -301,8 +317,8 @@ public class GradeController {
 
     @GetMapping("/courses/{courseId}/groups/{groupId}/report")
     public ResponseEntity<Resource> downloadGradeReport(@PathVariable Long courseId,
-                                                        @PathVariable Long groupId,
-                                                        Authentication authentication) {
+            @PathVariable Long groupId,
+            Authentication authentication) {
         if (!authorizationService.hasAnyRole(authentication, UserRole.ADMIN, UserRole.PROFESSOR)) {
             return ResponseEntity.status(403).build();
         }
@@ -317,26 +333,26 @@ public class GradeController {
                     0,
                     1000, // Asumir máximo 1000 estudiantes
                     authorizationService.getAuthenticatedProfessor(authentication).orElse(null),
-                    isAdmin
-            );
+                    isAdmin);
 
             // Obtener info del curso y grupo
             List<CourseGroupSummaryResponse> groups = professorGradingService.getCourseGroups(
                     courseId,
                     authorizationService.getAuthenticatedProfessor(authentication).orElse(null),
-                    isAdmin
-            );
+                    isAdmin);
             CourseGroupSummaryResponse group = groups.stream()
                     .filter(g -> g.groupId().equals(groupId))
                     .findFirst()
                     .orElseThrow(() -> new IllegalArgumentException("Group not found"));
 
             // Asumir semesterNumber de algún lado; por ahora hardcode o buscar en Course
-            // Para simplicidad, asumir par/impar basado en algo; aquí hardcode A para ejemplo
+            // Para simplicidad, asumir par/impar basado en algo; aquí hardcode A para
+            // ejemplo
             String ciclo = "A"; // Placeholder, ajustar con semesterNumber
 
             // Generar Excel
-            byte[] excelBytes = generateGradeReportExcel(rosterResponse.students(), group.courseName(), ciclo, group.groupLetter());
+            byte[] excelBytes = generateGradeReportExcel(rosterResponse.students(), group.courseName(), ciclo,
+                    group.groupLetter());
 
             HttpHeaders headers = new HttpHeaders();
             headers.add(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"reporte_notas.xlsx\"");
@@ -356,7 +372,8 @@ public class GradeController {
         }
     }
 
-    private byte[] generateGradeReportExcel(List<CourseRosterEntryResponse> students, String courseName, String ciclo, String groupLetter) throws Exception {
+    private byte[] generateGradeReportExcel(List<CourseRosterEntryResponse> students, String courseName, String ciclo,
+            String groupLetter) throws Exception {
         Workbook workbook = new XSSFWorkbook();
         Sheet sheet = workbook.createSheet("Calificaciones");
 
@@ -395,7 +412,8 @@ public class GradeController {
 
         // Fila headers
         Row headerRow = sheet.createRow(rowNum++);
-        String[] headers = {"Nro", "CUI", "Apellidos y Nombres", "Nro. Matricula", "nota continua1", "nota examen 1", "nota continua 2", "nota examen 2", "nota continua 3", "nota examen 3"};
+        String[] headers = { "Nro", "CUI", "Apellidos y Nombres", "Nro. Matricula", "nota continua1", "nota examen 1",
+                "nota continua 2", "nota examen 2", "nota continua 3", "nota examen 3" };
         for (int i = 0; i < headers.length; i++) {
             headerRow.createCell(i).setCellValue(headers[i]);
         }

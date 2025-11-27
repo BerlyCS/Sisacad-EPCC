@@ -407,6 +407,44 @@ export const useGradeStore = defineStore('grades', () => {
     }
   }
 
+  const submitBulkGrades = async (payload: { groupId: number; students: any[]; status: string }) => {
+    if (!activeCourseId.value) {
+      throw new Error('No hay un curso activo seleccionado')
+    }
+
+    gradeMutationLoading.value = true
+    gradeMutationError.value = ''
+
+    try {
+      const responses = await gradeService.submitGradesBulk(
+        activeCourseId.value,
+        payload.groupId,
+        payload.students
+      )
+
+      // Update local state for all affected students
+      rosterEntries.value = rosterEntries.value.map(entry => {
+        const update = responses.find(r => r.studentUserId === entry.studentUserId)
+        if (update) {
+          return {
+            ...entry,
+            continuousGrades: update.continuousGrades,
+            examGrades: update.examGrades,
+            finalGrade: update.finalGrade,
+            submissionStatus: update.status
+          }
+        }
+        return entry
+      })
+    } catch (error) {
+      console.error('Error while submitting bulk grades', error)
+      gradeMutationError.value = error instanceof Error ? error.message : 'No se pudo registrar la nota masiva'
+      throw error
+    } finally {
+      gradeMutationLoading.value = false
+    }
+  }
+
   return {
     // state
     studentGrades,
@@ -458,6 +496,8 @@ export const useGradeStore = defineStore('grades', () => {
     updateSelectedGroups,
     refreshCourseRoster,
     selectRosterStudent,
-    submitRosterGrade
+    selectRosterStudent,
+    submitRosterGrade,
+    submitBulkGrades
   }
 })

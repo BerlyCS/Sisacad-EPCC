@@ -34,17 +34,20 @@ public class SyllabusService {
     private final AuthorizationService authorizationService;
     private final SyllabusStorageService storageService;
     private final Clock clock;
+    private final AuditService auditService;
 
     public SyllabusService(SyllabusRepository syllabusRepository,
-                           CourseRepository courseRepository,
-                           AuthorizationService authorizationService,
-                           SyllabusStorageService storageService,
-                           Clock clock) {
+            CourseRepository courseRepository,
+            AuthorizationService authorizationService,
+            SyllabusStorageService storageService,
+            Clock clock,
+            AuditService auditService) {
         this.syllabusRepository = syllabusRepository;
         this.courseRepository = courseRepository;
         this.authorizationService = authorizationService;
         this.storageService = storageService;
         this.clock = clock;
+        this.auditService = auditService;
     }
 
     public List<Syllabus> getAllSyllabus() {
@@ -67,11 +70,20 @@ public class SyllabusService {
     }
 
     public Syllabus uploadSyllabus(Long courseId,
-                                   MultipartFile syllabusFile,
-                                   List<SyllabusTopicInput> topics,
-                                   Authentication authentication) {
+            MultipartFile syllabusFile,
+            List<SyllabusTopicInput> topics,
+            Authentication authentication) {
         Course course = findCourse(courseId);
         ensureCanModify(authentication, course);
+
+        // Validate submission window (1 week from start date)
+        if (course.getStartDate() != null) {
+            LocalDate deadline = course.getStartDate().plusWeeks(1);
+            if (LocalDate.now(clock).isAfter(deadline)) {
+                throw new InvalidSyllabusException(
+                        "Syllabus submission deadline has passed (1 week from course start).");
+            }
+        }
 
         List<Topic> topicEntities = mapTopics(topics);
 
@@ -84,14 +96,21 @@ public class SyllabusService {
         }
 
         Content content = storageService.storeFile(syllabusFile, courseId);
-        Syllabus syllabusToPersist = buildSyllabus(existing != null ? existing.getId() : null, courseId, content, topicEntities);
+        Syllabus syllabusToPersist = buildSyllabus(existing != null ? existing.getId() : null, courseId, content,
+                topicEntities);
 
-        return syllabusRepository.save(syllabusToPersist);
+        Syllabus saved = syllabusRepository.save(syllabusToPersist);
+
+        Long userId = authorizationService.getAuthenticatedUserId(authentication);
+        auditService.logAction(userId, "UPLOAD_SYLLABUS", String.valueOf(saved.getId()),
+                "Uploaded syllabus for course " + courseId, "UNKNOWN_IP");
+
+        return saved;
     }
 
     public Syllabus updateTopics(Long courseId,
-                                 List<SyllabusTopicInput> topics,
-                                 Authentication authentication) {
+            List<SyllabusTopicInput> topics,
+            Authentication authentication) {
         Course course = findCourse(courseId);
         ensureCanModify(authentication, course);
 
@@ -147,7 +166,8 @@ public class SyllabusService {
             throw new SyllabusAccessDeniedException("Professor identification is required");
         }
 
-        List<Long> teacherIds = course.getGroups().stream().map(CourseGroup::getTeacherId).filter(Objects::nonNull).distinct().toList();
+        List<Long> teacherIds = course.getGroups().stream().map(CourseGroup::getTeacherId).filter(Objects::nonNull)
+                .distinct().toList();
         boolean isAssigned = teacherIds.stream().anyMatch(id -> Objects.equals(id, professorId));
         if (!isAssigned) {
             throw new SyllabusAccessDeniedException("You are not assigned to this course");
@@ -193,5 +213,6 @@ public class SyllabusService {
         return new Syllabus(id, courseId, content, topics);
     }
 
-    public record SyllabusFile(Resource resource, Content content) {}
+    public record SyllabusFile(Resource resource, Content content) {
+    }
 }

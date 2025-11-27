@@ -42,6 +42,9 @@ class ProfessorGradingServiceTest {
     @Mock
     private SyllabusService syllabusService;
 
+    @Mock
+    private AuditService auditService;
+
     private ProfessorGradingService professorGradingService;
 
     @BeforeEach
@@ -52,8 +55,8 @@ class ProfessorGradingServiceTest {
                 enrollmentRepository,
                 gradeRepository,
                 gradeComputationService,
-                syllabusService
-        );
+                syllabusService,
+                auditService);
     }
 
     @Test
@@ -77,6 +80,7 @@ class ProfessorGradingServiceTest {
 
         GradeSubmissionRequest request = new GradeSubmissionRequest(List.of(10), List.of(10), "SUBMITTED", null);
 
-        assertThrows(IllegalArgumentException.class, () -> professorGradingService.submitGrade(courseId, groupId, 200L, request, professor));
+        assertThrows(IllegalArgumentException.class,
+                () -> professorGradingService.submitGrade(courseId, groupId, 200L, request, professor));
     }
 }

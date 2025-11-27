@@ -18,6 +18,7 @@ public class Course {
     private List<CourseGroup> groups;
     private List<Integer> continuousGradeWeights;
     private List<Integer> examGradeWeights;
+    private java.time.LocalDate startDate;
 
     // Constructor sin parámetros
     public Course() {
@@ -25,7 +26,8 @@ public class Course {
     }
 
     // Constructor con parámetros
-    public Course(Integer courseCode, String name, Integer credits, Long syllabusId, Integer labHours, Integer practiceHours, Integer theoryHours, Integer semesterNumber) {
+    public Course(Integer courseCode, String name, Integer credits, Long syllabusId, Integer labHours,
+            Integer practiceHours, Integer theoryHours, Integer semesterNumber) {
         this.courseCode = courseCode;
         this.name = name;
         this.credits = credits;
@@ -44,35 +46,85 @@ public class Course {
     }
 
     // Getters y setters
-    public Long getCourseId() { return courseId; }
-    public void setCourseId(Long courseId) { this.courseId = courseId; }
+    public Long getCourseId() {
+        return courseId;
+    }
 
-    public Integer getCourseCode() { return courseCode; }
-    public void setCourseCode(Integer courseCode) { this.courseCode = courseCode; }
+    public void setCourseId(Long courseId) {
+        this.courseId = courseId;
+    }
 
-    public String getName() { return name; }
-    public void setName(String name) { this.name = name; }
+    public Integer getCourseCode() {
+        return courseCode;
+    }
 
-    public Integer getCredits() { return credits; }
-    public void setCredits(Integer credits) { this.credits = credits; }
+    public void setCourseCode(Integer courseCode) {
+        this.courseCode = courseCode;
+    }
 
-    public Long getSyllabusId() { return syllabusId; }
-    public void setSyllabusId(Long syllabusId) { this.syllabusId = syllabusId; }
+    public String getName() {
+        return name;
+    }
 
-    public Integer getLabHours() { return labHours; }
-    public void setLabHours(Integer labHours) { this.labHours = labHours; }
+    public void setName(String name) {
+        this.name = name;
+    }
 
-    public Integer getPracticeHours() { return practiceHours; }
-    public void setPracticeHours(Integer practiceHours) { this.practiceHours = practiceHours; }
+    public Integer getCredits() {
+        return credits;
+    }
 
-    public Integer getTheoryHours() { return theoryHours; }
-    public void setTheoryHours(Integer theoryHours) { this.theoryHours = theoryHours; }
+    public void setCredits(Integer credits) {
+        this.credits = credits;
+    }
 
-    public Integer getSemesterNumber() { return semesterNumber; }
-    public void setSemesterNumber(Integer semesterNumber) { this.semesterNumber = semesterNumber; }
+    public Long getSyllabusId() {
+        return syllabusId;
+    }
 
-    public List<CourseGroup> getGroups() { return groups; }
-    public void setGroups(List<CourseGroup> groups) { this.groups = groups != null ? groups : new ArrayList<>(); }
+    public void setSyllabusId(Long syllabusId) {
+        this.syllabusId = syllabusId;
+    }
+
+    public Integer getLabHours() {
+        return labHours;
+    }
+
+    public void setLabHours(Integer labHours) {
+        this.labHours = labHours;
+    }
+
+    public Integer getPracticeHours() {
+        return practiceHours;
+    }
+
+    public void setPracticeHours(Integer practiceHours) {
+        this.practiceHours = practiceHours;
+    }
+
+    public Integer getTheoryHours() {
+        return theoryHours;
+    }
+
+    public void setTheoryHours(Integer theoryHours) {
+        this.theoryHours = theoryHours;
+    }
+
+    public Integer getSemesterNumber() {
+        return semesterNumber;
+    }
+
+    public void setSemesterNumber(Integer semesterNumber) {
+        this.semesterNumber = semesterNumber;
+    }
+
+    public List<CourseGroup> getGroups() {
+        return groups;
+    }
+
+    public void setGroups(List<CourseGroup> groups) {
+        this.groups = groups != null ? groups : new ArrayList<>();
+    }
 
     public List<Integer> getContinuousGradeWeights() {
         return Collections.unmodifiableList(continuousGradeWeights);
@@ -118,5 +170,13 @@ public class Course {
         defaults.add(0);
         defaults.add(0);
         return defaults;
+    }
+
+    public java.time.LocalDate getStartDate() {
+        return startDate;
+    }
+
+    public void setStartDate(java.time.LocalDate startDate) {
+        this.startDate = startDate;
     }
 }

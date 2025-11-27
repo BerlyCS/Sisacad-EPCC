@@ -96,6 +96,10 @@ export const useProfessorGrades = () => {
     updateSelectedGroups,
     refreshRoster,
     selectRosterStudent,
-    submitGrade
+    submitGrade,
+    submitBulkGrades: async (payload: { groupId: number; students: any[]; status: string }) => {
+      await gradeStore.submitBulkGrades(payload)
+      await refreshRoster()
+    }
   }
 }
