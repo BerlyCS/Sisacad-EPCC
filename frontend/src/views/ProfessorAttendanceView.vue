@@ -341,7 +341,7 @@ const mapStudentToAttendance = (entry: CourseRosterEntry): AttendanceEntry => ({
   status: 'ABSENT'
 })
 
-const loadSyllabusStatus = async (courseId?: number | null) => {
+async function loadSyllabusStatus(courseId?: number | null) {
   if (!courseId) {
     syllabusSummary.value = null
     syllabusError.value = ''

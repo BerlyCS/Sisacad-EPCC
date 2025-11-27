@@ -123,6 +123,7 @@
   </AdminLayout>
 </template>
 
+<script setup lang="ts">
 import { computed, ref, watch, watchEffect } from 'vue'
 import AdminLayout from '@/components/ui/TopBar.vue'
 import { ProfessorCourseList, ProfessorGradeStatsDrawer, GroupFilterTabs, GradeRosterTable, GradeEditorPanel, BulkGradeEditor } from '@/components/features/professor'
@@ -241,9 +242,6 @@ const selectedStudentKey = computed(() => {
   if (!selectedRosterStudent.value) {
     return null
   }
-  return `${selectedRosterStudent.value.groupId}-${selectedRosterStudent.value.studentUserId}`
-})
-
   return `${selectedRosterStudent.value.groupId}-${selectedRosterStudent.value.studentUserId}`
 })
 

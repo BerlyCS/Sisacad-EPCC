@@ -496,7 +496,6 @@ export const useGradeStore = defineStore('grades', () => {
     updateSelectedGroups,
     refreshCourseRoster,
     selectRosterStudent,
-    selectRosterStudent,
     submitRosterGrade,
     submitBulkGrades
   }

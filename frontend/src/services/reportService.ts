@@ -34,5 +34,22 @@ export const reportService = {
         a.click()
         window.URL.revokeObjectURL(url)
         document.body.removeChild(a)
+    },
+
+    async downloadGradeExcel(courseId: number) {
+        const response = await fetch(`${API_BASE_URL}/reports/courses/${courseId}/grades/export/excel`, {
+            credentials: 'include'
+        })
+        if (!response.ok) throw new Error(`HTTP ${response.status}`)
+
+        const blob = await response.blob()
+        const url = window.URL.createObjectURL(blob)
+        const a = document.createElement('a')
+        a.href = url
+        a.download = `grade_report_${courseId}.xlsx`
+        document.body.appendChild(a)
+        a.click()
+        window.URL.revokeObjectURL(url)
+        document.body.removeChild(a)
     }
 }

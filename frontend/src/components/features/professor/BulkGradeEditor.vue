@@ -120,7 +120,7 @@ const calculateFinal = (student: any) => {
     
     let sum = 0
     for (let i = 0; i < weights.length; i++) {
-      sum += (grades[i] || 0) * (weights[i] / totalWeight)
+      sum += (grades[i] || 0) * ((weights?.[i] ?? 0) / totalWeight)
     }
     return sum
   }

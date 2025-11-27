@@ -139,7 +139,7 @@ import { useAuthStore } from '@/stores/auth';
 const DAYS = ['LUNES', 'MARTES', 'MIERCOLES', 'JUEVES', 'VIERNES'] as const;
 const START_MINUTES = 7 * 60;
 const END_MINUTES = 21 * 60;
-const SLOT_INTERVAL = 60; // minutes (1 hour)
+const SLOT_INTERVAL = 20; // minutes (1 hour)
 
 const route = useRoute();
 const router = useRouter();
