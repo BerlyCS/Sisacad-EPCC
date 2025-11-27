@@ -2,6 +2,7 @@ package com.application.sisacadepcc.presentation;
 
 import com.application.sisacadepcc.config.security.RequiresAdministratorAccess;
 import com.application.sisacadepcc.domain.model.Course;
+import com.application.sisacadepcc.presentation.dto.CourseSummaryResponse;
 import com.application.sisacadepcc.domain.model.CourseGroup;
 import com.application.sisacadepcc.presentation.dto.CourseDetailsResponse;
 import com.application.sisacadepcc.presentation.dto.CourseGroupAssignmentResponse;
@@ -35,8 +36,11 @@ public class CourseController {
     }
 
     @GetMapping
-    public ResponseEntity<List<Course>> getAllCourses() {
-        return ResponseEntity.ok(service.getAllCourses());
+    public ResponseEntity<List<CourseSummaryResponse>> getAllCourses() {
+        var list = service.getAllCourses().stream()
+                .map(CourseSummaryResponse::from)
+                .toList();
+        return ResponseEntity.ok(list);
     }
 
     @GetMapping("/{courseId}/groups")

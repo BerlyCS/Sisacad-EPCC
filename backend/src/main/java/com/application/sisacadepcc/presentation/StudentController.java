@@ -3,7 +3,10 @@ package com.application.sisacadepcc.presentation;
 import com.application.sisacadepcc.config.security.RequiresAdministratorAccess;
 import com.application.sisacadepcc.domain.model.Student;
 import com.application.sisacadepcc.domain.model.Course;
+import com.application.sisacadepcc.domain.model.CourseGroup;
+import com.application.sisacadepcc.domain.model.valueobject.CourseType;
 import com.application.sisacadepcc.presentation.dto.StudentScheduleEntry;
+import com.application.sisacadepcc.presentation.dto.StudentCourseDto;
 import com.application.sisacadepcc.service.StudentService;
 import com.application.sisacadepcc.service.StudentCourseService;
 import com.application.sisacadepcc.service.AuthorizationService;
@@ -45,14 +48,14 @@ public class StudentController {
 
     @GetMapping("/document/{studentId}/courses")
     @RequiresAdministratorAccess
-    public ResponseEntity<List<Course>> getCoursesByStudentDocument(@PathVariable Long studentId) {
+    public ResponseEntity<List<StudentCourseDto>> getCoursesByStudentDocument(@PathVariable Long studentId) {
         List<Course> courses = studentCourseService.getCoursesByStudent(studentId);
-        return ResponseEntity.ok(courses);
+        return ResponseEntity.ok(mapToStudentCourseDtos(courses));
     }
 
     // NUEVO ENDPOINT para que estudiantes vean sus propios cursos - SIN anotación de administrador
     @GetMapping("/my-courses")
-    public ResponseEntity<List<Course>> getMyCourses(@AuthenticationPrincipal OAuth2User principal) {
+    public ResponseEntity<List<StudentCourseDto>> getMyCourses(@AuthenticationPrincipal OAuth2User principal) {
         try {
             if (principal == null) {
                 return ResponseEntity.badRequest().build();
@@ -71,7 +74,7 @@ public class StudentController {
 
             Long studentId = student.get().getUserId();
             List<Course> courses = studentCourseService.getCoursesByStudent(studentId);
-            return ResponseEntity.ok(courses);
+            return ResponseEntity.ok(mapToStudentCourseDtos(courses));
 
         } catch (Exception e) {
             return ResponseEntity.internalServerError().build();
@@ -200,7 +203,7 @@ public class StudentController {
     }
 
     @GetMapping("/{cui}/courses")
-    public ResponseEntity<List<Course>> getStudentCourses(@PathVariable String cui,
+    public ResponseEntity<List<StudentCourseDto>> getStudentCourses(@PathVariable String cui,
                                                           Authentication authentication) {
         if (!authorizationService.hasAnyRole(authentication, UserRole.ADMIN, UserRole.SECRETARY,
                 UserRole.PROFESSOR, UserRole.STUDENT)) {
@@ -222,7 +225,7 @@ public class StudentController {
         }
 
         List<Course> courses = studentCourseService.getCoursesByStudent(student.getUserId());
-        return ResponseEntity.ok(courses);
+        return ResponseEntity.ok(mapToStudentCourseDtos(courses));
     }
 
     @GetMapping("/{cui}/schedule")
@@ -249,5 +252,59 @@ public class StudentController {
 
         List<StudentScheduleEntry> schedule = studentCourseService.getScheduleForStudent(student.getUserId());
         return ResponseEntity.ok(schedule);
+    }
+
+    private List<StudentCourseDto> mapToStudentCourseDtos(List<Course> courses) {
+        if (courses == null || courses.isEmpty()) {
+            return List.of();
+        }
+
+        return courses.stream()
+                .map(this::mapCourseToDto)
+                .filter(java.util.Objects::nonNull)
+                .collect(java.util.stream.Collectors.toList());
+    }
+
+    private StudentCourseDto mapCourseToDto(Course course) {
+        if (course == null) {
+            return null;
+        }
+
+        CourseGroup group = (course.getGroups() != null && !course.getGroups().isEmpty())
+                ? course.getGroups().get(0)
+                : null;
+
+        CourseType courseType = group != null && group.getType() != null
+                ? group.getType()
+                : CourseType.THEORY;
+
+        String groupLetter = group != null ? group.getLetter() : null;
+        Long courseGroupId = group != null ? group.getId() : null;
+
+        Long courseCode = course.getCourseCode() != null
+                ? course.getCourseCode().longValue()
+                : null;
+
+        return new StudentCourseDto(
+                course.getCourseId(),
+                courseCode,
+                course.getName(),
+                groupLetter,
+                courseType,
+                resolveCourseTypeLabel(courseType),
+                course.getCredits(),
+                courseGroupId
+        );
+    }
+
+    private String resolveCourseTypeLabel(CourseType type) {
+        if (type == null) {
+            return "Teoría";
+        }
+        return switch (type) {
+            case LAB -> "Laboratorio";
+            case THEORY -> "Teoría";
+            case PRACTICE -> "Práctica";
+        };
     }
 }

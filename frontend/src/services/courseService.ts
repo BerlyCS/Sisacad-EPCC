@@ -158,7 +158,13 @@ export const useCourseService = () => {
         throw new Error('Error al cargar los cursos')
       }
 
-      const data: any[] = await response.json()
+      let data: any[] = []
+      try {
+        data = await response.json()
+      } catch (parseErr) {
+        const raw = await response.text().catch(() => '<unavailable>')
+        throw new Error('Respuesta inválida del servidor al obtener cursos: ' + raw)
+      }
       courses.value = data.map(course => ({
         courseId: Number(course.courseId ?? course.courseID),
         courseCode: course.courseCode != null ? Number(course.courseCode) : null,

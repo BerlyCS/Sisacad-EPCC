@@ -28,7 +28,26 @@ export const useStudentGrades = () => {
   } = storeToRefs(gradeStore)
 
   const refresh = async (userId?: number) => {
-    const targetUserId = userId || Number(resolveRefString(authStore.userDocumentoIdentidad))
+    let targetUserId = userId || Number(resolveRefString(authStore.userDocumentoIdentidad))
+
+    if (!targetUserId || !Number.isFinite(targetUserId)) {
+      // Fallback: try to resolve userId from the student's CUI via the student profile endpoint
+      const cui = resolveRefString(authStore.userCui)
+      if (cui) {
+        try {
+          const resp = await fetch(`/api/students/profile/${encodeURIComponent(cui)}`, { credentials: 'include' })
+          if (resp.ok) {
+            const data = await resp.json()
+            const resolved = Number(data.userId ?? data.user_id ?? data.userID)
+            if (resolved && Number.isFinite(resolved)) {
+              targetUserId = resolved
+            }
+          }
+        } catch (err) {
+          console.warn('No se pudo resolver userId por CUI:', err)
+        }
+      }
+    }
 
     if (!targetUserId || !Number.isFinite(targetUserId)) {
       throw new Error('No se pudo determinar el ID del estudiante autenticado')

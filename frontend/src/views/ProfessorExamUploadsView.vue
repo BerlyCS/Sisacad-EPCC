@@ -82,7 +82,6 @@
             <header class="space-y-1">
               <p class="text-sm font-semibold text-gray-500 uppercase tracking-wide">Historial de PDFs</p>
               <h2 class="text-2xl font-bold text-gray-900">Resúmenes subidos</h2>
-              <p class="text-sm text-gray-500">Cada examen acepta un PDF por tipo de estadística (media, mejor y peor nota).</p>
             </header>
 
             <div v-if="examPdfsLoading" class="text-blue-600 text-sm">Cargando archivos...</div>
@@ -127,7 +126,7 @@
           <article class="rounded-2xl border border-gray-200 bg-white p-5 space-y-5">
             <header class="space-y-1">
               <p class="text-sm font-semibold text-gray-500 uppercase tracking-wide">Carga de PDF</p>
-              <h2 class="text-2xl font-bold text-gray-900">Subir estadística del examen</h2>
+              <h2 class="text-2xl font-bold text-gray-900">Subir examen</h2>
               <p class="text-sm text-gray-500">Formato PDF · Máx. 20 MB · Se reemplaza el archivo existente para el mismo tipo y examen.</p>
             </header>
 
