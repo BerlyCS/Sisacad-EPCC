@@ -79,7 +79,7 @@
             <p class="text-3xl font-bold text-gray-900">{{ formattedRoundedFinalGrade }}</p>
           </div>
           <p class="text-xs text-gray-500">Precisión decimal: {{ formattedExactGrade }}</p>
-          <p class="text-xs text-gray-400">El cálculo usa los pesos de la rúbrica actual y se redondea hacia arriba.</p>
+          <p class="text-xs text-gray-400">El cálculo usa los pesos de la rúbrica actual y se redondea con regla personalizada.</p>
           <p class="text-xs text-gray-400" v-if="student.finalGrade != null">
             Nota registrada actualmente: <span class="font-semibold text-gray-600">{{ registeredFinalGradeLabel }}</span>
           </p>
@@ -233,11 +233,17 @@ const weightedAverage = (values: number[], weights: number[]) => {
   return total
 }
 
+const customRound = (num: number) => {
+  const integer = Math.floor(num)
+  const fractional = num - integer
+  return fractional >= 0.45 ? integer + 1 : integer
+}
+
 const roundedFinalGrade = computed(() => {
   if (calculatedFinalGrade.value == null) {
     return null
   }
-  return Math.ceil(calculatedFinalGrade.value)
+  return customRound(calculatedFinalGrade.value)
 })
 
 const formattedRoundedFinalGrade = computed(() => {
@@ -258,7 +264,7 @@ const registeredFinalGradeLabel = computed(() => {
   if (!props.student || props.student.finalGrade == null) {
     return '--'
   }
-  return Math.ceil(Number(props.student.finalGrade)).toString()
+  return customRound(Number(props.student.finalGrade)).toString()
 })
 
 const handleSubmit = (status: 'SUBMITTED' | 'DRAFT') => {

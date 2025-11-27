@@ -29,7 +29,15 @@ public class GradeComputationService {
         }
 
         BigDecimal normalized = finalGrade.setScale(SCALE, RoundingMode.HALF_UP);
-        return normalized.setScale(0, RoundingMode.CEILING);
+
+        // Custom rounding rule: round up to next integer only if fractional part >= 0.45
+        BigDecimal integerPart = normalized.setScale(0, RoundingMode.DOWN);
+        BigDecimal fractional = normalized.subtract(integerPart);
+        BigDecimal threshold = BigDecimal.valueOf(0.45);
+        if (fractional.compareTo(threshold) >= 0) {
+            return integerPart.add(BigDecimal.ONE);
+        }
+        return integerPart;
     }
 
     public GradeWeightSnapshot snapshotWeights(Course course) {
