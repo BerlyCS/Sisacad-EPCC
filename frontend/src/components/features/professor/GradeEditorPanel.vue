@@ -197,9 +197,20 @@ const calculatedFinalGrade = computed(() => {
   if (!props.rubric) {
     return null
   }
-  const continuous = weightedAverage(continuousInputs.value, continuousWeights.value)
-  const exams = weightedAverage(examInputs.value, examWeights.value)
-  const total = continuous + exams
+
+  const continuousMean = weightedAverage(continuousInputs.value, continuousWeights.value)
+  const examsMean = weightedAverage(examInputs.value, examWeights.value)
+
+  const sumWeights = (weights: number[]) => (weights && weights.length ? weights.reduce((s, w) => s + (w ?? 0), 0) : 0)
+
+  const continuousWeightSum = sumWeights(continuousWeights.value)
+  const examWeightSum = sumWeights(examWeights.value)
+
+  // Convert group means (0-20) into contributions according to their percentage of the final grade
+  const continuousContribution = continuousWeightSum > 0 ? continuousMean * (continuousWeightSum / 100) : 0
+  const examContribution = examWeightSum > 0 ? examsMean * (examWeightSum / 100) : 0
+
+  const total = continuousContribution + examContribution
   if (!Number.isFinite(total)) {
     return null
   }
