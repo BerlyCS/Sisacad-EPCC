@@ -80,31 +80,66 @@
       </div>
 
       <div v-if="selectedCourseId">
-        <label class="block text-sm font-medium text-gray-700">Grupo del curso</label>
-        <div class="mt-1 relative">
-          <select
-            v-model="selectedCourseGroupId"
-            class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white text-gray-900 appearance-none pr-10"
+        <label class="block text-sm font-medium text-gray-700">Selecciona la letra del grupo</label>
+        <p class="text-xs text-gray-500">Se matriculará automáticamente en los bloques de teoría y práctica disponibles para la letra elegida (los laboratorios se gestionan aparte).</p>
+        <p v-if="courseGroupsLoading" class="mt-2 text-sm text-gray-500">Cargando grupos...</p>
+        <p v-else-if="groupSelectionOptions.length === 0" class="mt-2 text-sm text-red-600">
+          No existen grupos de teoría o práctica configurados para este curso.
+        </p>
+        <div v-else class="mt-3 grid gap-3 md:grid-cols-2">
+          <label
+            v-for="option in groupSelectionOptions"
+            :key="option.letter"
+            class="rounded-2xl border px-4 py-3 transition cursor-pointer"
+            :class="[
+              selectedGroupLetter === option.letter ? 'border-blue-500 bg-blue-50' : 'border-gray-200 hover:border-blue-300',
+              option.hasConflict ? 'opacity-60 cursor-not-allowed' : ''
+            ]"
           >
-            <option value="">Selecciona un grupo</option>
-            <option
-              v-for="group in availableCourseGroups"
-              :key="group.groupId"
-              :value="group.groupId"
+            <input
+              type="radio"
+              class="sr-only"
+              :value="option.letter"
+              v-model="selectedGroupLetter"
+              :disabled="option.hasConflict || isSubmitting"
             >
-              Grupo {{ group.letter }} - {{ group.typeLabel }} (Capacidad: {{ group.maxCapacity }})
-            </option>
-          </select>
-          <!-- Icono de flecha para el dropdown -->
-          <div class="absolute inset-y-0 right-0 flex items-center px-2 pointer-events-none">
-            <svg class="h-5 w-5 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
-              <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
-            </svg>
-          </div>
+            <div class="flex items-start justify-between gap-3">
+              <div>
+                <p class="text-base font-semibold text-gray-900">Grupo {{ option.letter }}</p>
+                <div class="mt-1 flex flex-wrap gap-1">
+                  <span
+                    v-for="group in option.groups"
+                    :key="`tag-${group.groupId}`"
+                    class="inline-flex items-center rounded-full border border-gray-200 bg-white/80 px-2 py-0.5 text-[11px] font-semibold text-gray-700"
+                  >
+                    {{ group.typeLabel }}
+                  </span>
+                </div>
+              </div>
+              <span
+                class="text-xs font-semibold"
+                :class="option.hasConflict ? 'text-red-600' : 'text-emerald-600'"
+              >
+                {{ option.hasConflict ? 'Conflicto de horario' : 'Disponible' }}
+              </span>
+            </div>
+            <ul class="mt-3 space-y-1 text-xs text-gray-600">
+              <li v-for="slot in option.scheduleSlots" :key="slot.key">
+                {{ slot.typeLabel }} · {{ slot.displayDay }} {{ slot.startTime || 'Sin hora' }} - {{ slot.endTime || 'Sin hora' }}
+              </li>
+              <li v-if="!option.scheduleSlots.length">Sin horario registrado</li>
+            </ul>
+            <p v-if="option.hasConflict" class="mt-2 text-xs text-red-600">
+              {{ option.conflictDetails[0] }}
+              <span v-if="option.conflictDetails.length > 1">(+{{ option.conflictDetails.length - 1 }} más)</span>
+            </p>
+          </label>
         </div>
-        <p v-if="courseGroupsLoading" class="mt-1 text-sm text-gray-500">Cargando grupos...</p>
-        <p v-else-if="availableCourseGroups.length === 0" class="mt-1 text-sm text-red-600">No se encontraron grupos disponibles para este curso</p>
-        <p v-if="courseGroupsError" class="mt-1 text-sm text-red-600">{{ courseGroupsError }}</p>
+        <p v-if="selectedLetterConflicts.length" class="mt-2 text-sm text-red-600">
+          No puedes matricular este grupo porque {{ selectedLetterConflicts[0] }}
+          <span v-if="selectedLetterConflicts.length > 1"> y {{ selectedLetterConflicts.length - 1 }} conflicto(s) adicional(es)</span>.
+        </p>
+        <p v-if="courseGroupsError" class="mt-2 text-sm text-red-600">{{ courseGroupsError }}</p>
       </div>
 
       <div class="flex flex-wrap gap-3">
@@ -128,17 +163,18 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
 import StudentProfileSummary from '@/components/features/student/StudentProfileSummary.vue'
 import StudentCoursesCard from '@/components/features/student/StudentCoursesCard.vue'
 import StudentScheduleCard from '@/components/features/student/StudentScheduleCard.vue'
 import { useCourseService } from '@/services/courseService'
+import type { CourseGroupSummary, CourseScheduleSlotSummary } from '@/services/courseService'
 import { useSecretaryService } from '@/services/secretaryService'
 import { useStudentService } from '@/services/studentService'
 
 const studentCui = ref('')
 const selectedCourseId = ref<number | ''>('')
-const selectedCourseGroupId = ref<number | ''>('')
+const selectedGroupLetter = ref('')
 const studentSearchError = ref('')
 const submitError = ref('')
 const successMessage = ref('')
@@ -158,7 +194,165 @@ const enrolledCourses = computed(() => studentProfile.value?.courses ?? [])
 const scheduleEntries = computed(() => studentProfile.value?.schedule ?? [])
 
 const availableCourses = computed(() => courses.value || [])
-const availableCourseGroups = computed(() => courseGroups.value || [])
+const DAY_LABELS: Record<string, string> = {
+  LUNES: 'Lunes',
+  MARTES: 'Martes',
+  MIERCOLES: 'Miércoles',
+  'MIÉRCOLES': 'Miércoles',
+  JUEVES: 'Jueves',
+  VIERNES: 'Viernes',
+  SABADO: 'Sábado',
+  'SÁBADO': 'Sábado'
+}
+
+const normalizeDay = (value?: string | null) => value?.trim().toUpperCase() ?? ''
+const formatDayLabel = (value?: string | null) => DAY_LABELS[normalizeDay(value)] ?? (value ?? 'Día sin definir')
+const toMinutes = (value?: string | null) => {
+  if (!value) {
+    return null
+  }
+  const [hours, minutes] = value.split(':')
+  const h = Number(hours)
+  const m = Number(minutes)
+  if (!Number.isFinite(h) || !Number.isFinite(m)) {
+    return null
+  }
+  return h * 60 + m
+}
+
+const normalizedStudentSchedule = computed(() => scheduleEntries.value
+  .map(entry => ({
+    label: `${entry.courseName} (${entry.courseType})`,
+    normalizedDay: normalizeDay(entry.dayOfWeek),
+    startMinutes: toMinutes(entry.startTime),
+    endMinutes: toMinutes(entry.endTime)
+  }))
+  .filter(block => block.normalizedDay && block.startMinutes !== null && block.endMinutes !== null)
+)
+
+type GroupScheduleBlock = {
+  key: string
+  typeLabel: string
+  displayDay: string
+  normalizedDay: string
+  startTime: string
+  endTime: string
+}
+
+type CourseGroupSelectionOption = {
+  letter: string
+  groups: CourseGroupSummary[]
+  scheduleSlots: GroupScheduleBlock[]
+  hasConflict: boolean
+  conflictDetails: string[]
+}
+
+const detectConflicts = (slots: GroupScheduleBlock[]) => {
+  const conflicts: string[] = []
+  slots.forEach(slot => {
+    const slotStart = toMinutes(slot.startTime)
+    const slotEnd = toMinutes(slot.endTime)
+    if (!slot.normalizedDay || slotStart === null || slotEnd === null) {
+      return
+    }
+    normalizedStudentSchedule.value.forEach(existing => {
+      if (!existing || existing.normalizedDay !== slot.normalizedDay) {
+        return
+      }
+      if (existing.startMinutes === null || existing.endMinutes === null) {
+        return
+      }
+      const overlaps = Math.max(slotStart, existing.startMinutes) < Math.min(slotEnd, existing.endMinutes)
+      if (overlaps) {
+        conflicts.push(`${slot.typeLabel} ${slot.displayDay} ${slot.startTime}-${slot.endTime} se cruza con ${existing.label}`)
+      }
+    })
+  })
+  return conflicts
+}
+
+const groupSelectionOptions = computed<CourseGroupSelectionOption[]>(() => {
+  if (!selectedCourseId.value) {
+    return []
+  }
+
+  const groups = (courseGroups.value || []).filter(group => group.type !== 'LAB')
+  if (!groups.length) {
+    return []
+  }
+
+  const bucket = new Map<string, CourseGroupSelectionOption>()
+  groups.forEach(group => {
+    const letter = (group.letter ?? '').trim().toUpperCase() || '-'
+    let option = bucket.get(letter)
+    if (!option) {
+      option = {
+        letter,
+        groups: [],
+        scheduleSlots: [],
+        hasConflict: false,
+        conflictDetails: []
+      }
+      bucket.set(letter, option)
+    }
+    option.groups.push(group)
+    const slots = (group.scheduleSlots ?? []).map((slot: CourseScheduleSlotSummary, index) => ({
+      key: `${group.groupId}-${slot.scheduleId ?? index}-${group.type}`,
+      typeLabel: group.typeLabel,
+      displayDay: formatDayLabel(slot.dayOfWeek),
+      normalizedDay: normalizeDay(slot.dayOfWeek),
+      startTime: slot.startTime ?? '',
+      endTime: slot.endTime ?? ''
+    }))
+    option.scheduleSlots.push(...slots)
+  })
+
+  return Array.from(bucket.values())
+    .map(option => {
+      const conflicts = detectConflicts(option.scheduleSlots)
+      return {
+        ...option,
+        hasConflict: conflicts.length > 0,
+        conflictDetails: conflicts
+      }
+    })
+    .sort((a, b) => a.letter.localeCompare(b.letter))
+})
+
+const selectedLetterOption = computed(() => {
+  if (!selectedGroupLetter.value) {
+    return null
+  }
+  return groupSelectionOptions.value.find(option => option.letter === selectedGroupLetter.value) ?? null
+})
+
+const selectedGroupIds = computed(() => selectedLetterOption.value
+  ? selectedLetterOption.value.groups
+      .map(group => group.groupId)
+      .filter((id): id is number => typeof id === 'number')
+  : [])
+
+const selectedLetterConflicts = computed(() => selectedLetterOption.value?.conflictDetails ?? [])
+const hasBlockingConflicts = computed(() => selectedLetterConflicts.value.length > 0)
+
+watch(groupSelectionOptions, options => {
+  if (!selectedCourseId.value) {
+    selectedGroupLetter.value = ''
+    return
+  }
+  if (!options.length) {
+    selectedGroupLetter.value = ''
+    return
+  }
+  if (selectedGroupLetter.value) {
+    const current = options.find(option => option.letter === selectedGroupLetter.value && !option.hasConflict)
+    if (current) {
+      return
+    }
+  }
+  const nextOption = options.find(option => !option.hasConflict) ?? options[0]
+  selectedGroupLetter.value = nextOption ? nextOption.letter : ''
+})
 
 const selectedCourse = computed(() => {
   if (!selectedCourseId.value) {
@@ -168,18 +362,10 @@ const selectedCourse = computed(() => {
   return courses.value.find(course => course.courseId === courseId) || null
 })
 
-const selectedCourseGroup = computed(() => {
-  if (!selectedCourseGroupId.value) {
-    return null
-  }
-  const groupId = Number(selectedCourseGroupId.value)
-  return courseGroups.value.find(group => group.groupId === groupId) || null
-})
-
-const canSubmit = computed(() => Boolean(studentProfile.value && selectedCourseGroup.value && !isSubmitting.value))
+const canSubmit = computed(() => Boolean(studentProfile.value && selectedGroupIds.value.length && !isSubmitting.value && !hasBlockingConflicts.value))
 
 const onCourseChange = async () => {
-  selectedCourseGroupId.value = ''
+  selectedGroupLetter.value = ''
   if (selectedCourseId.value) {
     await fetchCourseGroups(Number(selectedCourseId.value))
   }
@@ -254,8 +440,8 @@ const handleSubmit = async () => {
   submitError.value = ''
   successMessage.value = ''
 
-  if (!canSubmit.value || !studentProfile.value || !selectedCourseGroup.value) {
-    submitError.value = 'Selecciona un estudiante y un grupo de curso'
+  if (!canSubmit.value || !studentProfile.value || !selectedGroupIds.value.length) {
+    submitError.value = 'Selecciona un estudiante y un grupo de teoría/práctica disponible'
     return
   }
 
@@ -272,9 +458,12 @@ const handleSubmit = async () => {
     await enrollStudentInCourse({
       studentId: userId || undefined,
       studentCui: cui,
-      courseGroupId: selectedCourseGroup.value.groupId
+      courseGroupIds: selectedGroupIds.value
     })
-    successMessage.value = `Se matriculó correctamente al estudiante en ${selectedCourse.value?.name} - Grupo ${selectedCourseGroup.value.letter}`
+    const groupSummary = selectedLetterOption.value?.groups
+      .map(group => `${group.typeLabel} ${group.letter}`)
+      .join(' y ')
+    successMessage.value = `Se matriculó correctamente al estudiante en ${selectedCourse.value?.name ?? 'el curso'} (${groupSummary ?? 'sin detalle'})`
     await fetchStudentProfile(cui)
     await loadAcademicData(cui)
   } catch (error) {
@@ -288,7 +477,7 @@ const handleSubmit = async () => {
 const resetForm = () => {
   studentCui.value = ''
   selectedCourseId.value = ''
-  selectedCourseGroupId.value = ''
+  selectedGroupLetter.value = ''
   studentSearchError.value = ''
   submitError.value = ''
   successMessage.value = ''

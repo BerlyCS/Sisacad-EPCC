@@ -13,14 +13,15 @@ export interface Secretary {
 export interface EnrollmentPayload {
   studentId?: number
   studentCui?: string
-  courseGroupId: number
+  courseGroupIds: number[]
 }
 
 export interface EnrollmentResponse {
   success: boolean
   message: string
   studentId?: number
-  courseId?: number
+  courseId?: number | null
+  courseGroupIds?: number[]
 }
 
 export const useSecretaryService = () => {
@@ -50,8 +51,12 @@ export const useSecretaryService = () => {
   }
 
   const enrollStudentInCourse = async (payload: EnrollmentPayload): Promise<EnrollmentResponse> => {
-    if (!payload.courseGroupId) {
-      throw new Error('Debe seleccionar un grupo de curso')
+    const sanitizedGroupIds = Array.isArray(payload.courseGroupIds)
+      ? Array.from(new Set(payload.courseGroupIds.filter(id => typeof id === 'number' && Number.isFinite(id))))
+      : []
+
+    if (!sanitizedGroupIds.length) {
+      throw new Error('Debe seleccionar al menos un grupo de curso')
     }
 
     const response = await fetch(`${API_BASE_URL}/secretary/enrollments`, {
@@ -60,7 +65,11 @@ export const useSecretaryService = () => {
       headers: {
         'Content-Type': 'application/json'
       },
-      body: JSON.stringify(payload)
+      body: JSON.stringify({
+        studentId: payload.studentId,
+        studentCui: payload.studentCui,
+        courseGroupIds: sanitizedGroupIds
+      })
     })
 
     const data: EnrollmentResponse = await response.json().catch(() => ({

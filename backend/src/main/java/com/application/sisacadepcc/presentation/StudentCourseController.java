@@ -52,7 +52,7 @@ public class StudentCourseController {
     }
 
     @PostMapping("/secretary/enrollments")
-        public ResponseEntity<EnrollmentResponse> enrollStudentAsSecretary(
+    public ResponseEntity<EnrollmentResponse> enrollStudentAsSecretary(
             @RequestBody EnrollStudentRequest request,
             Authentication authentication) {
 
@@ -60,23 +60,29 @@ public class StudentCourseController {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         }
 
-        if (request == null || request.courseGroupId() == null || !request.hasStudentIdentifier()) {
+        if (request == null || !request.hasStudentIdentifier()) {
             return ResponseEntity.badRequest()
-                    .body(EnrollmentResponse.failure("Debe proporcionar el identificador del estudiante y el grupo de curso", null, request != null ? request.courseGroupId() : null));
+                    .body(EnrollmentResponse.failure("Debe proporcionar el identificador del estudiante y los grupos objetivo", null, null, List.of()));
+        }
+
+        List<Long> targetGroups = request.sanitizedCourseGroupIds();
+        if (targetGroups.isEmpty()) {
+            return ResponseEntity.badRequest()
+                    .body(EnrollmentResponse.failure("Selecciona al menos un grupo válido", null, null, List.of()));
         }
 
         Long studentId = resolveStudentId(request);
         if (studentId == null) {
             return ResponseEntity.badRequest()
-                    .body(EnrollmentResponse.failure("No se encontró al estudiante solicitado", null, request.courseGroupId()));
+                    .body(EnrollmentResponse.failure("No se encontró al estudiante solicitado", null, null, targetGroups));
         }
 
         try {
-            studentCourseService.enrollStudentInCourseGroup(studentId, request.courseGroupId());
-            return ResponseEntity.ok(EnrollmentResponse.success(studentId, request.courseGroupId()));
+            studentCourseService.enrollStudentInCourseGroups(studentId, targetGroups);
+            return ResponseEntity.ok(EnrollmentResponse.success(studentId, null, targetGroups));
         } catch (IllegalArgumentException | IllegalStateException ex) {
             return ResponseEntity.badRequest()
-                    .body(EnrollmentResponse.failure(ex.getMessage(), studentId, request.courseGroupId()));
+                    .body(EnrollmentResponse.failure(ex.getMessage(), studentId, null, targetGroups));
         }
     }
 

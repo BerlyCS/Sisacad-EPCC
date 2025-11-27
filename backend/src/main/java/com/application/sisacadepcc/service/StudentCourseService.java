@@ -3,11 +3,13 @@ package com.application.sisacadepcc.service;
 import com.application.sisacadepcc.domain.model.Student;
 import com.application.sisacadepcc.domain.model.Course;
 import com.application.sisacadepcc.domain.model.CourseGroup;
+import com.application.sisacadepcc.domain.model.valueobject.CourseType;
 import com.application.sisacadepcc.domain.repository.CourseRepository;
 import com.application.sisacadepcc.domain.repository.StudentRepository;
 import com.application.sisacadepcc.domain.repository.CourseGroupRepository;
 import com.application.sisacadepcc.domain.repository.EnrollmentRepository;
 import com.application.sisacadepcc.infrastructure.repository.jpa.EnrollmentEntity;
+import com.application.sisacadepcc.infrastructure.repository.jpa.StudentEntity;
 import com.application.sisacadepcc.infrastructure.repository.jpa.StudentJpaRepository;
 import com.application.sisacadepcc.infrastructure.repository.jpa.CourseGroupJpaRepository;
 import com.application.sisacadepcc.presentation.dto.StudentScheduleEntry;
@@ -18,6 +20,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Objects;
 
 @Service
 public class StudentCourseService {
@@ -88,34 +91,58 @@ public class StudentCourseService {
     }
 
     @Transactional
-    public void enrollStudentInCourseGroup(Long studentId, Long courseGroupId) {
-        if (studentId == null || courseGroupId == null) {
-            throw new IllegalArgumentException("Student ID and Course Group ID are required");
+    public void enrollStudentInCourseGroups(Long studentId, List<Long> courseGroupIds) {
+        if (studentId == null) {
+            throw new IllegalArgumentException("Student ID is required");
+        }
+
+        List<Long> targets = courseGroupIds == null
+                ? List.of()
+                : courseGroupIds.stream().filter(Objects::nonNull).distinct().toList();
+
+        if (targets.isEmpty()) {
+            throw new IllegalArgumentException("Debe seleccionar al menos un grupo válido");
         }
 
         Student student = studentRepository.findById(studentId)
                 .orElseThrow(() -> new IllegalArgumentException("Student not found"));
+        var studentEntity = studentJpaRepository.findById(studentId)
+                .orElseThrow(() -> new IllegalArgumentException("Student entity not found"));
+
+        for (Long courseGroupId : targets) {
+            enrollInSingleGroup(student, studentEntity, courseGroupId);
+        }
+    }
+
+    @Transactional
+    public void enrollStudentInCourseGroup(Long studentId, Long courseGroupId) {
+        enrollStudentInCourseGroups(studentId, courseGroupId != null ? List.of(courseGroupId) : List.of());
+    }
+
+    private void enrollInSingleGroup(Student student, StudentEntity studentEntity, Long courseGroupId) {
+        if (courseGroupId == null) {
+            throw new IllegalArgumentException("Course group ID is required");
+        }
 
         CourseGroup courseGroup = courseGroupRepository.findById(courseGroupId)
                 .orElseThrow(() -> new IllegalArgumentException("Course group not found"));
 
-        // Check if already enrolled
+        if (courseGroup.getType() == CourseType.LAB) {
+            throw new IllegalArgumentException("Los laboratorios deben gestionarse desde el módulo de estudiantes");
+        }
+
         boolean alreadyEnrolled = enrollmentRepository.findByCourseGroupId(courseGroupId).stream()
                 .anyMatch(enrollment -> enrollment.getStudent().getCui().equals(student.getCui()));
 
         if (alreadyEnrolled) {
-            throw new IllegalStateException("Student is already enrolled in this course group");
+            throw new IllegalStateException("El estudiante ya está matriculado en este grupo");
         }
 
-        // Check capacity
         long currentEnrollments = enrollmentRepository.countByCourseGroupId(courseGroupId);
         if (currentEnrollments >= courseGroup.getMaxCapacity()) {
-            throw new IllegalStateException("Course group is at full capacity");
+            throw new IllegalStateException("El grupo ha alcanzado su capacidad máxima");
         }
 
-        // Get entities for enrollment
-        var studentEntity = studentJpaRepository.findById(studentId)
-                .orElseThrow(() -> new IllegalArgumentException("Student entity not found"));
         var courseGroupEntity = courseGroupJpaRepository.findById(courseGroupId)
                 .orElseThrow(() -> new IllegalArgumentException("Course group entity not found"));
 
