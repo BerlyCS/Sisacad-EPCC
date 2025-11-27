@@ -42,17 +42,20 @@ public class ProfessorGradingService {
     private final EnrollmentRepository enrollmentRepository;
     private final GradeRepository gradeRepository;
     private final GradeComputationService gradeComputationService;
+    private final SyllabusService syllabusService;
 
     public ProfessorGradingService(CourseRepository courseRepository,
                                    CourseGroupRepository courseGroupRepository,
                                    EnrollmentRepository enrollmentRepository,
                                    GradeRepository gradeRepository,
-                                   GradeComputationService gradeComputationService) {
+                                   GradeComputationService gradeComputationService,
+                                   SyllabusService syllabusService) {
         this.courseRepository = courseRepository;
         this.courseGroupRepository = courseGroupRepository;
         this.enrollmentRepository = enrollmentRepository;
         this.gradeRepository = gradeRepository;
         this.gradeComputationService = gradeComputationService;
+        this.syllabusService = syllabusService;
     }
 
     public List<CourseGroupSummaryResponse> getCourseGroups(Long courseId, Professor professor, boolean isAdmin) {
@@ -138,6 +141,10 @@ public class ProfessorGradingService {
         if (professor == null) {
             throw new AccessDeniedException("Solo los profesores autorizados pueden registrar notas");
         }
+
+        // Enforce syllabus presence: professor cannot submit grades if no syllabus uploaded
+        syllabusService.getByCourseId(courseId)
+                .orElseThrow(() -> new IllegalArgumentException("Syllabus not found for this course. Please upload a syllabus first."));
 
         Course course = courseRepository.findById(courseId)
                 .orElseThrow(() -> new IllegalArgumentException("No se encontró el curso seleccionado"));

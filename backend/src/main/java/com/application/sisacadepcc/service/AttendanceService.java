@@ -105,6 +105,14 @@ public class AttendanceService {
 
     private void validateAttendanceRules(Long courseId, LocalDate date, LocalDateTime timestamp,
             java.time.LocalTime scheduledStartTime, String todo) {
+        if (courseId == null) {
+            throw new IllegalArgumentException("Course identifier is required to register attendance.");
+        }
+
+        syllabusService.getByCourseId(courseId)
+                .orElseThrow(() -> new IllegalArgumentException(
+                        "Syllabus not found for this course. Please upload a syllabus first."));
+
         // 1. Deadline Validation (48 hours)
         if (date.isBefore(LocalDate.now().minusDays(2))) {
             throw new IllegalArgumentException("Cannot register attendance for dates older than 48 hours.");
@@ -120,19 +128,7 @@ public class AttendanceService {
                         "Attendance registration is outside the 15-minute tolerance window.");
             }
         }
-
-        // 3. Syllabus Enforcement
-        if (todo != null && !todo.isBlank()) {
-            // Check if the topic is in the syllabus (fuzzy check or just presence)
-            // For now, we just ensure the syllabus exists for the course
-            syllabusService.getByCourseId(courseId)
-                    .orElseThrow(() -> new IllegalArgumentException(
-                            "Syllabus not found for this course. Please upload a syllabus first."));
-
-            // Advanced: Check if 'todo' matches any topic name?
-            // Let's keep it simple: just ensure syllabus exists so we know what SHOULD be
-            // taught.
-        }
+        // Additional validations (e.g., todo matching topics) can be added later if needed.
     }
 
     public List<com.application.sisacadepcc.domain.model.dto.StudentAttendanceDTO> getStudentAttendance(

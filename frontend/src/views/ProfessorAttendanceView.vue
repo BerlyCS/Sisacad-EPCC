@@ -22,6 +22,22 @@
           </p>
         </div>
 
+        <div v-if="syllabusLoading" class="rounded-xl border border-blue-200 bg-blue-50 px-4 py-3 text-sm text-blue-700">
+          Verificando que el sílabo del curso esté registrado...
+        </div>
+        <div v-else-if="syllabusError" class="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+          <span>{{ syllabusError }}</span>
+          <button type="button" class="text-sm font-semibold underline" @click="retrySyllabusCheck">
+            Reintentar
+          </button>
+        </div>
+        <div v-else-if="!canRegisterAttendance" class="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+          <p>Antes de registrar asistencia debes subir el sílabo del curso.</p>
+          <RouterLink to="/professor/syllabus" class="mt-1 inline-flex items-center text-sm font-semibold text-amber-900 underline">
+            Subir sílabo ahora
+          </RouterLink>
+        </div>
+
         <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div>
             <label class="block text-sm font-medium text-gray-700">Fecha</label>
@@ -106,13 +122,16 @@
           <button
             type="button"
             class="px-4 py-2 rounded-md text-white bg-blue-600 hover:bg-blue-700 transition disabled:opacity-60"
-            :disabled="professorAttendanceSubmitting || !withinProfessorTolerance || !activeGroup"
+            :disabled="professorAttendanceSubmitting || !withinProfessorTolerance || !activeGroup || !canRegisterAttendance"
             @click="handleProfessorAttendance"
           >
             {{ professorAttendanceSubmitting ? 'Registrando...' : 'Registrar mi asistencia' }}
           </button>
           <p v-if="!withinProfessorTolerance" class="text-sm text-amber-600">
             Solo puedes registrar tu asistencia dentro de los primeros 15 minutos del bloque elegido.
+          </p>
+          <p v-else-if="!canRegisterAttendance && !syllabusLoading" class="text-sm text-amber-700">
+            Debes subir el sílabo del curso para habilitar el registro de asistencia.
           </p>
           <p v-if="professorAttendanceError" class="text-sm text-red-600">{{ professorAttendanceError }}</p>
           <p v-if="professorAttendanceSuccess" class="text-sm text-green-600">¡Tu asistencia se registró correctamente!</p>
@@ -154,12 +173,15 @@
             <div class="mt-6 flex justify-end">
               <button 
                 @click="submitAttendance" 
-                :disabled="submitting"
+                :disabled="submitting || !canRegisterAttendance || !activeGroup"
                 class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition disabled:opacity-50"
               >
                 {{ submitting ? 'Guardando...' : 'Guardar Asistencia' }}
               </button>
             </div>
+            <p v-if="!canRegisterAttendance && !syllabusLoading" class="mt-2 text-amber-700 text-right">
+              Antes de guardar debes subir el sílabo del curso.
+            </p>
             <p v-if="submitError" class="mt-2 text-red-600 text-right">{{ submitError }}</p>
             <p v-if="submitSuccess" class="mt-2 text-green-600 text-right">Asistencia guardada correctamente.</p>
           </div>
@@ -176,6 +198,7 @@ import { ProfessorCourseList, GroupFilterTabs } from '@/components/features/prof
 import { attendanceService, type ClassType, type AttendanceStatus } from '@/services/attendanceService'
 import { useProfessorService } from '@/services/professorService'
 import type { CourseRosterEntry, ProfessorCourseSummary } from '@/services/gradeService'
+import { syllabusService, type CourseSyllabusSummary } from '@/services/syllabusService'
 import { useProfessorAttendanceWorkspace } from '@/composables/useProfessorAttendanceWorkspace'
 
 type AttendanceMode = 'PROFESSOR' | 'STUDENTS'
@@ -198,6 +221,10 @@ const {
   selectCourse,
   updateSelectedGroups
 } = useProfessorAttendanceWorkspace()
+
+const syllabusSummary = ref<CourseSyllabusSummary | null>(null)
+const syllabusLoading = ref(false)
+const syllabusError = ref('')
 
 const { fetchCurrentProfessor } = useProfessorService()
 
@@ -228,6 +255,8 @@ interface AttendanceEntry {
 }
 
 const attendanceList = ref<AttendanceEntry[]>([])
+
+const canRegisterAttendance = computed(() => Boolean(syllabusSummary.value))
 
 const activeGroupId = computed(() => selectedGroupIds.value[0] ?? null)
 const activeGroup = computed(() => {
@@ -272,6 +301,10 @@ watch(timeSlotOptions, options => {
   }
 })
 
+watch(() => selectedCourse.value?.courseId, courseId => {
+  void loadSyllabusStatus(courseId ?? null)
+}, { immediate: true })
+
 const selectedTimeSlot = computed(() => {
   if (!selectedTimeSlotKey.value) {
     return null
@@ -307,6 +340,28 @@ const mapStudentToAttendance = (entry: CourseRosterEntry): AttendanceEntry => ({
   fullName: entry.fullName,
   status: 'ABSENT'
 })
+
+const loadSyllabusStatus = async (courseId?: number | null) => {
+  if (!courseId) {
+    syllabusSummary.value = null
+    syllabusError.value = ''
+    syllabusLoading.value = false
+    return
+  }
+  syllabusLoading.value = true
+  syllabusError.value = ''
+  try {
+    syllabusSummary.value = await syllabusService.fetchByCourse(courseId)
+  } catch (error) {
+    console.error('Error while verifying syllabus status for attendance', error)
+    syllabusSummary.value = null
+    syllabusError.value = 'No se pudo verificar el estado del sílabo. Reintenta más tarde.'
+  } finally {
+    syllabusLoading.value = false
+  }
+}
+
+const retrySyllabusCheck = () => loadSyllabusStatus(selectedCourse.value?.courseId ?? null)
 
 watch(rosterEntries, entries => {
   attendanceList.value = entries.map(mapStudentToAttendance)
@@ -361,6 +416,11 @@ const handleProfessorAttendance = async () => {
     return
   }
 
+  if (!canRegisterAttendance.value) {
+    professorAttendanceError.value = 'Debes subir el sílabo del curso antes de registrar asistencia.'
+    return
+  }
+
   if (!withinProfessorTolerance.value) {
     professorAttendanceError.value = 'Estás fuera de la ventana de tolerancia de 15 minutos.'
     return
@@ -368,6 +428,10 @@ const handleProfessorAttendance = async () => {
 
   professorAttendanceSubmitting.value = true
   try {
+    const slot = selectedTimeSlot.value
+    if (!slot) {
+      throw new Error('Bloque horario inválido')
+    }
     await attendanceService.markProfessorAttendance({
       professorId: professorId.value,
       courseId: selectedCourse.value.courseId,
@@ -377,7 +441,7 @@ const handleProfessorAttendance = async () => {
       date: sessionDate.value,
       timestamp: new Date().toISOString(),
       todo: professorNote.value,
-      scheduledStartTime: selectedTimeSlot.value.startTime
+      scheduledStartTime: slot.startTime
     })
     professorAttendanceSuccess.value = true
   } catch (error) {
@@ -402,8 +466,22 @@ const submitAttendance = async () => {
     return
   }
 
+  if (!selectedTimeSlot.value) {
+    submitError.value = 'Selecciona un bloque horario para continuar.'
+    return
+  }
+
+  if (!canRegisterAttendance.value) {
+    submitError.value = 'Debes subir el sílabo del curso antes de registrar la asistencia.'
+    return
+  }
+
   submitting.value = true
   try {
+    const slot = selectedTimeSlot.value
+    if (!slot) {
+      throw new Error('Bloque horario inválido')
+    }
     await attendanceService.createSession({
       professorId: professorId.value,
       courseId: selectedCourse.value.courseId,
@@ -411,7 +489,7 @@ const submitAttendance = async () => {
       date: sessionDate.value,
       classType: classType.value,
       todo: professorNote.value,
-      scheduledStartTime: selectedTimeSlot.value.startTime,
+      scheduledStartTime: slot.startTime,
       students: attendanceList.value.map(student => ({
         studentId: student.studentId,
         status: student.status
