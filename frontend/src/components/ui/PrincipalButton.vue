@@ -32,6 +32,11 @@ const variantClasses = computed(() => {
     pinck: 'bg-pink-500 hover:bg-white hover:text-pink-500 hover:border-pink-500',
     gray: 'bg-gray-500 hover:bg-white hover:text-gray-500 hover:border-gray-500',
     green: 'bg-emerald-500 hover:bg-white hover:text-emerald-500 hover:border-emerald-500',
+    blue: 'bg-blue-500 hover:bg-white hover:text-blue-500 hover:border-blue-500',
+    yellow: 'bg-amber-400 hover:bg-white hover:text-amber-500 hover:border-amber-400',
+    pink: 'bg-pink-500 hover:bg-white hover:text-pink-500 hover:border-pink-500',
+    amber: 'bg-amber-500 hover:bg-white hover:text-amber-500 hover:border-amber-500',
+    cyan: 'bg-cyan-500 hover:bg-white hover:text-cyan-500 hover:border-cyan-500'
   }
   return map[props.color] ?? map.teal
 })

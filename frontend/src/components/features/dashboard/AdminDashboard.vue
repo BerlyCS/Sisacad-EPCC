@@ -34,6 +34,14 @@
         <ClipboardDocumentListIcon class="w-15 h-15 mx-auto mt-2 mb-4" />
         <h4 class="text-xl">Gestionar Reservas</h4>
       </PrincipalButton>
+      <PrincipalButton color="cyan" to="/admin/student-enrollment">
+        <UserPlusIcon class="w-15 h-15 mx-auto mt-2 mb-4" />
+        <h4 class="text-xl">Matricular Estudiantes</h4>
+      </PrincipalButton>
+      <PrincipalButton color="purple" to="/admin/labs">
+        <BuildingOffice2Icon class="w-15 h-15 mx-auto mt-2 mb-4" />
+        <h4 class="text-xl">Gestionar Laboratorios</h4>
+      </PrincipalButton>
     </div>
   </div>
 </template>
@@ -42,12 +50,14 @@
 import { PrincipalButton } from '@/components/ui'
 import {
   AcademicCapIcon,
+  BuildingOffice2Icon,
   BookOpenIcon,
   BriefcaseIcon,
   BuildingLibraryIcon,
   CalendarIcon,
   ClipboardDocumentListIcon,
   PlusIcon,
-  UserIcon
+  UserIcon,
+  UserPlusIcon
 } from '@heroicons/vue/16/solid'
 </script>

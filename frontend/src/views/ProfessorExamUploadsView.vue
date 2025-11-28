@@ -4,10 +4,6 @@
       <header class="space-y-2">
         <p class="text-sm font-semibold text-blue-500 uppercase tracking-wide">Gestión de exámenes</p>
         <h1 class="text-3xl font-bold text-gray-900">Resumenes PDF de exámenes</h1>
-        <p class="text-gray-600">
-          Selecciona uno de tus cursos teóricos para cargar el PDF con la nota media, la peor y la mejor calificación de cada examen.
-          Solo los profesores asignados a grupos teóricos pueden realizar esta operación.
-        </p>
       </header>
 
       <ProfessorCourseList
