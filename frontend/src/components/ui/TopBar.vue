@@ -149,15 +149,6 @@
               <span>Laboratorios</span>
             </router-link>
 
-            <router-link 
-              v-if="userRole === 'ADMIN'" 
-              to="/reservation-management" 
-              class="text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-all duration-200 px-3 py-2 rounded-md text-sm font-medium flex items-center space-x-2"
-              :class="{ 'bg-blue-100 text-blue-700': $route.path === '/reservation-management' }"
-            >
-              <i class="fas fa-tasks"></i>
-              <span>Gestionar Reservas</span>
-            </router-link>
           </div>
         </div>
 
@@ -293,15 +284,6 @@
               Laboratorios
             </router-link>
 
-            <router-link 
-              v-if="userRole === 'ADMIN'"
-              to="/reservation-management"
-              class="block text-gray-700 hover:bg-gray-100 rounded-md px-3 py-2 text-sm font-medium"
-              :class="{ 'bg-blue-100 text-blue-700': $route.path === '/reservation-management' }"
-              @click="isMenuOpen = false"
-            >
-              Gestionar Reservas
-            </router-link>
           </div>
         </transition>
       </div>
@@ -330,16 +312,22 @@ const { userRole, userCui } = storeToRefs(authStore)
 const adminNavigation = [
   { name: 'Aulas', to: '/admin/classrooms' },
   { name: 'Cursos', to: '/admin/courses' },
+  { name: 'Agregar curso', to: '/admin/courses/add' },
   { name: 'Profesores', to: '/admin/professors' },
   { name: 'Estudiantes', to: '/admin/students' },
-  { name: 'Secretarias', to: '/admin/secretaries' }
+  { name: 'Secretarias', to: '/admin/secretaries' },
+  { name: 'Matricular', to: '/admin/student-enrollment' },
+  { name: 'Laboratorios', to: '/admin/labs' },
+  { name: 'Reservas', to: '/reservation-management' }
 ]
 
 const secretaryNavigation = [
   { name: 'Aulas', to: '/admin/classrooms' },
   { name: 'Estudiantes', to: '/admin/students' },
   { name: 'Gestionar cursos', to: '/admin/courses' },
-  { name: 'Matricular', to: '/admin/student-enrollment' }
+  { name: 'Agregar curso', to: '/admin/courses/add' },
+  { name: 'Matricular', to: '/admin/student-enrollment' },
+  { name: 'Laboratorios', to: '/admin/labs' }
 ]
 </script>
 
