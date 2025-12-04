@@ -63,6 +63,7 @@ public class CourseService {
     }
 
     public Course createCourse(Course course) {
+        validateCourseWeights(course);
         return repository.save(course);
     }
 
@@ -368,6 +369,29 @@ public class CourseService {
             return CourseType.fromValue(rawType.trim());
         } catch (IllegalArgumentException ex) {
             return CourseType.THEORY;
+        }
+    }
+
+    private void validateCourseWeights(Course course) {
+        if (course == null) {
+            throw new IllegalArgumentException("El curso no puede ser nulo");
+        }
+
+        List<Integer> continuousWeights = course.getContinuousGradeWeights();
+        if (continuousWeights == null || continuousWeights.size() != 3) {
+            throw new IllegalArgumentException("Las evaluaciones continuas deben tener exactamente 3 porcentajes");
+        }
+        int continuousSum = continuousWeights.stream().mapToInt(Integer::intValue).sum();
+
+        List<Integer> examWeights = course.getExamGradeWeights();
+        if (examWeights == null || examWeights.size() != 3) {
+            throw new IllegalArgumentException("Los exámenes deben tener exactamente 3 porcentajes");
+        }
+        int examSum = examWeights.stream().mapToInt(Integer::intValue).sum();
+
+        int totalSum = continuousSum + examSum;
+        if (totalSum != 100) {
+            throw new IllegalArgumentException("Los porcentajes de las evaluaciones continuas y exámenes deben sumar 100% en total. Actualmente suman " + totalSum + "%.");
         }
     }
 

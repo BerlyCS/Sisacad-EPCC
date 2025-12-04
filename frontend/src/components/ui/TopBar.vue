@@ -312,7 +312,6 @@ const { userRole, userCui } = storeToRefs(authStore)
 const adminNavigation = [
   { name: 'Aulas', to: '/admin/classrooms' },
   { name: 'Cursos', to: '/admin/courses' },
-  { name: 'Agregar curso', to: '/admin/courses/add' },
   { name: 'Profesores', to: '/admin/professors' },
   { name: 'Estudiantes', to: '/admin/students' },
   { name: 'Secretarias', to: '/admin/secretaries' },
@@ -325,7 +324,6 @@ const secretaryNavigation = [
   { name: 'Aulas', to: '/admin/classrooms' },
   { name: 'Estudiantes', to: '/admin/students' },
   { name: 'Gestionar cursos', to: '/admin/courses' },
-  { name: 'Agregar curso', to: '/admin/courses/add' },
   { name: 'Matricular', to: '/admin/student-enrollment' },
   { name: 'Laboratorios', to: '/admin/labs' }
 ]

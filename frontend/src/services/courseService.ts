@@ -30,6 +30,8 @@ export interface Course {
   practiceHours: number | null
   theoryHours: number | null
   semesterNumber: number | null
+  continuousGradeWeights?: number[] | null
+  examGradeWeights?: number[] | null
   enrolledStudentIDs?: number[]
   teacherIDs?: number[]
 }
@@ -111,6 +113,17 @@ const resolveCourseTypeLabel = (type?: CourseType | string | null): string => {
   return COURSE_TYPE_LABEL[normalized as CourseType] ?? COURSE_TYPE_LABEL.THEORY
 }
 
+const ensureWeightList = (value: unknown): number[] => {
+  const normalized = [0, 0, 0]
+  if (Array.isArray(value)) {
+    for (let i = 0; i < normalized.length; i++) {
+      const candidate = Number(value[i])
+      normalized[i] = Number.isFinite(candidate) && candidate >= 0 ? candidate : 0
+    }
+  }
+  return normalized
+}
+
 export interface CourseScheduleSlotPayload {
   dayOfWeek: string
   startTime: string
@@ -175,6 +188,8 @@ export const useCourseService = () => {
         practiceHours: course.practiceHours != null ? Number(course.practiceHours) : null,
         theoryHours: course.theoryHours != null ? Number(course.theoryHours) : null,
         semesterNumber: course.semesterNumber != null ? Number(course.semesterNumber) : null,
+        continuousGradeWeights: ensureWeightList(course.continuousGradeWeights),
+        examGradeWeights: ensureWeightList(course.examGradeWeights),
         enrolledStudentIDs: [],
         teacherIDs: []
       }))

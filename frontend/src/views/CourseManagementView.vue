@@ -133,95 +133,214 @@
             <p v-if="createCourseError" class="mt-2">{{ createCourseError }}</p>
           </div>
 
-          <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
+          <section class="rounded-2xl border border-gray-200 p-4 space-y-4">
+            <div>
+              <p class="text-xs font-semibold uppercase tracking-wide text-blue-500">Información básica</p>
+              <h4 class="text-lg font-semibold text-gray-900">Identificación del curso</h4>
+            </div>
+            <div class="grid grid-cols-1 gap-4 md:grid-cols-3">
+              <label class="text-sm font-medium text-gray-700">
+                Código del curso
+                <input
+                  v-model="newCourseForm.courseCode"
+                  type="number"
+                  inputmode="numeric"
+                  class="mt-2 w-full rounded-xl border border-gray-200 px-4 py-2 text-sm focus:border-blue-500 focus:outline-none"
+                  placeholder="Ej. 1701101"
+                  :disabled="createCourseLoading"
+                  min="1"
+                />
+              </label>
+              <label class="text-sm font-medium text-gray-700">
+                Créditos
+                <input
+                  v-model="newCourseForm.credits"
+                  type="number"
+                  inputmode="numeric"
+                  class="mt-2 w-full rounded-xl border border-gray-200 px-4 py-2 text-sm focus:border-blue-500 focus:outline-none"
+                  placeholder="Ej. 3"
+                  :disabled="createCourseLoading"
+                  min="1"
+                />
+              </label>
+              <label class="text-sm font-medium text-gray-700">
+                Semestre
+                <input
+                  v-model="newCourseForm.semesterNumber"
+                  type="number"
+                  inputmode="numeric"
+                  class="mt-2 w-full rounded-xl border border-gray-200 px-4 py-2 text-sm focus:border-blue-500 focus:outline-none"
+                  placeholder="1"
+                  :disabled="createCourseLoading"
+                  min="1"
+                />
+              </label>
+            </div>
             <label class="text-sm font-medium text-gray-700">
-              Código del curso
+              Nombre del curso
               <input
-                v-model="newCourseForm.courseCode"
-                type="number"
-                inputmode="numeric"
+                v-model="newCourseForm.name"
+                type="text"
                 class="mt-2 w-full rounded-xl border border-gray-200 px-4 py-2 text-sm focus:border-blue-500 focus:outline-none"
-                placeholder="Ej. 1701101"
+                placeholder="Ingresa el nombre oficial"
                 :disabled="createCourseLoading"
-                min="1"
               />
             </label>
-            <label class="text-sm font-medium text-gray-700">
-              Créditos
-              <input
-                v-model="newCourseForm.credits"
-                type="number"
-                inputmode="numeric"
-                class="mt-2 w-full rounded-xl border border-gray-200 px-4 py-2 text-sm focus:border-blue-500 focus:outline-none"
-                placeholder="Ej. 3"
-                :disabled="createCourseLoading"
-                min="1"
-              />
-            </label>
-          </div>
+          </section>
 
-          <label class="text-sm font-medium text-gray-700">
-            Nombre del curso
-            <input
-              v-model="newCourseForm.name"
-              type="text"
-              class="mt-2 w-full rounded-xl border border-gray-200 px-4 py-2 text-sm focus:border-blue-500 focus:outline-none"
-              placeholder="Ingresa el nombre oficial"
-              :disabled="createCourseLoading"
-            />
-          </label>
+          <section class="rounded-2xl border border-gray-200 p-4 space-y-4">
+            <div>
+              <p class="text-xs font-semibold uppercase tracking-wide text-blue-500">Plan académico</p>
+              <h4 class="text-lg font-semibold text-gray-900">Distribución de horas</h4>
+            </div>
+            <div class="grid grid-cols-1 gap-4 md:grid-cols-3">
+              <label class="text-sm font-medium text-gray-700">
+                Horas teoría
+                <input
+                  v-model="newCourseForm.theoryHours"
+                  type="number"
+                  inputmode="numeric"
+                  class="mt-2 w-full rounded-xl border border-gray-200 px-4 py-2 text-sm focus:border-blue-500 focus:outline-none"
+                  placeholder="0"
+                  :disabled="createCourseLoading"
+                  min="0"
+                />
+              </label>
+              <label class="text-sm font-medium text-gray-700">
+                Horas práctica
+                <input
+                  v-model="newCourseForm.practiceHours"
+                  type="number"
+                  inputmode="numeric"
+                  class="mt-2 w-full rounded-xl border border-gray-200 px-4 py-2 text-sm focus:border-blue-500 focus:outline-none"
+                  placeholder="0"
+                  :disabled="createCourseLoading"
+                  min="0"
+                />
+              </label>
+              <label class="text-sm font-medium text-gray-700">
+                Horas laboratorio
+                <input
+                  v-model="newCourseForm.labHours"
+                  type="number"
+                  inputmode="numeric"
+                  class="mt-2 w-full rounded-xl border border-gray-200 px-4 py-2 text-sm focus:border-blue-500 focus:outline-none"
+                  placeholder="0"
+                  :disabled="createCourseLoading"
+                  min="0"
+                />
+              </label>
+            </div>
+          </section>
 
-          <div class="grid grid-cols-1 gap-4 md:grid-cols-3">
-            <label class="text-sm font-medium text-gray-700">
-              Horas teoría
-              <input
-                v-model="newCourseForm.theoryHours"
-                type="number"
-                inputmode="numeric"
-                class="mt-2 w-full rounded-xl border border-gray-200 px-4 py-2 text-sm focus:border-blue-500 focus:outline-none"
-                placeholder="0"
-                :disabled="createCourseLoading"
-                min="0"
-              />
-            </label>
-            <label class="text-sm font-medium text-gray-700">
-              Horas práctica
-              <input
-                v-model="newCourseForm.practiceHours"
-                type="number"
-                inputmode="numeric"
-                class="mt-2 w-full rounded-xl border border-gray-200 px-4 py-2 text-sm focus:border-blue-500 focus:outline-none"
-                placeholder="0"
-                :disabled="createCourseLoading"
-                min="0"
-              />
-            </label>
-            <label class="text-sm font-medium text-gray-700">
-              Horas laboratorio
-              <input
-                v-model="newCourseForm.labHours"
-                type="number"
-                inputmode="numeric"
-                class="mt-2 w-full rounded-xl border border-gray-200 px-4 py-2 text-sm focus:border-blue-500 focus:outline-none"
-                placeholder="0"
-                :disabled="createCourseLoading"
-                min="0"
-              />
-            </label>
-          </div>
+          <section class="rounded-2xl border border-gray-200 bg-white/70 p-5 space-y-6 shadow-sm">
+            <div class="flex flex-col gap-2 md:flex-row md:items-end md:justify-between">
+              <div>
+                <p class="text-xs font-semibold uppercase tracking-wide text-blue-500">Evaluaciones</p>
+                <h4 class="text-lg font-semibold text-gray-900">Porcentaje de evaluaciones</h4>
+              </div>
+              <div class="inline-flex items-center gap-2 rounded-full border px-4 py-1 text-sm font-semibold"
+                :class="isTotalWeightBalanced ? 'border-green-200 bg-green-50 text-green-700' : 'border-red-200 bg-red-50 text-red-700'">
+                <span>{{ Math.round(totalWeightSum) }}%</span>
+                <span class="text-xs text-gray-400">/ 100%</span>
+              </div>
+            </div>
 
-          <label class="text-sm font-medium text-gray-700">
-            Número de semestre (opcional)
-            <input
-              v-model="newCourseForm.semesterNumber"
-              type="number"
-              inputmode="numeric"
-              class="mt-2 w-full rounded-xl border border-gray-200 px-4 py-2 text-sm focus:border-blue-500 focus:outline-none"
-              placeholder="1"
-              :disabled="createCourseLoading"
-              min="1"
-            />
-          </label>
+            <div class="grid gap-4 lg:grid-cols-2">
+              <div class="rounded-2xl border border-gray-200 bg-gray-50/60 p-4 space-y-4">
+                <div class="flex items-center justify-between">
+                  <div>
+                    <p class="text-xs font-semibold uppercase tracking-wide text-blue-500">Evaluaciones continuas</p>
+                  </div>
+                  <span class="text-xs font-semibold" :class="isTotalWeightBalanced ? 'text-green-600' : 'text-amber-600'">
+                    {{ Math.round(continuousWeightSum) }}%
+                  </span>
+                </div>
+                <div class="grid grid-cols-1 gap-3 md:grid-cols-3">
+                  <label
+                    v-for="(label, index) in continuousWeightFieldLabels"
+                    :key="`continuous-${index}`"
+                    class="text-sm font-medium text-gray-700"
+                  >
+                    {{ label }}
+                    <input
+                      v-model="newCourseForm.continuousWeights[index]"
+                      type="number"
+                      min="0"
+                      max="100"
+                      step="1"
+                      class="mt-1 w-full rounded-xl border border-gray-200 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none"
+                      placeholder="0"
+                      :disabled="createCourseLoading"
+                    />
+                  </label>
+                </div>
+              </div>
+
+              <div class="rounded-2xl border border-gray-200 bg-gray-50/60 p-4 space-y-4">
+                <div class="flex items-center justify-between">
+                  <div>
+                    <p class="text-xs font-semibold uppercase tracking-wide text-amber-500">Exámenes</p>
+                  </div>
+                  <span class="text-xs font-semibold" :class="isTotalWeightBalanced ? 'text-green-600' : 'text-amber-600'">
+                    {{ Math.round(examWeightSum) }}%
+                  </span>
+                </div>
+                <div class="grid grid-cols-1 gap-3 md:grid-cols-3">
+                  <label
+                    v-for="(label, index) in examWeightFieldLabels"
+                    :key="`exam-${index}`"
+                    class="text-sm font-medium text-gray-700"
+                  >
+                    {{ label }}
+                    <input
+                      v-model="newCourseForm.examWeights[index]"
+                      type="number"
+                      min="0"
+                      max="100"
+                      step="1"
+                      class="mt-1 w-full rounded-xl border border-gray-200 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none"
+                      placeholder="0"
+                      :disabled="createCourseLoading"
+                    />
+                  </label>
+                </div>
+              </div>
+            </div>
+            <p class="text-xs text-gray-500">La suma conjunta de evaluaciones continuas y exámenes debe ser 100%.</p>
+          </section>
+
+          <section class="rounded-2xl border border-gray-200 p-4 space-y-4">
+            <div>
+              <p class="text-xs font-semibold uppercase tracking-wide text-blue-500">Documentación</p>
+              <h4 class="text-lg font-semibold text-gray-900">Sílabo (opcional)</h4>
+              <p class="text-sm text-gray-500">Adjunta un PDF de hasta 10MB para completar el registro.</p>
+            </div>
+            <div class="flex flex-col gap-3 md:flex-row md:items-center md:gap-6">
+              <label class="flex-1 cursor-pointer rounded-2xl border-2 border-dashed border-gray-300 px-6 py-4 text-center hover:border-blue-400">
+                <span class="text-sm font-medium text-blue-600">Seleccionar archivo PDF</span>
+                <input
+                  ref="syllabusFileRef"
+                  type="file"
+                  accept=".pdf"
+                  class="sr-only"
+                  @change="handleSyllabusFileChange"
+                />
+              </label>
+              <div class="flex flex-1 flex-wrap items-center gap-2 text-sm text-gray-600">
+                <span class="font-medium">{{ selectedSyllabusFileName }}</span>
+                <button
+                  v-if="selectedSyllabusFile"
+                  type="button"
+                  class="text-xs font-semibold text-red-600 hover:text-red-700"
+                  @click="clearSyllabusSelection"
+                >
+                  Quitar
+                </button>
+              </div>
+            </div>
+            <p class="text-xs text-gray-500">La carga del archivo se completará una vez registrado el curso.</p>
+          </section>
 
           <div class="flex flex-col gap-2 border-t pt-4 sm:flex-row sm:justify-end">
             <button
@@ -608,6 +727,8 @@ const showCreateCourseModal = ref(false)
 const createCourseLoading = ref(false)
 const createCourseError = ref('')
 const courseFormErrors = ref<string[]>([])
+const syllabusFileRef = ref<HTMLInputElement | null>(null)
+const selectedSyllabusFile = ref<File | null>(null)
 const newCourseForm = reactive({
   courseCode: '',
   name: '',
@@ -615,8 +736,92 @@ const newCourseForm = reactive({
   theoryHours: '',
   practiceHours: '',
   labHours: '',
-  semesterNumber: ''
+  semesterNumber: '',
+  continuousWeights: ['', '', ''] as string[],
+  examWeights: ['', '', ''] as string[]
 })
+const continuousWeightFieldLabels = ['Evaluación continua 1', 'Evaluación continua 2', 'Evaluación continua 3']
+const examWeightFieldLabels = ['Examen 1', 'Examen 2', 'Examen 3']
+const sanitizePercentageInput = (value: string) => {
+  if (value == null) {
+    return 0
+  }
+  const parsed = Number(value)
+  return Number.isFinite(parsed) ? parsed : 0
+}
+const sumWeightValues = (values: string[]) => values.reduce((total, value) => total + sanitizePercentageInput(value), 0)
+const continuousWeightSum = computed(() => sumWeightValues(newCourseForm.continuousWeights))
+const examWeightSum = computed(() => sumWeightValues(newCourseForm.examWeights))
+const totalWeightSum = computed(() => continuousWeightSum.value + examWeightSum.value)
+const isContinuousWeightBalanced = computed(() => Math.round(continuousWeightSum.value) === 100)
+const isExamWeightBalanced = computed(() => Math.round(examWeightSum.value) === 100)
+const isTotalWeightBalanced = computed(() => Math.round(totalWeightSum.value) === 100)
+const selectedSyllabusFileName = computed(() => selectedSyllabusFile.value?.name ?? 'Ningún archivo seleccionado')
+const handleSyllabusFileChange = (event: Event) => {
+  const input = event.target as HTMLInputElement | null
+  selectedSyllabusFile.value = input?.files?.[0] ?? null
+}
+const clearSyllabusSelection = () => {
+  selectedSyllabusFile.value = null
+  if (syllabusFileRef.value) {
+    syllabusFileRef.value.value = ''
+  }
+}
+const weightPayloadFrom = (values: string[]) => values.map(value => {
+  const parsed = Number(value)
+  if (!Number.isFinite(parsed)) {
+    return 0
+  }
+  return Math.max(0, Math.min(100, Math.round(parsed)))
+})
+const validateWeightSet = (values: string[], label: string) => {
+  const issues: string[] = []
+  const parsedValues: number[] = []
+  values.forEach((value, index) => {
+    if (value === '' || value == null) {
+      issues.push(`El porcentaje ${index + 1} de ${label} es obligatorio.`)
+      parsedValues.push(0)
+      return
+    }
+    const parsed = Number(value)
+    if (!Number.isFinite(parsed) || parsed < 0 || parsed > 100) {
+      issues.push(`El porcentaje ${index + 1} de ${label} debe estar entre 0 y 100.`)
+    }
+    parsedValues.push(Number.isFinite(parsed) ? parsed : 0)
+  })
+  const sum = parsedValues.reduce((total, value) => total + value, 0)
+  if (Math.round(sum) !== 100) {
+    issues.push(`La suma de los porcentajes de ${label} debe ser 100%. Actualmente es ${sum.toFixed(1)}%.`)
+  }
+  return issues
+}
+
+const validateTotalWeights = (continuousValues: string[], examValues: string[]) => {
+  const issues: string[] = []
+  const allValues = [...continuousValues, ...examValues]
+  const parsedValues: number[] = []
+  allValues.forEach((value, index) => {
+    if (value === '' || value == null) {
+      const label = index < 3 ? 'las evaluaciones continuas' : 'los exámenes'
+      const num = index < 3 ? index + 1 : index - 2
+      issues.push(`El porcentaje ${num} de ${label} es obligatorio.`)
+      parsedValues.push(0)
+      return
+    }
+    const parsed = Number(value)
+    if (!Number.isFinite(parsed) || parsed < 0 || parsed > 100) {
+      const label = index < 3 ? 'las evaluaciones continuas' : 'los exámenes'
+      const num = index < 3 ? index + 1 : index - 2
+      issues.push(`El porcentaje ${num} de ${label} debe estar entre 0 y 100.`)
+    }
+    parsedValues.push(Number.isFinite(parsed) ? parsed : 0)
+  })
+  const sum = parsedValues.reduce((total, value) => total + value, 0)
+  if (Math.round(sum) !== 100) {
+    issues.push(`La suma total de los porcentajes de evaluaciones continuas y exámenes debe ser 100%. Actualmente es ${sum.toFixed(1)}%.`)
+  }
+  return issues
+}
 
 const assignmentActiveTab = ref<'professors' | 'settings'>('professors')
 const groupCreationErrors = ref<string[]>([])
@@ -973,6 +1178,9 @@ const resetCourseForm = () => {
   newCourseForm.practiceHours = ''
   newCourseForm.labHours = ''
   newCourseForm.semesterNumber = ''
+  newCourseForm.continuousWeights = ['', '', '']
+  newCourseForm.examWeights = ['', '', '']
+  clearSyllabusSelection()
 }
 
 const openCreateCourseModal = () => {
@@ -1023,6 +1231,8 @@ const validateCourseForm = () => {
     }
   }
 
+  errors.push(...validateTotalWeights(newCourseForm.continuousWeights, newCourseForm.examWeights))
+
   courseFormErrors.value = errors
   return errors.length === 0
 }
@@ -1044,11 +1254,17 @@ const handleCreateCourse = async () => {
     labHours: parseNonNegativeNumber(newCourseForm.labHours),
     semesterNumber: newCourseForm.semesterNumber
       ? Number(newCourseForm.semesterNumber)
-      : null
+      : null,
+    continuousGradeWeights: weightPayloadFrom(newCourseForm.continuousWeights),
+    examGradeWeights: weightPayloadFrom(newCourseForm.examWeights)
   }
 
   try {
-    await createCourse(payload)
+    const createdCourse = await createCourse(payload)
+
+    if (selectedSyllabusFile.value && createdCourse?.courseId) {
+      // TODO: Integrar carga de sílabo cuando el servicio esté disponible
+    }
     await fetchCourses()
     closeCreateCourseModal()
   } catch (err) {
