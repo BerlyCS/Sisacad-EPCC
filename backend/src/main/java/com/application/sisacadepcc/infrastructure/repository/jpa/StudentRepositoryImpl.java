@@ -59,6 +59,17 @@ public class StudentRepositoryImpl implements StudentRepository {
                 .map(this::mapToDomain);
     }
 
+    @Override
+    public Student save(Student student) {
+        if (student == null) {
+            throw new IllegalArgumentException("El estudiante no puede ser nulo");
+        }
+
+        StudentEntity entity = mapToEntity(student);
+        StudentEntity saved = studentJpaRepository.save(entity);
+        return mapToDomain(saved);
+    }
+
     private Student mapToDomain(StudentEntity entity) {
         Student student = new Student();
         student.setUserId(entity.getUserId());

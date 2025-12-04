@@ -1,9 +1,19 @@
 <template>
   <AdminLayout>
     <div class="bg-white shadow rounded-lg">
-      <div class="px-6 py-4 border-b border-gray-200">
-        <h2 class="text-xl font-semibold text-gray-800">Gestión de Estudiantes</h2>
-        <p class="text-gray-600 mt-1">Administra los estudiantes registrados</p>
+      <div class="px-6 py-4 border-b border-gray-200 flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
+        <div>
+          <h2 class="text-xl font-semibold text-gray-800">Gestión de Estudiantes</h2>
+        </div>
+        <button
+          @click="openCreateStudentModal"
+          class="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700"
+        >
+          <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+          </svg>
+          Agregar Estudiante
+        </button>
       </div>
       
       <div class="p-6">
@@ -111,6 +121,115 @@
         </div>
       </div>
     </div>
+
+    <div
+      v-if="showCreateStudentModal"
+      class="fixed inset-0 z-50 flex items-start md:items-center justify-center bg-black/40 p-4 overflow-auto"
+    >
+      <div class="w-full max-w-2xl rounded-2xl bg-white shadow-2xl max-h-[calc(100vh-2rem)] overflow-y-auto">
+        <div class="flex items-start justify-between border-b px-6 py-4">
+          <div>
+            <p class="text-xs font-semibold uppercase tracking-wide text-blue-500">Nuevo estudiante</p>
+            <h3 class="text-xl font-semibold text-gray-900">Registrar estudiante</h3>
+          </div>
+          <button
+            class="rounded-full p-2 text-gray-400 hover:bg-gray-100 hover:text-gray-600"
+            @click="closeCreateStudentModal"
+            :disabled="createStudentLoading"
+          >
+            <span class="sr-only">Cerrar</span>
+            ✕
+          </button>
+        </div>
+
+        <form class="px-6 py-5 space-y-6" @submit.prevent="handleCreateStudent">
+          <div v-if="studentFormErrors.length || createStudentError" class="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
+            <p class="font-semibold">Revisa los siguientes campos:</p>
+            <ul v-if="studentFormErrors.length" class="mt-2 list-disc pl-5">
+              <li v-for="(message, index) in studentFormErrors" :key="`student-error-${index}`">{{ message }}</li>
+            </ul>
+            <p v-if="createStudentError" class="mt-2">{{ createStudentError }}</p>
+          </div>
+
+          <div class="grid gap-4 md:grid-cols-2">
+            <label class="text-sm font-medium text-gray-700">
+              Nombres
+              <input
+                v-model="newStudentForm.firstNames"
+                type="text"
+                class="mt-2 w-full rounded-xl border border-gray-200 px-4 py-2 text-sm focus:border-blue-500 focus:outline-none"
+                placeholder="Ivan"
+                :disabled="createStudentLoading"
+                required
+              />
+            </label>
+            <label class="text-sm font-medium text-gray-700">
+              Apellido paterno
+              <input
+                v-model="newStudentForm.paternalSurname"
+                type="text"
+                class="mt-2 w-full rounded-xl border border-gray-200 px-4 py-2 text-sm focus:border-blue-500 focus:outline-none"
+                placeholder="Zegarra"
+                :disabled="createStudentLoading"
+                required
+              />
+            </label>
+            <label class="text-sm font-medium text-gray-700">
+              Apellido materno
+              <input
+                v-model="newStudentForm.maternalSurname"
+                type="text"
+                class="mt-2 w-full rounded-xl border border-gray-200 px-4 py-2 text-sm focus:border-blue-500 focus:outline-none"
+                placeholder="López"
+                :disabled="createStudentLoading"
+                required
+              />
+            </label>
+            <label class="text-sm font-medium text-gray-700">
+              CUI
+              <input
+                v-model="newStudentForm.cui"
+                type="text"
+                inputmode="numeric"
+                class="mt-2 w-full rounded-xl border border-gray-200 px-4 py-2 text-sm focus:border-blue-500 focus:outline-none"
+                placeholder="20201234"
+                :disabled="createStudentLoading"
+                required
+              />
+            </label>
+            <label class="text-sm font-medium text-gray-700 md:col-span-2">
+              Correo institucional
+              <input
+                v-model="newStudentForm.institutionalEmail"
+                type="email"
+                class="mt-2 w-full rounded-xl border border-gray-200 px-4 py-2 text-sm focus:border-blue-500 focus:outline-none"
+                placeholder="estudiante@unsa.edu.pe"
+                :disabled="createStudentLoading"
+                required
+              />
+            </label>
+          </div>
+
+          <div class="flex flex-col gap-2 border-t pt-4 sm:flex-row sm:justify-end">
+            <button
+              type="button"
+              class="rounded-xl border border-gray-200 px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50"
+              @click="closeCreateStudentModal"
+              :disabled="createStudentLoading"
+            >
+              Cancelar
+            </button>
+            <button
+              type="submit"
+              class="rounded-xl bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-blue-300"
+              :disabled="createStudentLoading"
+            >
+              {{ createStudentLoading ? 'Guardando...' : 'Registrar estudiante' }}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
   </AdminLayout>
 </template>
 
@@ -122,8 +241,24 @@ import { useStudentService } from '../services/studentService'
 
 const sortBy = ref('dni')
 const direction = ref('asc')
-const { students, loading, error, fetchStudentsSorted } = useStudentService()
 const router = useRouter()
+
+const { students, loading, error, fetchStudentsSorted, createStudent } = useStudentService()
+
+const showCreateStudentModal = ref(false)
+const createStudentLoading = ref(false)
+const createStudentError = ref('')
+const studentFormErrors = ref([])
+
+const createEmptyStudentForm = () => ({
+  firstNames: '',
+  paternalSurname: '',
+  maternalSurname: '',
+  cui: '',
+  institutionalEmail: ''
+})
+
+const newStudentForm = ref(createEmptyStudentForm())
 
 const fetchSorted = () => {
   fetchStudentsSorted(sortBy.value, direction.value)
@@ -132,6 +267,78 @@ const fetchSorted = () => {
 const goToProfile = (student) => {
   if (!student?.cui) return
   router.push({ name: 'student-profile', params: { cui: student.cui } })
+}
+
+const resetStudentForm = () => {
+  studentFormErrors.value = []
+  createStudentError.value = ''
+  newStudentForm.value = createEmptyStudentForm()
+}
+
+const openCreateStudentModal = () => {
+  resetStudentForm()
+  showCreateStudentModal.value = true
+}
+
+const closeCreateStudentModal = () => {
+  if (createStudentLoading.value) return
+  showCreateStudentModal.value = false
+  resetStudentForm()
+}
+
+const validateStudentForm = () => {
+  const errors = []
+  const payload = newStudentForm.value
+
+  if (!payload.firstNames.trim()) {
+    errors.push('Ingresa los nombres del estudiante.')
+  }
+  if (!payload.paternalSurname.trim()) {
+    errors.push('Ingresa el apellido paterno.')
+  }
+  if (!payload.maternalSurname.trim()) {
+    errors.push('Ingresa el apellido materno.')
+  }
+  const cuiDigits = payload.cui.replace(/\D/g, '')
+  if (cuiDigits.length < 6) {
+    errors.push('El CUI debe tener al menos 6 dígitos.')
+  }
+  const emailValue = payload.institutionalEmail.trim()
+  const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+  if (!emailPattern.test(emailValue)) {
+    errors.push('Ingresa un correo institucional válido.')
+  }
+
+  studentFormErrors.value = errors
+  return errors.length === 0
+}
+
+const handleCreateStudent = async () => {
+  if (!validateStudentForm()) {
+    return
+  }
+
+  createStudentLoading.value = true
+  createStudentError.value = ''
+
+  try {
+    const payload = {
+      firstNames: newStudentForm.value.firstNames.trim(),
+      paternalSurname: newStudentForm.value.paternalSurname.trim(),
+      maternalSurname: newStudentForm.value.maternalSurname.trim(),
+      cui: newStudentForm.value.cui.replace(/\D/g, ''),
+      institutionalEmail: newStudentForm.value.institutionalEmail.trim()
+    }
+
+    await createStudent(payload)
+    resetStudentForm()
+    showCreateStudentModal.value = false
+    fetchSorted()
+  } catch (err) {
+    createStudentError.value = err instanceof Error ? err.message : 'No se pudo crear el estudiante'
+  } finally {
+    createStudentLoading.value = false
+  }
 }
 
 onMounted(() => {

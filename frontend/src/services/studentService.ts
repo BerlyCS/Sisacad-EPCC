@@ -41,6 +41,14 @@ export interface StudentProfile {
   schedule: StudentScheduleEntry[]
 }
 
+export interface CreateStudentPayload {
+  cui: string
+  firstNames: string
+  paternalSurname: string
+  maternalSurname: string
+  institutionalEmail: string
+}
+
 const COURSE_TYPE_LABEL: Record<CourseType, string> = {
   THEORY: 'Teoría',
   LAB: 'Laboratorio'
@@ -318,6 +326,25 @@ export const useStudentService = () => {
     }
   }
 
+  const createStudent = async (student: CreateStudentPayload) => {
+    const response = await fetch(`${API_BASE_URL}/students`, {
+      method: 'POST',
+      credentials: 'include',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(student)
+    })
+
+    if (!response.ok) {
+      const body = await response.json().catch(() => ({}))
+      const message = body?.message || body?.error || 'No se pudo crear el estudiante'
+      throw new Error(message)
+    }
+
+    return response.json()
+  }
+
   return {
     students,
     loading,
@@ -331,6 +358,7 @@ export const useStudentService = () => {
     fetchStudentCourses,
     fetchMyCourses,
     fetchStudentSchedule,
-    fetchMySchedule
+    fetchMySchedule,
+    createStudent
   }
 }

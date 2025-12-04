@@ -15,4 +15,6 @@ public interface StudentRepository {
     Optional<Student> findByCui(String cui);
 
     Optional<Student> findById(Long id);
+
+    Student save(Student student);
 }
