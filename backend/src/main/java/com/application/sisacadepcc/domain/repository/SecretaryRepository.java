@@ -9,4 +9,6 @@ public interface SecretaryRepository {
     boolean existsByInstitutionalEmail(String email);
     Optional<Secretary> findByInstitutionalEmail(String email);
     Optional<Secretary> findById(Long id);
+
+    Secretary save(Secretary secretary);
 }

@@ -3,8 +3,15 @@ import { ref } from 'vue'
 const API_BASE_URL = 'http://localhost:8080/api'
 
 export interface Secretary {
-  dni: string
-  name: string
+  userId: number | null
+  firstNames: string
+  paternalSurname: string
+  maternalSurname: string
+  institutionalEmail: string
+}
+
+export interface CreateSecretaryPayload {
+  firstNames: string
   paternalSurname: string
   maternalSurname: string
   institutionalEmail: string
@@ -41,7 +48,16 @@ export const useSecretaryService = () => {
         throw new Error('Error al cargar las secretarias')
       }
       
-      secretaries.value = await response.json()
+      const data = await response.json()
+      secretaries.value = Array.isArray(data)
+        ? data.map((item: any): Secretary => ({
+            userId: typeof item?.userId === 'number' ? item.userId : item?.id ?? null,
+            firstNames: item?.firstNames ?? item?.name ?? '',
+            paternalSurname: item?.paternalSurname ?? '',
+            maternalSurname: item?.maternalSurname ?? '',
+            institutionalEmail: item?.institutionalEmail ?? item?.email ?? ''
+          }))
+        : []
     } catch (err) {
       error.value = 'No se pudieron cargar las secretarias'
       console.error('Error fetching secretaries:', err)
@@ -84,11 +100,32 @@ export const useSecretaryService = () => {
     return data
   }
 
+  const createSecretary = async (payload: CreateSecretaryPayload) => {
+    const response = await fetch(`${API_BASE_URL}/secretaries`, {
+      method: 'POST',
+      credentials: 'include',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(payload)
+    })
+
+    const body = await response.json().catch(() => ({}))
+
+    if (!response.ok) {
+      const message = body?.message || body?.error || 'No se pudo registrar la secretaria'
+      throw new Error(message)
+    }
+
+    return body
+  }
+
   return {
     secretaries,
     loading,
     error,
     fetchSecretaries,
-    enrollStudentInCourse
+    enrollStudentInCourse,
+    createSecretary
   }
 }

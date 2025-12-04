@@ -66,4 +66,15 @@ public class SecretaryRepositoryImpl implements SecretaryRepository {
                 .map(this::mapToDomain);
     }
 
+    @Override
+    public Secretary save(Secretary secretary) {
+        if (secretary == null) {
+            throw new IllegalArgumentException("La secretaria no puede ser nula");
+        }
+
+        SecretaryEntity entity = mapToEntity(secretary);
+        SecretaryEntity saved = jpaRepository.save(entity);
+        return mapToDomain(saved);
+    }
+
 }
