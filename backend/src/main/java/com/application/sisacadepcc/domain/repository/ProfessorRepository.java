@@ -10,4 +10,6 @@ public interface ProfessorRepository {
     boolean existsByCorreo(String email);
     Optional<Professor> findByCorreo(String correo);
     Optional<Professor> findById(Long id);
+
+    Professor save(Professor professor);
 }

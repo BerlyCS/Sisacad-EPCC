@@ -45,6 +45,17 @@ public class ProfessorRepositoryImpl implements ProfessorRepository {
                 .map(this::mapToDomain);
     }
 
+    @Override
+    public Professor save(Professor professor) {
+        if (professor == null) {
+            throw new IllegalArgumentException("El profesor no puede ser nulo");
+        }
+
+        ProfessorEntity entity = mapToEntity(professor);
+        ProfessorEntity saved = jpaRepository.save(entity);
+        return mapToDomain(saved);
+    }
+
     private Professor mapToDomain(ProfessorEntity entity) {
         Professor professor = new Professor();
         professor.setUserId(entity.getUserId());

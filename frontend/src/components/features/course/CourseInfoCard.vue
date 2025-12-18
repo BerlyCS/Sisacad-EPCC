@@ -61,7 +61,7 @@
         </div>
         <div class="bg-indigo-50 rounded-md p-4">
           <p class="text-xs uppercase tracking-wide text-indigo-600 font-semibold">Estudiantes</p>
-          <p class="text-lg font-semibold text-indigo-900">{{ details.enrolledCount }}</p>
+          <p class="text-lg font-semibold text-indigo-900">{{ studentCount }}</p>
         </div>
         <div class="bg-amber-50 rounded-md p-4">
           <p class="text-xs uppercase tracking-wide text-amber-600 font-semibold">Docentes asignados</p>
@@ -182,7 +182,7 @@
     <div class="bg-white shadow rounded-lg p-6 space-y-4">
       <div class="flex items-center justify-between">
         <h3 class="text-lg font-semibold text-gray-800">Estudiantes matriculados</h3>
-        <span class="text-sm text-gray-500">{{ details.enrolledCount }} estudiantes</span>
+        <span class="text-sm text-gray-500">{{ studentCount }} estudiantes</span>
       </div>
 
       <div v-if="!details.enrolledStudents.length" class="text-sm text-gray-500">
@@ -295,6 +295,14 @@ const groupCountLabel = computed(() => {
     return ''
   }
   return `${count} grupo${count === 1 ? '' : 's'}`
+})
+
+const studentCount = computed(() => {
+  const count = props.details.enrolledCount
+  if (typeof count === 'number' && count > 0) {
+    return count
+  }
+  return props.details.enrolledStudents?.length ?? 0
 })
 
 const formatStudentName = (student: CourseStudentSummary) =>

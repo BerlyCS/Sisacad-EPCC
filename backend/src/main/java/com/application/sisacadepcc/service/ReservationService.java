@@ -152,7 +152,7 @@ public class ReservationService {
 
         // Verificar que el aula esté disponible (no ocupada por cursos)
         if (!isClassroomAvailable(reservation.getClassroomId(), reservation)) {
-            throw new IllegalArgumentException("El aula no está disponible en este horario");
+            throw new IllegalArgumentException("El aula está ocupada por un curso en este horario");
         }
 
         if (reservation.getReservationDate() == null) {

@@ -8,15 +8,21 @@ import com.application.sisacadepcc.service.AuthorizationService;
 import com.application.sisacadepcc.service.CourseService;
 import com.application.sisacadepcc.service.ProfessorService;
 import com.application.sisacadepcc.service.UserRole;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/professors")
 public class ProfessorController {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(ProfessorController.class);
 
     private final ProfessorService service;
     private final AuthorizationService authorizationService;
@@ -41,9 +47,17 @@ public class ProfessorController {
 
     @PostMapping
     @RequiresAdministratorAccess
-    public ResponseEntity<Professor> createProfessor(@RequestBody Professor professor) {
-        // Lógica para crear profesor
-        return ResponseEntity.ok(professor);
+    public ResponseEntity<?> createProfessor(@RequestBody Professor professor) {
+        try {
+            Professor created = service.createProfessor(professor);
+            return ResponseEntity.status(HttpStatus.CREATED).body(created);
+        } catch (IllegalArgumentException ex) {
+            return ResponseEntity.badRequest().body(Map.of("message", ex.getMessage()));
+        } catch (Exception ex) {
+            LOGGER.error("Error registrando profesor", ex);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("message", "No se pudo registrar el profesor"));
+        }
     }
 
     @PutMapping("/{id}")

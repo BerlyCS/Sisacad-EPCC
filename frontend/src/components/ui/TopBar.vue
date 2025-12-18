@@ -316,7 +316,6 @@ const adminNavigation = [
   { name: 'Estudiantes', to: '/admin/students' },
   { name: 'Secretarias', to: '/admin/secretaries' },
   { name: 'Matricular', to: '/admin/student-enrollment' },
-  { name: 'Laboratorios', to: '/admin/labs' },
   { name: 'Reservas', to: '/reservation-management' }
 ]
 
@@ -324,8 +323,7 @@ const secretaryNavigation = [
   { name: 'Aulas', to: '/admin/classrooms' },
   { name: 'Estudiantes', to: '/admin/students' },
   { name: 'Gestionar cursos', to: '/admin/courses' },
-  { name: 'Matricular', to: '/admin/student-enrollment' },
-  { name: 'Laboratorios', to: '/admin/labs' }
+  { name: 'Matricular', to: '/admin/student-enrollment' }
 ]
 </script>
 

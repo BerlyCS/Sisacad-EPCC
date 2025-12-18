@@ -347,9 +347,17 @@ const eventStyle = (event: CalendarEvent) => {
   };
 };
 
+const parseLocalDate = (value: string) => {
+  // Avoid UTC parsing that shifts one day for negative timezones
+  const [y, m, d] = value.split('-').map(Number);
+  return Number.isFinite(y) && Number.isFinite(m) && Number.isFinite(d)
+    ? new Date(y, m - 1, d)
+    : new Date(value);
+};
+
 const isDateInWeek = (dateStr: string | undefined, weekStart: Date) => {
   if (!dateStr) return false;
-  const d = new Date(dateStr);
+  const d = parseLocalDate(dateStr);
   d.setHours(0, 0, 0, 0);
   const weekEnd = addDays(weekStart, 4);
   return d >= weekStart && d <= weekEnd;
@@ -422,7 +430,7 @@ const normalizeDay = (value: string) =>
 
 const resolveDay = (reservation: Reservation) => {
   if (reservation.reservationDate) {
-    const date = new Date(reservation.reservationDate);
+    const date = parseLocalDate(reservation.reservationDate);
     return normalizeDay(date.toLocaleDateString('es-PE', { weekday: 'long' }));
   }
   return reservation.schedule?.dayOfWeek ? normalizeDay(reservation.schedule.dayOfWeek) : '';

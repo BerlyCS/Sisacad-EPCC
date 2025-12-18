@@ -34,10 +34,6 @@
         <UserPlusIcon class="w-15 h-15 mx-auto mt-2 mb-4" />
         <h4 class="text-xl">Matricular Estudiantes</h4>
       </PrincipalButton>
-      <PrincipalButton color="purple" to="/admin/labs">
-        <BuildingOffice2Icon class="w-15 h-15 mx-auto mt-2 mb-4" />
-        <h4 class="text-xl">Gestionar Laboratorios</h4>
-      </PrincipalButton>
     </div>
   </div>
 </template>

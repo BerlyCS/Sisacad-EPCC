@@ -9,7 +9,7 @@
       </div>
 
       <StudentCoursesCard
-        :courses="studentCourses"
+        :courses="dedupedCourses"
         :loading="profileLoading"
         :error="profileError"
         @refresh="loadStudentProfile"
@@ -20,7 +20,7 @@
 </template>
 
 <script setup>
-import { onMounted } from 'vue'
+import { computed, onMounted } from 'vue'
 import AdminLayout from '../components/ui/TopBar.vue'
 import { StudentCoursesCard } from '@/components/features/student'
 import { useStudentProfile } from '@/composables/useStudentProfile'
@@ -30,6 +30,21 @@ import { useRouter } from 'vue-router'
 const router = useRouter()
 const authStore = useAuthStore()
 const { courses: studentCourses, profileLoading, profileError, loadProfile: loadStudentProfile } = useStudentProfile()
+
+const dedupedCourses = computed(() => {
+  const seen = new Set()
+  return (studentCourses.value ?? []).filter(course => {
+    const key = course?.courseId ?? course?.courseCode ?? course?.name ?? course?.id
+    if (!key) {
+      return true
+    }
+    if (seen.has(key)) {
+      return false
+    }
+    seen.add(key)
+    return true
+  })
+})
 
 const openCourseDetail = (course) => {
   if (!course) {

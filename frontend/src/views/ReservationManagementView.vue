@@ -212,12 +212,20 @@ const submitReservation = async () => {
 
 const formatDate = (value?: string) => {
   if (!value) return 'Sin fecha';
-  return new Date(value).toLocaleDateString('es-PE', {
+  return parseLocalDate(value).toLocaleDateString('es-PE', {
     weekday: 'long',
     year: 'numeric',
     month: 'short',
     day: 'numeric'
   });
+};
+
+const parseLocalDate = (value: string) => {
+  // Avoid UTC parsing that shifts one day for negative timezones
+  const [y, m, d] = value.split('-').map(Number);
+  return Number.isFinite(y) && Number.isFinite(m) && Number.isFinite(d)
+    ? new Date(y, m - 1, d)
+    : new Date(value);
 };
 
 onMounted(async () => {

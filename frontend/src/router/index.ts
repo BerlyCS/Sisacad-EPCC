@@ -6,7 +6,6 @@ import CourseManagementView from '../views/CourseManagementView.vue'
 import ProfessorManagementView from '../views/ProfessorManagementView.vue'
 import StudentManagementView from '../views/StudentManagementView.vue'
 import SecretaryManagementView from '../views/SecretaryManagementView.vue'
-import SecretaryLabManagementView from '../views/SecretaryLabManagementView.vue'
 import NotFoundComponent from '@/components/ui/NotFoundComponent.vue'
 import { useAuthStore } from '../stores/auth'
 
@@ -90,12 +89,6 @@ const router = createRouter({
       path: '/admin/secretaries',
       name: 'secretaries',
       component: SecretaryManagementView,
-    },
-    {
-      path: '/admin/labs',
-      name: 'secretary-labs',
-      component: SecretaryLabManagementView,
-      meta: { requiresAuth: true, allowedRoles: ['ADMIN', 'SECRETARY'] }
     },
     {
       path: '/admin/student-enrollment',
