@@ -109,22 +109,74 @@
                   :key="segment.startMinutes"
                   class="slot-guide"
                 ></div>
-                <div
+                <button
                   v-for="event in eventsByDay[day]"
                   :key="event.id"
+                  type="button"
                   class="event-block"
-                  :class="[event.type, event.type === 'reservation' ? event.ownership : '']"
+                  :class="[event.type, event.type === 'reservation' ? event.ownership : '', 'interactive']"
                   :style="eventStyle(event)"
+                  @click="openEventModal(event)"
                 >
                   <p class="event-title">{{ event.title }}</p>
                   <p class="event-time">{{ event.start }} - {{ event.end }}</p>
-                </div>
+                </button>
               </div>
             </div>
           </div>
         </div>
       </section>
 
+      <transition name="fade-slide">
+        <div v-if="modalOpen && selectedEvent" class="modal-backdrop" @click.self="closeModal">
+          <div class="modal-card" role="dialog" aria-modal="true">
+            <header class="modal-header">
+              <div>
+                <p class="eyebrow">{{ selectedEvent.kind === 'reservation' ? 'Reserva' : 'Curso' }}</p>
+                <h3 class="modal-title">{{ selectedEvent.title }}</h3>
+              </div>
+              <button class="icon-button" @click="closeModal" aria-label="Cerrar">✕</button>
+            </header>
+            <div class="modal-body">
+              <div class="detail-row">
+                <span>Horario</span>
+                <strong>{{ selectedEvent.timeRange }}</strong>
+              </div>
+              <div class="detail-row">
+                <span>Fecha</span>
+                <strong>{{ selectedEvent.dateLabel }}</strong>
+              </div>
+              <template v-if="selectedEvent.kind === 'reservation'">
+                <div class="detail-row">
+                  <span>Reservado por</span>
+                  <strong>{{ selectedEvent.reservedBy }}</strong>
+                </div>
+                <div class="detail-row">
+                  <span>Propósito</span>
+                  <strong>{{ selectedEvent.purpose }}</strong>
+                </div>
+              </template>
+            </div>
+            <footer class="modal-footer">
+              <button class="secondary-button" @click="closeModal">Cerrar</button>
+              <button
+                v-if="selectedEvent.kind === 'reservation' && selectedEvent.canDelete"
+                class="danger-button"
+                :disabled="deletingReservationId === selectedEvent.reservationId"
+                @click="deleteSelectedReservation"
+              >
+                <span v-if="deletingReservationId === selectedEvent.reservationId"><i class="fas fa-spinner fa-spin" /> Eliminando...</span>
+                <span v-else>Eliminar</span>
+              </button>
+            </footer>
+          </div>
+        </div>
+      </transition>
+
+      <div v-if="success" class="success">
+        <i class="fas fa-check-circle" />
+        {{ success }}
+      </div>
       <div v-if="error" class="error">
         <i class="fas fa-exclamation-triangle" />
         {{ error }}
@@ -149,6 +201,11 @@ const route = useRoute();
 const router = useRouter();
 const auth = useAuthStore();
 const classroomName = ref(decodeURIComponent(route.params.classroomName as string));
+const normalizeForBackend = (value: string) => {
+  if (!value) return '';
+  return value.trim().replace(/\s+/g, ' ').toUpperCase();
+};
+const backendClassroomName = computed(() => normalizeForBackend(classroomName.value));
 
 const canReserve = computed(() => auth.isAdmin || auth.isSecretary || auth.isProfessor);
 const showReservationForm = ref(false);
@@ -163,7 +220,11 @@ const form = ref<CreateReservationPayload>({
 
 const creating = ref(false);
 const error = ref('');
+const success = ref('');
 const gridLoading = ref(true);
+const modalOpen = ref(false);
+const selectedEvent = ref<EventDetails | null>(null);
+const deletingReservationId = ref<number | null>(null);
 const reservations = ref<Reservation[]>([]);
 const courseSlots = ref<Array<{ id: string; day: string; start: string; end: string; title: string }>>([]);
 
@@ -236,6 +297,17 @@ type CalendarEvent = {
   reservationId?: number;
 };
 
+type EventDetails = {
+  kind: 'reservation' | 'course';
+  title: string;
+  timeRange: string;
+  dateLabel: string;
+  reservedBy?: string;
+  purpose?: string;
+  canDelete?: boolean;
+  reservationId?: number;
+};
+
 const eventsByDay = computed<Record<string, CalendarEvent[]>>(() => {
   const map: Record<string, CalendarEvent[]> = Object.fromEntries(DAYS.map(day => [day, []]));
   const courseEvents = courseSlots.value.map(slot => toCalendarEvent(slot, 'course'));
@@ -253,34 +325,39 @@ const eventsByDay = computed<Record<string, CalendarEvent[]>>(() => {
   return map;
 });
 
-const normalizeOwner = (value?: unknown) => String(value ?? '').trim().toLowerCase();
-
-const isReservationMine = (reservation: Reservation) => {
-  const owner = normalizeOwner(reservation.reservedBy);
-  if (!owner) return false;
-  const candidates = [auth.userEmail, auth.userName, auth.userDocumentoIdentidad]
-    .map(normalizeOwner)
-    .filter(Boolean);
-  return candidates.includes(owner);
-};
+const isReservationMine = (reservation: Reservation) => Boolean(reservation.ownedByCurrentUser);
 
 const toggleReservationForm = () => {
   showReservationForm.value = !showReservationForm.value;
 };
 
+const dateFromDay = (day: string) => {
+  const index = DAYS.indexOf(day as typeof DAYS[number]);
+  if (index === -1) return null;
+  return addDays(currentWeekStart.value, index);
+};
+
+const formatDateFromDay = (day: string) => {
+  const date = dateFromDay(day);
+  if (!date) return formatDayLabel(day);
+  const iso = date.toISOString().split('T')[0];
+  return formatDate(iso);
+};
+
 const loadReservations = async () => {
   try {
-    const data = await reservationService.getReservationsByClassroom(classroomName.value);
+    const data = await reservationService.getReservationsByClassroom(backendClassroomName.value);
     reservations.value = data;
   } catch (err) {
     error.value = 'No se pudieron cargar las reservas del aula.';
+    success.value = '';
     console.error(err);
   }
 };
 
 const loadCourseSchedule = async () => {
   try {
-    const schedule: ClassroomSchedule = await reservationService.getClassroomSchedule(classroomName.value);
+    const schedule: ClassroomSchedule = await reservationService.getClassroomSchedule(backendClassroomName.value);
     const entries: Array<{ id: string; day: string; start: string; end: string; title: string }> = [];
     Object.entries(schedule.schedule ?? {}).forEach(([day, slots]) => {
       slots.forEach(slot => {
@@ -298,6 +375,7 @@ const loadCourseSchedule = async () => {
     courseSlots.value = entries;
   } catch (err) {
     error.value = 'No se pudo obtener el horario oficial del aula.';
+    success.value = '';
     console.error(err);
   }
 };
@@ -305,21 +383,24 @@ const loadCourseSchedule = async () => {
 const submitReservation = async () => {
   if (!canReserve.value) {
     error.value = 'No tiene permisos para reservar.';
+    success.value = '';
     return;
   }
 
   if (!form.value.reservationDate || !form.value.startTime || !form.value.endTime || !form.value.purpose) {
     error.value = 'Complete todos los campos para crear la reserva.';
+    success.value = '';
     return;
   }
 
   try {
     creating.value = true;
     error.value = '';
-    form.value.classroomName = classroomName.value;
+    success.value = '';
+    form.value.classroomName = backendClassroomName.value;
 
     const available = await reservationService.checkAvailability(
-      classroomName.value,
+      backendClassroomName.value,
       form.value.reservationDate,
       form.value.startTime,
       form.value.endTime
@@ -327,6 +408,7 @@ const submitReservation = async () => {
 
     if (!available) {
       error.value = 'El aula no está disponible en ese horario.';
+      success.value = '';
       return;
     }
 
@@ -340,15 +422,48 @@ const submitReservation = async () => {
     const status = err?.status as number | undefined;
     if (status === 404) {
       error.value = 'No se encontró el aula o ya no está disponible.';
+      success.value = '';
     } else if (status === 403) {
       error.value = 'No tiene permisos para realizar esta acción.';
+      success.value = '';
     } else {
       error.value = err?.message || 'No se pudo registrar la reserva.';
+      success.value = '';
     }
     console.error(err);
   } finally {
     creating.value = false;
   }
+};
+
+const openEventModal = (event: CalendarEvent) => {
+  if (event.type === 'reservation' && event.reservationId) {
+    const reservation = reservations.value.find(r => r.id === event.reservationId);
+    const dateLabel = reservation?.reservationDate ? formatDate(reservation.reservationDate) : formatDateFromDay(event.day);
+    selectedEvent.value = {
+      kind: 'reservation',
+      reservationId: event.reservationId,
+      title: reservation?.purpose || event.title,
+      timeRange: `${event.start} - ${event.end}`,
+      dateLabel,
+      reservedBy: reservation?.reservedBy || 'No disponible',
+      purpose: reservation?.purpose || 'Sin propósito',
+      canDelete: reservation ? canDeleteAny.value || Boolean(reservation.ownedByCurrentUser) : canDeleteAny.value
+    };
+  } else if (event.type === 'course') {
+    selectedEvent.value = {
+      kind: 'course',
+      title: event.title,
+      timeRange: `${event.start} - ${event.end}`,
+      dateLabel: formatDateFromDay(event.day)
+    };
+  }
+  modalOpen.value = Boolean(selectedEvent.value);
+};
+
+const closeModal = () => {
+  modalOpen.value = false;
+  selectedEvent.value = null;
 };
 
 const formatDayLabel = (day: string) => {
@@ -405,7 +520,7 @@ const reservationToEvent = (reservation: Reservation): CalendarEvent | null => {
   if (!isDateInWeek(reservation.reservationDate, currentWeekStart.value)) return null;
   const day = resolveDay(reservation);
   if (!day || !DAYS.includes(day as typeof DAYS[number])) return null;
-  const mine = isReservationMine(reservation);
+  const mine = Boolean(reservation.ownedByCurrentUser);
   return {
     id: `reservation-${reservation.id}`,
     reservationId: reservation.id,
@@ -475,6 +590,43 @@ const resolveDay = (reservation: Reservation) => {
     return normalizeDay(date.toLocaleDateString('es-PE', { weekday: 'long' }));
   }
   return reservation.schedule?.dayOfWeek ? normalizeDay(reservation.schedule.dayOfWeek) : '';
+};
+
+const deleteSelectedReservation = async () => {
+  const reservationId = selectedEvent.value?.reservationId;
+  if (!reservationId) return;
+
+  const target = reservations.value.find(item => item.id === reservationId);
+  if (!target) {
+    error.value = 'No se encontró la reserva a eliminar.';
+    success.value = '';
+    return;
+  }
+
+  if (!canDeleteAny.value && !target.ownedByCurrentUser) {
+    error.value = 'Solo puede eliminar sus propias reservas.';
+    success.value = '';
+    return;
+  }
+
+  const confirmed = window.confirm('¿Desea eliminar esta reserva?');
+  if (!confirmed) return;
+
+  try {
+    deletingReservationId.value = reservationId;
+    error.value = '';
+    success.value = '';
+    await reservationService.deleteReservation(reservationId);
+    reservations.value = reservations.value.filter(item => item.id !== reservationId);
+    closeModal();
+    success.value = 'Reserva eliminada correctamente.';
+  } catch (err: any) {
+    error.value = err?.message || 'No se pudo eliminar la reserva.';
+    success.value = '';
+    console.error(err);
+  } finally {
+    deletingReservationId.value = null;
+  }
 };
 
 onMounted(async () => {
@@ -804,6 +956,8 @@ textarea {
   flex-direction: column;
   gap: 4px;
   font-size: 0.85rem;
+  border: none;
+  text-align: left;
 }
 
 .event-block.course {
@@ -822,6 +976,16 @@ textarea {
   background: linear-gradient(135deg, #0ea5e9, #38bdf8);
 }
 
+.event-block.interactive {
+  cursor: pointer;
+  transition: transform 0.1s ease, box-shadow 0.1s ease;
+}
+
+.event-block.interactive:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 14px 28px rgba(15, 23, 42, 0.18);
+}
+
 .event-title {
   margin: 0;
   font-weight: 600;
@@ -831,6 +995,101 @@ textarea {
   margin: 0;
   font-size: 0.8rem;
   opacity: 0.9;
+}
+
+.success {
+  background: #ecfdf5;
+  color: #166534;
+  padding: 16px;
+  border-radius: 12px;
+  border-left: 4px solid #22c55e;
+}
+
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  z-index: 50;
+}
+
+.modal-card {
+  width: min(520px, 100%);
+  background: #fff;
+  border-radius: 16px;
+  box-shadow: 0 30px 80px rgba(15, 23, 42, 0.25);
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+
+.modal-title {
+  margin: 4px 0 0;
+}
+
+.icon-button {
+  border: none;
+  background: #f1f5f9;
+  border-radius: 10px;
+  width: 34px;
+  height: 34px;
+  cursor: pointer;
+  font-size: 1rem;
+}
+
+.modal-body {
+  display: grid;
+  gap: 10px;
+}
+
+.detail-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: #f8fafc;
+  color: #334155;
+}
+
+.detail-row strong {
+  color: #0f172a;
+}
+
+.modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.secondary-button {
+  border: 1px solid #e2e8f0;
+  background: #fff;
+  border-radius: 10px;
+  padding: 10px 14px;
+  cursor: pointer;
+  color: #0f172a;
+}
+
+.danger-button {
+  border: none;
+  background: #dc2626;
+  color: #fff;
+  border-radius: 10px;
+  padding: 10px 14px;
+  cursor: pointer;
+  box-shadow: 0 10px 30px rgba(220, 38, 38, 0.25);
 }
 
 .state {

@@ -14,6 +14,7 @@ export interface Reservation {
   };
   reservationDate?: string;
   createdAt?: string;
+  ownedByCurrentUser?: boolean;
 }
 
 export interface CreateReservationPayload {

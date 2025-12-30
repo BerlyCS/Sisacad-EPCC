@@ -55,7 +55,7 @@ public class ReservationController {
     public ResponseEntity<List<ReservationResponse>> getAllReservations(Authentication authentication) {
         ensureAdministratorOrSecretary(authentication);
         List<ReservationResponse> responses = reservationService.getAllReservations().stream()
-                .map(this::toResponse)
+                .map(reservation -> toResponse(reservation, authentication))
                 .collect(Collectors.toList());
         return ResponseEntity.ok(responses);
     }
@@ -63,7 +63,7 @@ public class ReservationController {
     @GetMapping("/my-reservations")
     public ResponseEntity<List<ReservationResponse>> getMyReservations(Authentication authentication) {
         List<ReservationResponse> responses = reservationService.getReservationsForCurrentUser(authentication).stream()
-                .map(this::toResponse)
+            .map(reservation -> toResponse(reservation, authentication))
                 .collect(Collectors.toList());
         return ResponseEntity.ok(responses);
     }
@@ -74,7 +74,7 @@ public class ReservationController {
         ensureReservationActor(authentication);
         try {
             List<ReservationResponse> responses = reservationService.getReservationsByClassroomName(classroomName).stream()
-                    .map(this::toResponse)
+                    .map(reservation -> toResponse(reservation, authentication))
                     .collect(Collectors.toList());
             return ResponseEntity.ok(responses);
         } catch (IllegalArgumentException ex) {
@@ -100,7 +100,7 @@ public class ReservationController {
                     request.getEndTime(),
                     authentication
             );
-            return ResponseEntity.status(HttpStatus.CREATED).body(toResponse(reservation));
+            return ResponseEntity.status(HttpStatus.CREATED).body(toResponse(reservation, authentication));
         } catch (DateTimeParseException ex) {
             return ResponseEntity.badRequest().build();
         } catch (IllegalArgumentException ex) {
@@ -177,7 +177,7 @@ public class ReservationController {
         }
     }
 
-    private ReservationResponse toResponse(Reservation reservation) {
+    private ReservationResponse toResponse(Reservation reservation, Authentication authentication) {
         ReservationResponse response = new ReservationResponse();
         response.setId(reservation.getId());
         response.setPurpose(reservation.getPurpose());
@@ -185,6 +185,8 @@ public class ReservationController {
         response.setReservationDate(reservation.getReservationDate());
         response.setClassroomName(reservationService.getClassroomDisplayName(reservation.getClassroomId()));
         response.setReservedBy(userDirectoryService.resolveDisplayNameOrFallback(reservation.getUserId()));
+
+        response.setOwnedByCurrentUser(isOwnedByCurrentUser(reservation, authentication));
 
         if (reservation.getSchedule() != null) {
             ReservationResponse.ScheduleDto scheduleDto = new ReservationResponse.ScheduleDto();
@@ -210,6 +212,14 @@ public class ReservationController {
         if (!authorizationService.hasAnyRole(authentication, UserRole.ADMIN, UserRole.SECRETARY, UserRole.PROFESSOR)) {
             throw new SecurityException("No autorizado");
         }
+    }
+
+    private boolean isOwnedByCurrentUser(Reservation reservation, Authentication authentication) {
+        if (reservation == null || reservation.getUserId() == null) {
+            return false;
+        }
+        Long currentUserId = authorizationService.getAuthenticatedUserId(authentication);
+        return currentUserId != null && currentUserId.equals(reservation.getUserId());
     }
 
     private String normalizeDay(String value) {

@@ -12,6 +12,7 @@ public class ReservationResponse {
     private ScheduleDto schedule;
     private LocalDateTime createdAt;
     private LocalDate reservationDate;
+    private boolean ownedByCurrentUser;
 
     public Long getId() {
         return id;
@@ -67,6 +68,14 @@ public class ReservationResponse {
 
     public void setReservationDate(LocalDate reservationDate) {
         this.reservationDate = reservationDate;
+    }
+
+    public boolean isOwnedByCurrentUser() {
+        return ownedByCurrentUser;
+    }
+
+    public void setOwnedByCurrentUser(boolean ownedByCurrentUser) {
+        this.ownedByCurrentUser = ownedByCurrentUser;
     }
 
     public static class ScheduleDto {
