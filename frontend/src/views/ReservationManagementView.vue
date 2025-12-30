@@ -48,7 +48,6 @@
             </button>
           </div>
         </form>
-        <p class="helper-text">Los horarios no requieren aprobación previa; evita choques con cursos y otras reservas.</p>
       </section>
 
       <section class="card">
@@ -82,7 +81,19 @@
                 <p class="classroom">{{ reservation.classroomName }}</p>
                 <p class="date">{{ formatDate(reservation.reservationDate) }}</p>
               </div>
-              <p class="time">{{ reservation.schedule.startTime }} - {{ reservation.schedule.endTime }}</p>
+              <div class="card-actions">
+                <p class="time">{{ reservation.schedule.startTime }} - {{ reservation.schedule.endTime }}</p>
+                <button
+                  v-if="canViewAll"
+                  class="ghost-button"
+                  :disabled="deletingId === reservation.id"
+                  @click="deleteReservation(reservation.id)"
+                >
+                  <i v-if="deletingId === reservation.id" class="fas fa-spinner fa-spin" />
+                  <i v-else class="fas fa-trash" />
+                  <span>{{ deletingId === reservation.id ? 'Eliminando' : 'Eliminar' }}</span>
+                </button>
+              </div>
             </header>
             <p class="purpose">{{ reservation.purpose }}</p>
             <footer>
@@ -113,6 +124,7 @@ const classrooms = ref<string[]>([]);
 const reservations = ref<Reservation[]>([]);
 const loading = ref(false);
 const creating = ref(false);
+const deletingId = ref<number | null>(null);
 const error = ref('');
 
 const form = ref<CreateReservationPayload>({
@@ -207,6 +219,24 @@ const submitReservation = async () => {
     console.error(err);
   } finally {
     creating.value = false;
+  }
+};
+
+const deleteReservation = async (id?: number) => {
+  if (id == null) return;
+  const confirmed = window.confirm('¿Desea eliminar esta reserva?');
+  if (!confirmed) return;
+
+  try {
+    deletingId.value = id;
+    error.value = '';
+    await reservationService.deleteReservation(id);
+    reservations.value = reservations.value.filter(reservation => reservation.id !== id);
+  } catch (err: any) {
+    error.value = err?.message || 'No se pudo eliminar la reserva.';
+    console.error(err);
+  } finally {
+    deletingId.value = null;
   }
 };
 
@@ -363,6 +393,30 @@ textarea {
   display: flex;
   justify-content: space-between;
   align-items: baseline;
+}
+
+.card-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.ghost-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 12px;
+  border: 1px solid #e5e7eb;
+  background: #fff;
+  border-radius: 10px;
+  color: #b91c1c;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.ghost-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 
 .reservation-card .classroom {

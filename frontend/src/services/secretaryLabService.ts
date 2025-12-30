@@ -7,7 +7,7 @@ export interface TheoryCourseSummary {
   courseCode: number | null
   name: string
   groupLetter: string | null
-  anio: number | null
+  semesterNumber: number | null
   creditNumber: number | null
 }
 
@@ -102,7 +102,7 @@ const fetchTheoryCourses = async (): Promise<TheoryCourseSummary[]> => {
         courseCode: toNumberOrNull(course.courseCode),
         name: course.name ?? 'Curso',
         groupLetter: normalizeGroupLetter(course.groupLetter),
-        anio: toNumberOrNull(course.anio),
+        semesterNumber: toNumberOrNull(course.semesterNumber),
         creditNumber: toNumberOrNull(course.creditNumber)
       }))
     : []

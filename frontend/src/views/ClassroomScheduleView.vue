@@ -72,7 +72,11 @@
           </div>
           <div class="legend">
             <span><span class="legend-dot course"></span> Curso programado</span>
-            <span><span class="legend-dot reservation"></span> Reserva confirmada</span>
+            <template v-if="showReservationOwnership">
+              <span><span class="legend-dot reservation mine"></span> Mis reservas</span>
+              <span><span class="legend-dot reservation others"></span> Otras reservas</span>
+            </template>
+            <span v-else><span class="legend-dot reservation"></span> Reserva confirmada</span>
           </div>
         </div>
 
@@ -109,7 +113,7 @@
                   v-for="event in eventsByDay[day]"
                   :key="event.id"
                   class="event-block"
-                  :class="event.type"
+                  :class="[event.type, event.type === 'reservation' ? event.ownership : '']"
                   :style="eventStyle(event)"
                 >
                   <p class="event-title">{{ event.title }}</p>
@@ -165,6 +169,8 @@ const courseSlots = ref<Array<{ id: string; day: string; start: string; end: str
 
 const timeSegments = computed(() => buildTimeSegments(START_MINUTES, END_MINUTES, SLOT_INTERVAL));
 const slotCountStyle = computed(() => ({ '--slots-count': timeSegments.value.length }));
+const canDeleteAny = computed(() => auth.isAdmin || auth.isSecretary);
+const showReservationOwnership = computed(() => auth.isProfessor);
 
 // Week selector state: current week start (Monday)
 const today = new Date();
@@ -225,6 +231,9 @@ type CalendarEvent = {
   type: 'course' | 'reservation';
   startMinutes: number;
   endMinutes: number;
+  ownership?: 'mine' | 'others';
+  ownedByMe?: boolean;
+  reservationId?: number;
 };
 
 const eventsByDay = computed<Record<string, CalendarEvent[]>>(() => {
@@ -243,6 +252,17 @@ const eventsByDay = computed<Record<string, CalendarEvent[]>>(() => {
   Object.values(map).forEach(list => list.sort((a, b) => a.startMinutes - b.startMinutes));
   return map;
 });
+
+const normalizeOwner = (value?: unknown) => String(value ?? '').trim().toLowerCase();
+
+const isReservationMine = (reservation: Reservation) => {
+  const owner = normalizeOwner(reservation.reservedBy);
+  if (!owner) return false;
+  const candidates = [auth.userEmail, auth.userName, auth.userDocumentoIdentidad]
+    .map(normalizeOwner)
+    .filter(Boolean);
+  return candidates.includes(owner);
+};
 
 const toggleReservationForm = () => {
   showReservationForm.value = !showReservationForm.value;
@@ -317,7 +337,14 @@ const submitReservation = async () => {
     form.value.purpose = '';
     await Promise.all([loadReservations()]);
   } catch (err: any) {
-    error.value = err?.message || 'No se pudo registrar la reserva.';
+    const status = err?.status as number | undefined;
+    if (status === 404) {
+      error.value = 'No se encontró el aula o ya no está disponible.';
+    } else if (status === 403) {
+      error.value = 'No tiene permisos para realizar esta acción.';
+    } else {
+      error.value = err?.message || 'No se pudo registrar la reserva.';
+    }
     console.error(err);
   } finally {
     creating.value = false;
@@ -347,6 +374,16 @@ const eventStyle = (event: CalendarEvent) => {
   };
 };
 
+const formatDate = (value?: string) => {
+  if (!value) return 'Sin fecha';
+  return parseLocalDate(value).toLocaleDateString('es-PE', {
+    weekday: 'long',
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric'
+  });
+};
+
 const parseLocalDate = (value: string) => {
   // Avoid UTC parsing that shifts one day for negative timezones
   const [y, m, d] = value.split('-').map(Number);
@@ -368,15 +405,19 @@ const reservationToEvent = (reservation: Reservation): CalendarEvent | null => {
   if (!isDateInWeek(reservation.reservationDate, currentWeekStart.value)) return null;
   const day = resolveDay(reservation);
   if (!day || !DAYS.includes(day as typeof DAYS[number])) return null;
+  const mine = isReservationMine(reservation);
   return {
     id: `reservation-${reservation.id}`,
+    reservationId: reservation.id,
     day,
     start: reservation.schedule.startTime,
     end: reservation.schedule.endTime,
     title: reservation.purpose,
     type: 'reservation',
     startMinutes: timeToMinutes(reservation.schedule.startTime),
-    endMinutes: timeToMinutes(reservation.schedule.endTime)
+    endMinutes: timeToMinutes(reservation.schedule.endTime),
+    ownership: mine ? 'mine' : 'others',
+    ownedByMe: mine
   };
 };
 
@@ -581,6 +622,27 @@ onMounted(async () => {
   border: 1px solid #e0e7ff;
 }
 
+.event-delete-inline {
+  margin-top: auto;
+  align-self: flex-start;
+  color: #fff;
+  display: inline-flex;
+  gap: 6px;
+  align-items: center;
+  padding: 4px 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.6);
+  background: rgba(15, 23, 42, 0.25);
+  font-size: 0.8rem;
+  cursor: pointer;
+  font-weight: 700;
+}
+
+.event-delete-inline:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
 .form-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
@@ -658,7 +720,15 @@ textarea {
 }
 
 .legend-dot.reservation {
+  background: #0ea5e9;
+}
+
+.legend-dot.reservation.mine {
   background: #16a34a;
+}
+
+.legend-dot.reservation.others {
+  background: #0ea5e9;
 }
 
 .schedule-grid {
@@ -725,6 +795,7 @@ textarea {
   position: absolute;
   left: 12px;
   right: 12px;
+  z-index: 1;
   border-radius: 12px;
   padding: 10px 12px;
   color: #fff;
@@ -740,7 +811,15 @@ textarea {
 }
 
 .event-block.reservation {
+  background: linear-gradient(135deg, #0ea5e9, #38bdf8);
+}
+
+.event-block.reservation.mine {
   background: linear-gradient(135deg, #16a34a, #22c55e);
+}
+
+.event-block.reservation.others {
+  background: linear-gradient(135deg, #0ea5e9, #38bdf8);
 }
 
 .event-title {
@@ -810,5 +889,6 @@ textarea {
     width: 100%;
     justify-content: center;
   }
+
 }
 </style>

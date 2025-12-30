@@ -16,7 +16,7 @@ export interface Course {
   creditNumber: number | null
   groupLetter: string | null
   syllabusID: number | null
-  anio: number | null
+  semesterNumber: number | null
   courseType: CourseType
   labPrerequisiteCourseId: number | null
   labCapacity: number | null
@@ -91,7 +91,7 @@ export const useStudentCourseService = () => {
               creditNumber: toNumberOrNull(course.creditNumber),
               groupLetter: normalizeGroupLetter(course.groupLetter),
               syllabusID: toNumberOrNull(course.syllabusID),
-              anio: toNumberOrNull(course.anio),
+              semesterNumber: toNumberOrNull(course.semesterNumber),
               courseType,
               labPrerequisiteCourseId: toNumberOrNull(course.labPrerequisiteCourseId),
               labCapacity: labCapacity,

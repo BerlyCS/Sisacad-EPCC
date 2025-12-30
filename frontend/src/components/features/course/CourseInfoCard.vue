@@ -57,7 +57,7 @@
         </div>
         <div class="bg-emerald-50 rounded-md p-4">
           <p class="text-xs uppercase tracking-wide text-emerald-600 font-semibold">Año académico</p>
-          <p class="text-lg font-semibold text-emerald-900">{{ details.anio ?? 'No definido' }}</p>
+          <p class="text-lg font-semibold text-emerald-900">{{ academicYear }}</p>
         </div>
         <div class="bg-indigo-50 rounded-md p-4">
           <p class="text-xs uppercase tracking-wide text-indigo-600 font-semibold">Estudiantes</p>
@@ -303,6 +303,16 @@ const studentCount = computed(() => {
     return count
   }
   return props.details.enrolledStudents?.length ?? 0
+})
+
+const academicYear = computed(() => {
+  const semester = props.details.semesterNumber
+  if (semester == null || semester <= 0) {
+    return 'No definido'
+  }
+  // Calculate academic year: semesters 1-2 = year 1, 3-4 = year 2, etc.
+  const year = Math.ceil(semester / 2)
+  return year.toString()
 })
 
 const formatStudentName = (student: CourseStudentSummary) =>

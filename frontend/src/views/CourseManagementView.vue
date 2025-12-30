@@ -549,7 +549,6 @@
                   />
                 </label>
               </div>
-              <p class="text-xs text-gray-500">Cada bloque representa 50 minutos continuos. Combina los bloques para cumplir con las horas del curso.</p>
             </div>
 
             <div class="rounded-2xl border border-gray-200 p-4 space-y-4">

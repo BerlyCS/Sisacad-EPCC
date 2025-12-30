@@ -18,7 +18,7 @@ public record CourseDetailsResponse(
         String name,
         Integer creditNumber,
         String groupLetter,
-        Integer anio,
+        Integer semesterNumber,
         String courseType,
         String courseTypeLabel,
         Long labPrerequisiteCourseId,
@@ -62,7 +62,7 @@ public record CourseDetailsResponse(
                 course.getName(),
                 course.getCredits(),
                 groupLetter,
-                null, // anio removed
+                course.getSemesterNumber(),
                 type != null ? type.name() : null,
                 mapCourseTypeLabel(type),
                 null, // labPrerequisiteCourseId removed

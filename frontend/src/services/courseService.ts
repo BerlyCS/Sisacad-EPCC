@@ -92,7 +92,7 @@ export interface CourseDetails {
   name: string
   creditNumber: number
   groupLetter: string
-  anio: number | null
+  semesterNumber: number | null
   courseType: CourseType
   courseTypeLabel: string
   labPrerequisiteCourseId: number | null
@@ -290,7 +290,7 @@ export const useCourseService = () => {
       name: data.name ?? 'Curso',
       creditNumber: data.creditNumber != null ? Number(data.creditNumber) : 0,
       groupLetter: data.groupLetter ?? '',
-      anio: data.anio != null ? Number(data.anio) : null,
+      semesterNumber: data.semesterNumber != null ? Number(data.semesterNumber) : null,
       courseType,
       courseTypeLabel: data.courseTypeLabel ?? resolveCourseTypeLabel(courseType),
       labPrerequisiteCourseId: data.labPrerequisiteCourseId != null ? Number(data.labPrerequisiteCourseId) : null,

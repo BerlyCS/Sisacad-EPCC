@@ -55,7 +55,26 @@ class ReservationService {
     });
 
     if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
+      let message = `HTTP error ${response.status}`;
+      try {
+        const data = await response.json();
+        const apiMessage = (data as any)?.message || (data as any)?.error;
+        if (apiMessage) {
+          message = apiMessage;
+        }
+      } catch (_) {
+        try {
+          const text = await response.text();
+          if (text) {
+            message = text;
+          }
+        } catch (_) {
+          /* ignore */
+        }
+      }
+      const error: any = new Error(message);
+      error.status = response.status;
+      throw error;
     }
 
     return response.json();
