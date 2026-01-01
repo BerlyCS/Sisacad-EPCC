@@ -12,16 +12,21 @@ export interface Student {
   enrollmentYear?: number | null
 }
 
-type CourseType = 'THEORY' | 'LAB'
+type CourseType = 'THEORY' | 'LAB' | 'PRACTICE'
 
-interface StudentCourseSummary {
-  courseId: number
-  courseCode: number
-  name: string
+export interface StudentCourseGroupSummary {
+  courseGroupId: number
   groupLetter: string
   courseType: CourseType
   courseTypeLabel: string
+}
+
+export interface StudentCourseSummary {
+  courseId: number
+  courseCode: number
+  name: string
   creditNumber?: number | null
+  groups: StudentCourseGroupSummary[]
 }
 
 export interface StudentScheduleEntry {
@@ -51,7 +56,8 @@ export interface CreateStudentPayload {
 
 const COURSE_TYPE_LABEL: Record<CourseType, string> = {
   THEORY: 'Teoría',
-  LAB: 'Laboratorio'
+  LAB: 'Laboratorio',
+  PRACTICE: 'Práctica'
 }
 
 export const useStudentService = () => {
@@ -198,15 +204,24 @@ export const useStudentService = () => {
 
       const parsedCourses: StudentCourseSummary[] = Array.isArray(data)
         ? data.map((course: any) => {
-            const type = (course.courseType || 'THEORY').toUpperCase() as CourseType
+            const groups: StudentCourseGroupSummary[] = Array.isArray(course.groups)
+              ? course.groups.map((group: any) => {
+                  const type = (group.courseType || 'THEORY').toUpperCase() as CourseType
+                  return {
+                    courseGroupId: Number(group.courseGroupId ?? group.id ?? 0),
+                    groupLetter: group.groupLetter ?? group.letter ?? '-',
+                    courseType: type,
+                    courseTypeLabel: COURSE_TYPE_LABEL[type] ?? type
+                  }
+                })
+              : []
+
             return {
               courseId: Number(course.courseId ?? course.courseID ?? 0),
               courseCode: Number(course.courseCode ?? course.courseId ?? 0),
               name: course.name ?? 'Curso sin nombre',
-              groupLetter: course.groupLetter ?? '-',
-              courseType: type,
-              courseTypeLabel: COURSE_TYPE_LABEL[type] ?? type,
-              creditNumber: course.creditNumber ?? null
+              creditNumber: course.creditNumber ?? course.credits ?? null,
+              groups
             }
           })
         : []
@@ -234,15 +249,24 @@ export const useStudentService = () => {
 
       const parsedCourses: StudentCourseSummary[] = Array.isArray(data)
         ? data.map((course: any) => {
-            const type = (course.courseType || 'THEORY').toUpperCase() as CourseType
+            const groups: StudentCourseGroupSummary[] = Array.isArray(course.groups)
+              ? course.groups.map((group: any) => {
+                  const type = (group.courseType || 'THEORY').toUpperCase() as CourseType
+                  return {
+                    courseGroupId: Number(group.courseGroupId ?? group.id ?? 0),
+                    groupLetter: group.groupLetter ?? group.letter ?? '-',
+                    courseType: type,
+                    courseTypeLabel: COURSE_TYPE_LABEL[type] ?? type
+                  }
+                })
+              : []
+
             return {
               courseId: Number(course.courseId ?? course.courseID ?? 0),
               courseCode: Number(course.courseCode ?? course.courseId ?? 0),
               name: course.name ?? 'Curso sin nombre',
-              groupLetter: course.groupLetter ?? '-',
-              courseType: type,
-              courseTypeLabel: COURSE_TYPE_LABEL[type] ?? type,
-              creditNumber: course.creditNumber ?? null
+              creditNumber: course.creditNumber ?? course.credits ?? null,
+              groups
             }
           })
         : []

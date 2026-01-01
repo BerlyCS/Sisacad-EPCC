@@ -77,13 +77,22 @@
     </div>
 
     <div class="bg-white shadow rounded-lg p-6 space-y-4">
-      <div class="flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <h3 class="text-lg font-semibold text-gray-800">Grupos del curso</h3>
-          <p class="text-sm text-gray-500">Revisa teoría, práctica y laboratorio asignados.</p>
+        <div class="flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <h3 class="text-lg font-semibold text-gray-800">Grupos del curso</h3>
+            <p class="text-sm text-gray-500">Revisa teoría, práctica y laboratorio asignados.</p>
+          </div>
+          <div class="flex items-center gap-3">
+            <span v-if="groupCountLabel" class="text-sm text-gray-500">{{ groupCountLabel }}</span>
+            <RouterLink
+              v-if="details.courseId"
+              :to="{ name: 'course-syllabus', params: { courseId: details.courseId } }"
+              class="text-sm font-semibold text-blue-600 hover:text-blue-800"
+            >
+              Ver temario completo
+            </RouterLink>
+          </div>
         </div>
-        <span v-if="groupCountLabel" class="text-sm text-gray-500">{{ groupCountLabel }}</span>
-      </div>
 
       <p v-if="groupsLoading" class="text-sm text-blue-600">Cargando grupos...</p>
       <p v-else-if="groupsError" class="text-sm text-red-600">{{ groupsError }}</p>
@@ -171,7 +180,7 @@
               Ver más detalles
             </summary>
             <p class="mt-2">
-              Este tema se completó el {{ formatTopicDate(topic.sessionDate) }}. Revisa el sílabo descargado para repasar materiales adicionales.
+              Este tema se completó el {{ formatTopicDate(topic.sessionDate) }}.
             </p>
           </details>
         </li>
@@ -220,7 +229,7 @@
 
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
-import { useRouter } from 'vue-router'
+import { RouterLink, useRouter } from 'vue-router'
 import type {
   CourseDetails,
   CourseGroupSummary,

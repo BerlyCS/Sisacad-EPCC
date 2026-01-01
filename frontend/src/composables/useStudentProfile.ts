@@ -1,7 +1,7 @@
 import { computed } from 'vue'
 import { useStudentService } from '@/services/studentService'
 
-type CourseType = 'THEORY' | 'LAB'
+type CourseType = 'THEORY' | 'LAB' | 'PRACTICE'
 
 const DAY_ORDER = ['LUNES', 'MARTES', 'MIERCOLES', 'JUEVES', 'VIERNES', 'SABADO', 'DOMINGO'] as const
 const DAY_LABELS: Record<string, string> = {
@@ -73,18 +73,23 @@ export const useStudentProfile = () => {
 
   const courseStats = computed(() => {
     const courseList = courses.value
+    const allGroups = courseList.flatMap(course => course.groups ?? [])
+
     const totalCredits = courseList.reduce((sum, course) => {
       const credits = Number(course.creditNumber ?? 0)
       return Number.isFinite(credits) ? sum + credits : sum
     }, 0)
-    const labCourses = courseList.filter(course => course.courseType === 'LAB').length
-    const theoryCourses = courseList.filter(course => course.courseType === 'THEORY').length
+
+    const labSections = allGroups.filter(group => group.courseType === 'LAB').length
+    const practiceSections = allGroups.filter(group => group.courseType === 'PRACTICE').length
+    const theorySections = allGroups.filter(group => group.courseType === 'THEORY').length
 
     return {
       totalCourses: courseList.length,
       totalCredits,
-      labCourses,
-      theoryCourses
+      labSections,
+      practiceSections,
+      theorySections
     }
   })
 
@@ -110,7 +115,8 @@ export const useStudentProfile = () => {
 
     const COURSE_TYPE_LABEL: Record<CourseType, string> = {
       THEORY: 'Teoría',
-      LAB: 'Laboratorio'
+      LAB: 'Laboratorio',
+      PRACTICE: 'Práctica'
     }
 
     schedule.value.forEach((entry, index) => {

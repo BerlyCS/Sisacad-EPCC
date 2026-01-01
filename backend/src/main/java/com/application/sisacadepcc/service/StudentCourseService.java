@@ -19,7 +19,9 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 
 @Service
@@ -62,7 +64,8 @@ public class StudentCourseService {
             return List.of();
         }
 
-        List<Course> summaries = new ArrayList<>();
+        Map<Long, Course> coursesById = new LinkedHashMap<>();
+
         for (EnrollmentEntity enrollment : enrollments) {
             Long courseGroupId = enrollment.getCourseGroup() != null ? enrollment.getCourseGroup().getId() : null;
             if (courseGroupId == null) {
@@ -75,14 +78,23 @@ public class StudentCourseService {
             }
 
             Course course = resolveCourse(courseGroup);
-            if (course == null) {
+            if (course == null || course.getCourseId() == null) {
                 continue;
             }
 
-            summaries.add(buildCourseSummary(course, courseGroup));
+            Course summaryCourse = coursesById.computeIfAbsent(course.getCourseId(), id -> createCourseSummary(course));
+
+            boolean alreadyAdded = summaryCourse.getGroups().stream()
+                    .anyMatch(group -> Objects.equals(group.getId(), courseGroup.getId()));
+            if (alreadyAdded) {
+                continue;
+            }
+
+            CourseGroup summaryGroup = createCourseGroupSummary(courseGroup, summaryCourse);
+            summaryCourse.getGroups().add(summaryGroup);
         }
 
-        return summaries;
+        return new ArrayList<>(coursesById.values());
     }
 
     @Transactional
@@ -272,7 +284,7 @@ public class StudentCourseService {
         return courseRepository.findById(courseId).orElse(null);
     }
 
-    private Course buildCourseSummary(Course sourceCourse, CourseGroup courseGroup) {
+    private Course createCourseSummary(Course sourceCourse) {
         Course summary = new Course();
         summary.setCourseId(sourceCourse.getCourseId());
         summary.setCourseCode(sourceCourse.getCourseCode());
@@ -283,7 +295,11 @@ public class StudentCourseService {
         summary.setPracticeHours(sourceCourse.getPracticeHours());
         summary.setTheoryHours(sourceCourse.getTheoryHours());
         summary.setSemesterNumber(sourceCourse.getSemesterNumber());
+        summary.setGroups(new ArrayList<>());
+        return summary;
+    }
 
+    private CourseGroup createCourseGroupSummary(CourseGroup courseGroup, Course parentCourse) {
         CourseGroup summaryGroup = new CourseGroup();
         summaryGroup.setId(courseGroup.getId());
         summaryGroup.setLetter(courseGroup.getLetter());
@@ -292,11 +308,9 @@ public class StudentCourseService {
         summaryGroup.setAvailableCapacity(courseGroup.getAvailableCapacity());
         summaryGroup.setTeacherId(courseGroup.getTeacherId());
         summaryGroup.setCourseId(courseGroup.getCourseId());
-        summaryGroup.setCourse(summary);
+        summaryGroup.setCourse(parentCourse);
         summaryGroup.setCourseSchedules(courseGroup.getCourseSchedules());
-
-        summary.setGroups(List.of(summaryGroup));
-        return summary;
+        return summaryGroup;
     }
 
     private String formatTime(java.time.LocalTime time) {

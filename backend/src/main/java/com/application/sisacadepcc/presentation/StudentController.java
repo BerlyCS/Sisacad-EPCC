@@ -6,7 +6,8 @@ import com.application.sisacadepcc.domain.model.Course;
 import com.application.sisacadepcc.domain.model.CourseGroup;
 import com.application.sisacadepcc.domain.model.valueobject.CourseType;
 import com.application.sisacadepcc.presentation.dto.StudentScheduleEntry;
-import com.application.sisacadepcc.presentation.dto.StudentCourseDto;
+import com.application.sisacadepcc.presentation.dto.StudentCourseResponse;
+import com.application.sisacadepcc.presentation.dto.StudentCourseGroupResponse;
 import com.application.sisacadepcc.service.StudentService;
 import com.application.sisacadepcc.service.StudentCourseService;
 import com.application.sisacadepcc.service.AuthorizationService;
@@ -24,6 +25,7 @@ import org.slf4j.LoggerFactory;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -50,14 +52,14 @@ public class StudentController {
 
     @GetMapping("/document/{studentId}/courses")
     @RequiresAdministratorAccess
-    public ResponseEntity<List<StudentCourseDto>> getCoursesByStudentDocument(@PathVariable Long studentId) {
+    public ResponseEntity<List<StudentCourseResponse>> getCoursesByStudentDocument(@PathVariable Long studentId) {
         List<Course> courses = studentCourseService.getCoursesByStudent(studentId);
-        return ResponseEntity.ok(mapToStudentCourseDtos(courses));
+        return ResponseEntity.ok(mapToStudentCourseResponses(courses));
     }
 
     // NUEVO ENDPOINT para que estudiantes vean sus propios cursos - SIN anotación de administrador
     @GetMapping("/my-courses")
-    public ResponseEntity<List<StudentCourseDto>> getMyCourses(@AuthenticationPrincipal OAuth2User principal) {
+    public ResponseEntity<List<StudentCourseResponse>> getMyCourses(@AuthenticationPrincipal OAuth2User principal) {
         try {
             if (principal == null) {
                 return ResponseEntity.badRequest().build();
@@ -76,7 +78,7 @@ public class StudentController {
 
             Long studentId = student.get().getUserId();
             List<Course> courses = studentCourseService.getCoursesByStudent(studentId);
-            return ResponseEntity.ok(mapToStudentCourseDtos(courses));
+            return ResponseEntity.ok(mapToStudentCourseResponses(courses));
 
         } catch (Exception e) {
             return ResponseEntity.internalServerError().build();
@@ -213,7 +215,7 @@ public class StudentController {
     }
 
     @GetMapping("/{cui}/courses")
-    public ResponseEntity<List<StudentCourseDto>> getStudentCourses(@PathVariable String cui,
+    public ResponseEntity<List<StudentCourseResponse>> getStudentCourses(@PathVariable String cui,
                                                           Authentication authentication) {
         if (!authorizationService.hasAnyRole(authentication, UserRole.ADMIN, UserRole.SECRETARY,
                 UserRole.PROFESSOR, UserRole.STUDENT)) {
@@ -235,7 +237,7 @@ public class StudentController {
         }
 
         List<Course> courses = studentCourseService.getCoursesByStudent(student.getUserId());
-        return ResponseEntity.ok(mapToStudentCourseDtos(courses));
+        return ResponseEntity.ok(mapToStudentCourseResponses(courses));
     }
 
     @GetMapping("/{cui}/schedule")
@@ -264,46 +266,56 @@ public class StudentController {
         return ResponseEntity.ok(schedule);
     }
 
-    private List<StudentCourseDto> mapToStudentCourseDtos(List<Course> courses) {
+    private List<StudentCourseResponse> mapToStudentCourseResponses(List<Course> courses) {
         if (courses == null || courses.isEmpty()) {
             return List.of();
         }
 
         return courses.stream()
-                .map(this::mapCourseToDto)
+                .map(this::mapCourseToResponse)
                 .filter(java.util.Objects::nonNull)
-                .collect(java.util.stream.Collectors.toList());
+                .collect(Collectors.toList());
     }
 
-    private StudentCourseDto mapCourseToDto(Course course) {
+    private StudentCourseResponse mapCourseToResponse(Course course) {
         if (course == null) {
             return null;
         }
-
-        CourseGroup group = (course.getGroups() != null && !course.getGroups().isEmpty())
-                ? course.getGroups().get(0)
-                : null;
-
-        CourseType courseType = group != null && group.getType() != null
-                ? group.getType()
-                : CourseType.THEORY;
-
-        String groupLetter = group != null ? group.getLetter() : null;
-        Long courseGroupId = group != null ? group.getId() : null;
 
         Long courseCode = course.getCourseCode() != null
                 ? course.getCourseCode().longValue()
                 : null;
 
-        return new StudentCourseDto(
+        List<CourseGroup> groupCandidates = course.getGroups() != null ? course.getGroups() : List.<CourseGroup>of();
+        List<StudentCourseGroupResponse> groups = groupCandidates.stream()
+                .filter(Objects::nonNull)
+                .map(this::mapCourseGroupToResponse)
+                .filter(Objects::nonNull)
+                .collect(Collectors.toList());
+
+        return new StudentCourseResponse(
                 course.getCourseId(),
                 courseCode,
                 course.getName(),
-                groupLetter,
-                courseType,
-                resolveCourseTypeLabel(courseType),
                 course.getCredits(),
-                courseGroupId
+                groups
+        );
+    }
+
+    private StudentCourseGroupResponse mapCourseGroupToResponse(CourseGroup group) {
+        if (group == null) {
+            return null;
+        }
+
+        CourseType courseType = group.getType() != null
+                ? group.getType()
+                : CourseType.THEORY;
+
+        return new StudentCourseGroupResponse(
+                group.getId(),
+                group.getLetter(),
+                courseType,
+                resolveCourseTypeLabel(courseType)
         );
     }
 

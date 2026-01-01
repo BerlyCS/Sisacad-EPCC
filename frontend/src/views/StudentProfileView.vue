@@ -76,8 +76,7 @@
                 <thead>
                   <tr class="text-left text-xs font-semibold uppercase tracking-wide text-gray-500">
                     <th class="py-2 pr-4">Curso</th>
-                    <th class="py-2 pr-4">Tipo</th>
-                    <th class="py-2 pr-4">Sección</th>
+                    <th class="py-2 pr-4">Grupos</th>
                     <th class="py-2">Créditos</th>
                   </tr>
                 </thead>
@@ -87,12 +86,19 @@
                       <p class="font-semibold">{{ course.name }}</p>
                       <p class="text-xs text-gray-500">Código {{ course.courseCode }}</p>
                     </td>
-                    <td class="py-2 pr-4">
-                      <span class="rounded-full bg-blue-50 px-2 py-1 text-xs font-semibold text-blue-700">
-                        {{ course.courseTypeLabel }}
-                      </span>
+                    <td class="py-2 pr-4 text-sm">
+                      <div v-if="course.groups?.length" class="flex flex-wrap gap-2">
+                        <span
+                          v-for="group in course.groups"
+                          :key="group.courseGroupId"
+                          class="inline-flex items-center gap-1 rounded-full bg-blue-50 px-2 py-1 text-xs font-semibold text-blue-700"
+                        >
+                          <span>{{ COURSE_TYPE_LABEL[group.courseType] ?? group.courseType }}</span>
+                          <span class="text-gray-600">{{ group.groupLetter }}</span>
+                        </span>
+                      </div>
+                      <span v-else class="text-gray-500">Sin grupos registrados</span>
                     </td>
-                    <td class="py-2 pr-4 text-sm">{{ course.groupLetter }}</td>
                     <td class="py-2 text-sm">{{ course.creditNumber ?? '—' }}</td>
                   </tr>
                 </tbody>
@@ -134,7 +140,7 @@
   </AdminLayout>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { computed, onMounted, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import AdminLayout from '../components/ui/TopBar.vue'
@@ -185,11 +191,17 @@ const goBack = () => {
   }
 }
 
+const COURSE_TYPE_LABEL: Record<string, string> = {
+  LAB: 'Laboratorio',
+  PRACTICE: 'Práctica',
+  THEORY: 'Teoría'
+}
+
 const statCards = computed(() => [
   {
     label: 'Cursos activos',
     value: courseStats.value.totalCourses,
-    caption: 'Incluye teoría y laboratorio'
+    caption: 'Lista única por curso'
   },
   {
     label: 'Créditos inscritos',
@@ -197,14 +209,14 @@ const statCards = computed(() => [
     caption: 'Carga académica estimada'
   },
   {
-    label: 'Cursos teóricos',
-    value: courseStats.value.theoryCourses,
-    caption: 'Modalidad de aula'
+    label: 'Secciones teóricas',
+    value: courseStats.value.theorySections,
+    caption: 'Incluye todas las aulas'
   },
   {
-    label: 'Cursos de laboratorio',
-    value: courseStats.value.labCourses,
-    caption: 'Prácticas y laboratorio'
+    label: 'Secciones prácticas/lab',
+    value: courseStats.value.practiceSections + courseStats.value.labSections,
+    caption: 'Prácticas y laboratorios asignados'
   }
 ])
 
@@ -216,7 +228,7 @@ const nextSessionInfo = computed(() => {
   }
   return {
     ...nextSession.value,
-    courseTypeLabel: nextSession.value.courseType === 'LAB' ? 'Laboratorio' : 'Teoría'
+    courseTypeLabel: COURSE_TYPE_LABEL[nextSession.value.courseType] ?? 'Teoría'
   }
 })
 

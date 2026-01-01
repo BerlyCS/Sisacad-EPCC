@@ -13,6 +13,7 @@ import com.application.sisacadepcc.domain.repository.EnrollmentRepository;
 import com.application.sisacadepcc.presentation.dto.CourseScheduleSlotRequest;
 import com.application.sisacadepcc.presentation.dto.CreateCourseGroupRequest;
 import com.application.sisacadepcc.presentation.dto.ProfessorScheduleEntry;
+import com.application.sisacadepcc.service.SyllabusService;
 import com.application.sisacadepcc.service.dto.CourseDetails;
 import org.springframework.stereotype.Service;
 
@@ -34,6 +35,7 @@ public class CourseService {
     private final com.application.sisacadepcc.domain.repository.CourseGroupRepository courseGroupRepository;
     private final EnrollmentRepository enrollmentRepository;
     private final ClassroomRepository classroomRepository;
+    private final SyllabusService syllabusService;
 
     private static final DateTimeFormatter TIME_FORMATTER = DateTimeFormatter.ofPattern("HH:mm");
     private static final Map<String, Integer> DAY_ORDER = Map.of(
@@ -51,11 +53,13 @@ public class CourseService {
     public CourseService(CourseRepository repository,
                          com.application.sisacadepcc.domain.repository.CourseGroupRepository courseGroupRepository,
                          EnrollmentRepository enrollmentRepository,
-                         ClassroomRepository classroomRepository) {
+                         ClassroomRepository classroomRepository,
+                         SyllabusService syllabusService) {
         this.repository = repository;
         this.courseGroupRepository = courseGroupRepository;
         this.enrollmentRepository = enrollmentRepository;
         this.classroomRepository = classroomRepository;
+        this.syllabusService = syllabusService;
     }
 
     public List<Course> getAllCourses() {
@@ -235,7 +239,17 @@ public class CourseService {
     }
 
     private CourseDetails buildCourseDetails(CourseGroup group) {
-        return new CourseDetails(group, List.of(), null, null);
+        if (group == null || group.getCourse() == null) {
+            return new CourseDetails(group, List.of(), null, null);
+        }
+
+        Long courseId = group.getCourse().getCourseId();
+        com.application.sisacadepcc.domain.model.Syllabus syllabus = null;
+        if (courseId != null) {
+            syllabus = syllabusService.getByCourseId(courseId).orElse(null);
+        }
+
+        return new CourseDetails(group, List.of(), null, syllabus);
     }
 
     private List<CourseSchedule> buildScheduleAssignments(List<CourseScheduleSlotRequest> slots, Long courseId) {
