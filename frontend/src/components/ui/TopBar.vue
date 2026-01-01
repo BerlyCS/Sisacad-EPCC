@@ -81,12 +81,42 @@
 
             <router-link 
               v-if="userRole === 'PROFESSOR'"
+              to="/professor/reservations" 
+              class="text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-all duration-200 px-3 py-2 rounded-md text-sm font-medium flex items-center space-x-2"
+              :class="{ 'bg-blue-100 text-blue-700': $route.path === '/professor/reservations' }"
+            >
+              <i class="fas fa-bookmark"></i>
+              <span>Mis Reservas</span>
+            </router-link>
+
+            <router-link 
+              v-if="userRole === 'PROFESSOR'"
               to="/professor/exams" 
               class="text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-all duration-200 px-3 py-2 rounded-md text-sm font-medium flex items-center space-x-2"
               :class="{ 'bg-blue-100 text-blue-700': $route.path === '/professor/exams' }"
             >
               <i class="fas fa-file-pdf"></i>
               <span>Exámenes</span>
+            </router-link>
+
+            <router-link 
+              v-if="userRole === 'PROFESSOR'"
+              to="/professor/attendance" 
+              class="text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-all duration-200 px-3 py-2 rounded-md text-sm font-medium flex items-center space-x-2"
+              :class="{ 'bg-blue-100 text-blue-700': $route.path === '/professor/attendance' }"
+            >
+              <i class="fas fa-clipboard-check"></i>
+              <span>Asistencia</span>
+            </router-link>
+
+            <router-link 
+              v-if="userRole === 'PROFESSOR'"
+              to="/professor/syllabus" 
+              class="text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-all duration-200 px-3 py-2 rounded-md text-sm font-medium flex items-center space-x-2"
+              :class="{ 'bg-blue-100 text-blue-700': $route.path === '/professor/syllabus' }"
+            >
+              <i class="fas fa-file-upload"></i>
+              <span>Sílabo y temario</span>
             </router-link>
 
             <router-link
@@ -216,12 +246,42 @@
 
             <router-link 
               v-if="userRole === 'PROFESSOR'"
+              to="/professor/reservations"
+              class="block text-gray-700 hover:bg-gray-100 rounded-md px-3 py-2 text-sm font-medium"
+              :class="{ 'bg-blue-100 text-blue-700': $route.path === '/professor/reservations' }"
+              @click="isMenuOpen = false"
+            >
+              Mis Reservas
+            </router-link>
+
+            <router-link 
+              v-if="userRole === 'PROFESSOR'"
               to="/professor/exams"
               class="block text-gray-700 hover:bg-gray-100 rounded-md px-3 py-2 text-sm font-medium"
               :class="{ 'bg-blue-100 text-blue-700': $route.path === '/professor/exams' }"
               @click="isMenuOpen = false"
             >
               Exámenes
+            </router-link>
+
+            <router-link 
+              v-if="userRole === 'PROFESSOR'"
+              to="/professor/attendance"
+              class="block text-gray-700 hover:bg-gray-100 rounded-md px-3 py-2 text-sm font-medium"
+              :class="{ 'bg-blue-100 text-blue-700': $route.path === '/professor/attendance' }"
+              @click="isMenuOpen = false"
+            >
+              Asistencia
+            </router-link>
+
+            <router-link 
+              v-if="userRole === 'PROFESSOR'"
+              to="/professor/syllabus"
+              class="block text-gray-700 hover:bg-gray-100 rounded-md px-3 py-2 text-sm font-medium"
+              :class="{ 'bg-blue-100 text-blue-700': $route.path === '/professor/syllabus' }"
+              @click="isMenuOpen = false"
+            >
+              Sílabo
             </router-link>
 
             <router-link

@@ -23,7 +23,6 @@
           <div>
             <p class="text-xs font-semibold text-blue-600 uppercase tracking-wide">Curso activo</p>
             <p class="text-lg font-semibold text-gray-900">{{ selectedCourse.courseName }} ({{ selectedCourse.courseCode }})</p>
-            <p class="text-sm text-gray-700">Grupo {{ selectedCourse.groupLetter }} · {{ selectedCourse.courseType }}</p>
           </div>
           <div class="text-sm text-gray-600">
             <p>Última actualización: {{ lastUpdatedLabel }}</p>

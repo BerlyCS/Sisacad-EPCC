@@ -8,11 +8,19 @@
       </PrincipalButton>
       <PrincipalButton color="purple" to="/professor/grades">
         <ChartBarIcon class="w-15 h-15 mx-auto mt-2 mb-4" />
-        <h4 class="text-xl">Ver Calificaciones</h4>
+        <h4 class="text-xl">Calificaciones</h4>
       </PrincipalButton>
       <PrincipalButton color="cyan" to="/professor/schedule">
         <CalendarDaysIcon class="w-15 h-15 mx-auto mt-2 mb-4" />
         <h4 class="text-xl">Mi Horario</h4>
+      </PrincipalButton>
+      <PrincipalButton color="pink" to="/professor/reservations">
+        <BookmarkSquareIcon class="w-15 h-15 mx-auto mt-2 mb-4" />
+        <h4 class="text-xl">Mis Reservas</h4>
+      </PrincipalButton>
+      <PrincipalButton color="amber" to="/professor/exams">
+        <DocumentTextIcon class="w-15 h-15 mx-auto mt-2 mb-4" />
+        <h4 class="text-xl">Exámenes</h4>
       </PrincipalButton>
       <PrincipalButton color="green" to="/professor/attendance">
         <ClipboardDocumentCheckIcon class="w-15 h-15 mx-auto mt-2 mb-4" />
@@ -20,7 +28,7 @@
       </PrincipalButton>
       <PrincipalButton color="amber" to="/professor/syllabus">
         <DocumentArrowUpIcon class="w-15 h-15 mx-auto mt-2 mb-4" />
-        <h4 class="text-xl">Gestionar Sílabos</h4>
+        <h4 class="text-xl">Gestionar Sílabos y Temarios</h4>
       </PrincipalButton>
       <PrincipalButton color="teal" @click="toggleReportPanel">
         <ArrowDownTrayIcon class="w-15 h-15 mx-auto mt-2 mb-4" />
@@ -89,6 +97,8 @@ import {
   ChartBarIcon,
   ClipboardDocumentCheckIcon,
   DocumentArrowUpIcon,
+  BookmarkSquareIcon,
+  DocumentTextIcon,
   XMarkIcon
 } from '@heroicons/vue/24/solid'
 

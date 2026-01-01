@@ -5,12 +5,6 @@
         <div class="space-y-2">
           <div class="flex items-center gap-3 flex-wrap">
             <h2 class="text-2xl font-semibold text-gray-800">{{ details.name }}</h2>
-            <span
-              class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium"
-              :class="badgeClass"
-            >
-              {{ details.courseTypeLabel }}
-            </span>
           </div>
           <p class="text-gray-600 text-sm">
             Código: <span class="font-medium text-gray-900">{{ details.courseCode ?? 'Sin código' }}</span>
@@ -58,10 +52,6 @@
         <div class="bg-emerald-50 rounded-md p-4">
           <p class="text-xs uppercase tracking-wide text-emerald-600 font-semibold">Año académico</p>
           <p class="text-lg font-semibold text-emerald-900">{{ academicYear }}</p>
-        </div>
-        <div class="bg-indigo-50 rounded-md p-4">
-          <p class="text-xs uppercase tracking-wide text-indigo-600 font-semibold">Estudiantes</p>
-          <p class="text-lg font-semibold text-indigo-900">{{ studentCount }}</p>
         </div>
         <div class="bg-amber-50 rounded-md p-4">
           <p class="text-xs uppercase tracking-wide text-amber-600 font-semibold">Docentes asignados</p>
@@ -188,42 +178,6 @@
 
     </div>
 
-    <div class="bg-white shadow rounded-lg p-6 space-y-4">
-      <div class="flex items-center justify-between">
-        <h3 class="text-lg font-semibold text-gray-800">Estudiantes matriculados</h3>
-        <span class="text-sm text-gray-500">{{ studentCount }} estudiantes</span>
-      </div>
-
-      <div v-if="!details.enrolledStudents.length" class="text-sm text-gray-500">
-        No hay estudiantes matriculados en este curso.
-      </div>
-
-      <div v-else class="space-y-3">
-        <select
-          v-model="selectedStudentId"
-          class="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200"
-        >
-          <option value="">Selecciona un estudiante</option>
-          <option
-            v-for="student in details.enrolledStudents"
-            :key="student.userId || student.cui"
-            :value="student.userId"
-          >
-            {{ formatStudentName(student) }}
-          </option>
-        </select>
-
-        <div
-          v-if="selectedStudent"
-          class="rounded-md bg-gray-50 p-4 text-sm text-gray-700 space-y-1"
-        >
-          <p><span class="font-semibold">CUI:</span> {{ selectedStudent.cui || 'No registrado' }}</p>
-          <p><span class="font-semibold">User ID:</span> {{ selectedStudent.userId }}</p>
-          <p><span class="font-semibold">Correo:</span> {{ selectedStudent.institutionalEmail || 'No registrado' }}</p>
-          <p><span class="font-semibold">Año:</span> {{ selectedStudent.enrollmentYear ?? 'Sin dato' }}</p>
-        </div>
-      </div>
-    </div>
   </section>
 </template>
 

@@ -28,6 +28,8 @@ export interface ProfessorReservationEntry {
   startTime: string
   endTime: string
   dayOfWeek: string
+  ownedByMe?: boolean
+  canDelete?: boolean
 }
 
 const mapReservation = (reservation: Reservation): ProfessorReservationEntry => ({
@@ -37,7 +39,9 @@ const mapReservation = (reservation: Reservation): ProfessorReservationEntry => 
   reservationDate: reservation.reservationDate ?? '',
   startTime: reservation.schedule?.startTime ?? '',
   endTime: reservation.schedule?.endTime ?? '',
-  dayOfWeek: reservation.schedule?.dayOfWeek ?? ''
+  dayOfWeek: reservation.schedule?.dayOfWeek ?? '',
+  ownedByMe: Boolean(reservation.ownedByCurrentUser),
+  canDelete: Boolean(reservation.ownedByCurrentUser)
 })
 
 export const useProfessorScheduleService = () => {

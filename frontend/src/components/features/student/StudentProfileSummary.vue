@@ -1,48 +1,26 @@
 <template>
-  <section class="bg-white shadow rounded-lg p-6">
-    <header class="mb-4">
-      <h3 class="text-lg font-semibold text-gray-800">Información personal</h3>
-      <p v-if="subtitle" class="text-sm text-gray-500 mt-1">{{ subtitle }}</p>
-    </header>
+  <section class="rounded-2xl border border-slate-200 bg-white shadow-lg">
+    <div class="px-6 py-5 lg:px-8">
+      <header class="flex flex-col gap-1">
+        <h3 class="text-2xl font-semibold text-slate-900">Mi Información personal</h3>
+      </header>
 
-    <div class="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
-      <div class="bg-blue-50 border border-blue-100 rounded-lg p-4">
-        <p class="text-xs font-semibold text-blue-700 uppercase tracking-wide">
-          Nombre completo
-        </p>
-        <p class="mt-1 text-gray-900 font-semibold">
-          {{ fullName }}
-        </p>
-      </div>
-
-      <div class="bg-blue-50 border border-blue-100 rounded-lg p-4">
-        <p class="text-xs font-semibold text-blue-700 uppercase tracking-wide">
-          CUI
-        </p>
-        <p class="mt-1 text-gray-900 font-semibold">{{ student.cui || 'No disponible' }}</p>
-      </div>
-
-      <div class="bg-blue-50 border border-blue-100 rounded-lg p-4">
-        <p class="text-xs font-semibold text-blue-700 uppercase tracking-wide">
-          User ID
-        </p>
-        <p class="mt-1 text-gray-900 font-semibold">{{ student.userId || 'No disponible' }}</p>
-      </div>
-
-      <div class="bg-blue-50 border border-blue-100 rounded-lg p-4">
-        <p class="text-xs font-semibold text-blue-700 uppercase tracking-wide">
-          Correo institucional
-        </p>
-        <p class="mt-1 text-gray-900 font-semibold break-words">
-          {{ student.institutionalEmail || 'No registrado' }}
-        </p>
-      </div>
-
-      <div class="bg-blue-50 border border-blue-100 rounded-lg p-4">
-        <p class="text-xs font-semibold text-blue-700 uppercase tracking-wide">
-          Año académico
-        </p>
-        <p class="mt-1 text-gray-900 font-semibold">{{ student.enrollmentYear ?? 'No registrado' }}</p>
+      <div class="mt-5 grid gap-6 md:grid-cols-[1.2fr_0.8fr]">
+        <div>
+          <p class="text-xs uppercase tracking-[0.3em] text-slate-400">Estudiante</p>
+          <p class="text-2xl font-semibold text-slate-900">{{ fullName }}</p>
+          <p class="mt-2 text-sm text-slate-500">{{ student.institutionalEmail || 'Correo no registrado' }}</p>
+        </div>
+        <div class="grid gap-3 text-sm text-slate-600">
+          <div class="flex items-center justify-between border-b border-slate-100 pb-2">
+            <span>CUI</span>
+            <span class="font-semibold text-slate-900">{{ student.cui || '—' }}</span>
+          </div>
+          <div class="flex items-center justify-between">
+            <span>Año académico</span>
+            <span class="font-semibold text-slate-900">{{ student.enrollmentYear ?? '—' }}</span>
+          </div>
+        </div>
       </div>
 
       <slot name="extra"></slot>
@@ -72,4 +50,5 @@ const fullName = computed(() => {
   const maternalSurname = student.value.maternalSurname || ''
   return `${firstNames} ${paternalSurname} ${maternalSurname}`.trim() || 'Nombre no disponible'
 })
+
 </script>

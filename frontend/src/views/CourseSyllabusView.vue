@@ -5,7 +5,6 @@
         <div>
           <p class="text-xs uppercase tracking-wide text-gray-500">Temario oficial</p>
           <h1 class="text-2xl font-semibold text-gray-900">{{ courseTitle }}</h1>
-          <p class="text-sm text-gray-500">Consulta los temas planificados para el curso.</p>
         </div>
         <button
           type="button"
@@ -27,7 +26,7 @@
       </div>
 
       <div v-else-if="!hasSyllabus" class="bg-white shadow rounded-lg p-6 text-sm text-gray-500">
-        No hay un sílabo publicado para este curso.
+        No hay un temario definido para este curso.
       </div>
 
       <section v-else class="bg-white shadow rounded-lg p-6 space-y-6">
@@ -69,7 +68,7 @@
               </span>
             </div>
             <p class="text-xs text-gray-500">
-              {{ topic.status === 'COMPLETED' ? 'Revisa el texto correspondiente para repasar el contenido.' : 'Programa el seguimiento según tu disponibilidad.' }}
+              {{ topic.status === 'COMPLETED' ? 'Ya completado' : 'Pendiente' }}
             </p>
           </article>
         </div>

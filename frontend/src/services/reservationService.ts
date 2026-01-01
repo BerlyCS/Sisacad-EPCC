@@ -77,8 +77,16 @@ class ReservationService {
       error.status = response.status;
       throw error;
     }
-
-    return response.json();
+    // DELETE and some endpoints may return 204/empty body; safely return null in that case.
+    const raw = await response.text();
+    if (!raw) {
+      return null;
+    }
+    try {
+      return JSON.parse(raw);
+    } catch (_err) {
+      return raw as unknown;
+    }
   }
 
   async getAvailableClassrooms(): Promise<string[]> {

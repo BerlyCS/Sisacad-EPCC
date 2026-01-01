@@ -3,7 +3,9 @@
     <div class="space-y-6">
       <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
-          <h2 class="text-2xl font-semibold text-gray-800">Perfil del Estudiante</h2>
+          <h2 class="text-2xl font-semibold text-gray-800">
+            Mi perfil
+          </h2>
         </div>
         <button
           @click="goBack"
@@ -40,7 +42,6 @@
           >
             <p class="text-xs font-semibold uppercase tracking-wide text-indigo-700">{{ card.label }}</p>
             <p class="mt-2 text-3xl font-bold text-gray-900">{{ card.value }}</p>
-            <p class="text-sm text-gray-600">{{ card.caption }}</p>
           </article>
         </section>
 
@@ -199,24 +200,16 @@ const COURSE_TYPE_LABEL: Record<string, string> = {
 
 const statCards = computed(() => [
   {
-    label: 'Cursos activos',
+    label: 'Cursos',
     value: courseStats.value.totalCourses,
-    caption: 'Lista única por curso'
   },
   {
-    label: 'Créditos inscritos',
+    label: 'Créditos',
     value: courseStats.value.totalCredits,
-    caption: 'Carga académica estimada'
   },
   {
-    label: 'Secciones teóricas',
-    value: courseStats.value.theorySections,
-    caption: 'Incluye todas las aulas'
-  },
-  {
-    label: 'Secciones prácticas/lab',
-    value: courseStats.value.practiceSections + courseStats.value.labSections,
-    caption: 'Prácticas y laboratorios asignados'
+    label: 'Horas laboratorio',
+    value: courseStats.value.labSections,
   }
 ])
 

@@ -42,9 +42,21 @@
           <p class="text-sm font-semibold text-slate-800">{{ reservation.classroomName }}</p>
           <p class="text-xs text-slate-500 mt-1">{{ reservation.purpose }}</p>
         </div>
-        <div class="text-sm text-slate-600">
-          <p class="font-medium">{{ formatDate(reservation.reservationDate, reservation.dayOfWeek) }}</p>
-          <p class="text-xs text-slate-500">{{ reservation.startTime }} - {{ reservation.endTime }}</p>
+        <div class="flex flex-col md:flex-row md:items-center gap-3 md:gap-6 text-sm text-slate-600">
+          <div>
+            <p class="font-medium">{{ formatDate(reservation.reservationDate, reservation.dayOfWeek) }}</p>
+            <p class="text-xs text-slate-500">{{ reservation.startTime }} - {{ reservation.endTime }}</p>
+          </div>
+          <button
+            v-if="reservation.canDelete"
+            class="inline-flex items-center gap-2 rounded-md border border-red-200 bg-red-50 px-3 py-1.5 text-xs font-semibold text-red-700 hover:bg-red-100 disabled:opacity-60"
+            :disabled="pendingId === reservation.id"
+            @click="$emit('cancel', reservation.id)"
+          >
+            <i v-if="pendingId === reservation.id" class="fas fa-spinner fa-spin" />
+            <i v-else class="fas fa-trash" />
+            <span>{{ pendingId === reservation.id ? 'Cancelando...' : 'Cancelar' }}</span>
+          </button>
         </div>
       </li>
     </ul>
@@ -53,15 +65,16 @@
 
 <script setup lang="ts">
 import type { ProfessorReservationEntry } from '@/services/professorScheduleService'
-
 defineProps<{
   reservations: ProfessorReservationEntry[]
   loading: boolean
   error: string
+  pendingId?: number | null
 }>()
 
 defineEmits<{
   (e: 'refresh'): void
+  (e: 'cancel', id: number): void
 }>()
 
 const dateFormatter = new Intl.DateTimeFormat('es-PE', { dateStyle: 'full' })
