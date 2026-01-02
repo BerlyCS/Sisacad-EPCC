@@ -55,7 +55,7 @@
                   {{ course.credits }} créditos
                 </td>
                 <td class="px-6 py-4 text-sm text-gray-700">
-                  {{ course.enrolledStudentIDs?.length || 0 }}
+                  {{ course.enrolledStudentCount ?? 0 }}
                 </td>
                 <td v-if="canAssignProfessors" class="px-6 py-4 text-sm">
                   <div class="flex flex-wrap gap-2">
@@ -96,7 +96,7 @@
           <div class="bg-purple-50 border border-purple-200 rounded-lg p-6">
             <h3 class="text-lg font-semibold text-purple-800">Total Estudiantes Inscritos</h3>
             <p class="text-3xl font-bold text-purple-600 mt-2">
-              {{ courses.reduce((total, course) => total + (course.enrolledStudentIDs?.length || 0), 0) }}
+              {{ courses.reduce((total, course) => total + (course.enrolledStudentCount ?? 0), 0) }}
             </p>
           </div>
         </div>
@@ -111,8 +111,7 @@
         <div class="flex items-start justify-between border-b px-6 py-4">
           <div>
             <p class="text-xs font-semibold uppercase tracking-wide text-blue-500">Nuevo curso</p>
-            <h3 class="text-xl font-semibold text-gray-900">Registrar curso académico</h3>
-            <p class="text-sm text-gray-500">Completa los datos básicos para habilitar la matrícula.</p>
+            <h3 class="text-xl font-semibold text-gray-900 m-1">Registrar curso</h3>
           </div>
           <button
             class="rounded-full p-2 text-gray-400 hover:bg-gray-100 hover:text-gray-600"
@@ -125,17 +124,9 @@
         </div>
 
         <form class="px-6 py-5 space-y-6" @submit.prevent="handleCreateCourse">
-          <div v-if="courseFormErrors.length || createCourseError" class="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
-            <p class="font-semibold">Revisa los siguientes campos:</p>
-            <ul class="mt-2 list-disc pl-5">
-              <li v-for="(message, index) in courseFormErrors" :key="`course-error-${index}`">{{ message }}</li>
-            </ul>
-            <p v-if="createCourseError" class="mt-2">{{ createCourseError }}</p>
-          </div>
 
           <section class="rounded-2xl border border-gray-200 p-4 space-y-4">
             <div>
-              <p class="text-xs font-semibold uppercase tracking-wide text-blue-500">Información básica</p>
               <h4 class="text-lg font-semibold text-gray-900">Identificación del curso</h4>
             </div>
             <div class="grid grid-cols-1 gap-4 md:grid-cols-3">
@@ -182,7 +173,7 @@
                 v-model="newCourseForm.name"
                 type="text"
                 class="mt-2 w-full rounded-xl border border-gray-200 px-4 py-2 text-sm focus:border-blue-500 focus:outline-none"
-                placeholder="Ingresa el nombre oficial"
+                placeholder="Introducción a la Programación"
                 :disabled="createCourseLoading"
               />
             </label>
@@ -190,7 +181,6 @@
 
           <section class="rounded-2xl border border-gray-200 p-4 space-y-4">
             <div>
-              <p class="text-xs font-semibold uppercase tracking-wide text-blue-500">Plan académico</p>
               <h4 class="text-lg font-semibold text-gray-900">Distribución de horas</h4>
             </div>
             <div class="grid grid-cols-1 gap-4 md:grid-cols-3">
@@ -236,8 +226,7 @@
           <section class="rounded-2xl border border-gray-200 bg-white/70 p-5 space-y-6 shadow-sm">
             <div class="flex flex-col gap-2 md:flex-row md:items-end md:justify-between">
               <div>
-                <p class="text-xs font-semibold uppercase tracking-wide text-blue-500">Evaluaciones</p>
-                <h4 class="text-lg font-semibold text-gray-900">Porcentaje de evaluaciones</h4>
+                <h4 class="text-lg font-semibold text-gray-900">Peso de evaluaciones</h4>
               </div>
               <div class="inline-flex items-center gap-2 rounded-full border px-4 py-1 text-sm font-semibold"
                 :class="isTotalWeightBalanced ? 'border-green-200 bg-green-50 text-green-700' : 'border-red-200 bg-red-50 text-red-700'">
@@ -250,7 +239,7 @@
               <div class="rounded-2xl border border-gray-200 bg-gray-50/60 p-4 space-y-4">
                 <div class="flex items-center justify-between">
                   <div>
-                    <p class="text-xs font-semibold uppercase tracking-wide text-blue-500">Evaluaciones continuas</p>
+                    <p class="text-xs font-semibold uppercase tracking-wide text-blue-500">Evaluacion continua</p>
                   </div>
                   <span class="text-xs font-semibold" :class="isTotalWeightBalanced ? 'text-green-600' : 'text-amber-600'">
                     {{ Math.round(continuousWeightSum) }}%
@@ -280,7 +269,7 @@
               <div class="rounded-2xl border border-gray-200 bg-gray-50/60 p-4 space-y-4">
                 <div class="flex items-center justify-between">
                   <div>
-                    <p class="text-xs font-semibold uppercase tracking-wide text-amber-500">Exámenes</p>
+                    <p class="text-xs font-semibold uppercase tracking-wide text-amber-500">Evaluación de exámen</p>
                   </div>
                   <span class="text-xs font-semibold" :class="isTotalWeightBalanced ? 'text-green-600' : 'text-amber-600'">
                     {{ Math.round(examWeightSum) }}%
@@ -307,14 +296,12 @@
                 </div>
               </div>
             </div>
-            <p class="text-xs text-gray-500">La suma conjunta de evaluaciones continuas y exámenes debe ser 100%.</p>
           </section>
 
           <section class="rounded-2xl border border-gray-200 p-4 space-y-4">
             <div>
-              <p class="text-xs font-semibold uppercase tracking-wide text-blue-500">Documentación</p>
               <h4 class="text-lg font-semibold text-gray-900">Sílabo (opcional)</h4>
-              <p class="text-sm text-gray-500">Adjunta un PDF de hasta 10MB para completar el registro.</p>
+              <p class="text-sm text-gray-500">Adjunta un PDF</p>
             </div>
             <div class="flex flex-col gap-3 md:flex-row md:items-center md:gap-6">
               <label class="flex-1 cursor-pointer rounded-2xl border-2 border-dashed border-gray-300 px-6 py-4 text-center hover:border-blue-400">
@@ -339,8 +326,15 @@
                 </button>
               </div>
             </div>
-            <p class="text-xs text-gray-500">La carga del archivo se completará una vez registrado el curso.</p>
           </section>
+
+                    <div v-if="courseFormErrors.length || createCourseError" class="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
+            <p class="font-semibold">Revisa los siguientes campos:</p>
+            <ul class="mt-2 list-disc pl-5">
+              <li v-for="(message, index) in courseFormErrors" :key="`course-error-${index}`">{{ message }}</li>
+            </ul>
+            <p v-if="createCourseError" class="mt-2">{{ createCourseError }}</p>
+          </div>
 
           <div class="flex flex-col gap-2 border-t pt-4 sm:flex-row sm:justify-end">
             <button
@@ -739,7 +733,7 @@ const newCourseForm = reactive({
   continuousWeights: ['', '', ''] as string[],
   examWeights: ['', '', ''] as string[]
 })
-const continuousWeightFieldLabels = ['Evaluación continua 1', 'Evaluación continua 2', 'Evaluación continua 3']
+const continuousWeightFieldLabels = ['Continua 1', 'Continua 2', 'Continua 3']
 const examWeightFieldLabels = ['Examen 1', 'Examen 2', 'Examen 3']
 const sanitizePercentageInput = (value: string) => {
   if (value == null) {

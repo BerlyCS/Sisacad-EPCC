@@ -1,18 +1,15 @@
 <template>
   <section class="rounded-2xl border border-gray-100 bg-white p-5 space-y-5 h-full">
     <header class="space-y-1">
-      <p class="text-sm font-semibold text-blue-500 uppercase tracking-wide">Panel de calificación</p>
+      <p class="text-sm font-semibold text-blue-500 uppercase tracking-wide">Calificación</p>
       <div class="flex items-center justify-between gap-2">
         <h2 class="text-2xl font-bold text-gray-900">{{ student?.fullName || 'Selecciona un estudiante' }}</h2>
         <span v-if="student" class="text-xs font-semibold text-gray-500">{{ student.studentUserId }}</span>
       </div>
-      <p v-if="student" class="text-xs text-gray-500">
-        La nota final es única por estudiante y se guarda para todo el curso.
-      </p>
     </header>
 
     <div v-if="!student" class="text-sm text-gray-500">
-      Selecciona un estudiante en la lista para revisar y registrar sus notas.
+      
     </div>
 
     <template v-else>
@@ -28,7 +25,7 @@
 
       <div v-else class="space-y-6">
         <div class="space-y-3">
-          <h3 class="text-sm font-semibold text-gray-700 uppercase tracking-wide">Componentes continuos</h3>
+          <h3 class="text-sm font-semibold text-gray-700 uppercase tracking-wide">Evaluacion continua</h3>
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <label
               v-for="(weight, index) in continuousWeights"
@@ -78,8 +75,7 @@
             <p class="text-sm font-semibold text-gray-600">Nota final (entera)</p>
             <p class="text-3xl font-bold text-gray-900">{{ formattedRoundedFinalGrade }}</p>
           </div>
-          <p class="text-xs text-gray-500">Precisión decimal: {{ formattedExactGrade }}</p>
-          <p class="text-xs text-gray-400">El cálculo usa los pesos de la rúbrica actual y se redondea con regla personalizada.</p>
+          <p class="text-xs text-gray-500">Nota exacta: {{ formattedExactGrade }}</p>
           <p class="text-xs text-gray-400" v-if="student.finalGrade != null">
             Nota registrada actualmente: <span class="font-semibold text-gray-600">{{ registeredFinalGradeLabel }}</span>
           </p>

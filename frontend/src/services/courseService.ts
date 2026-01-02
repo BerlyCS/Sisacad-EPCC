@@ -33,6 +33,7 @@ export interface Course {
   continuousGradeWeights?: number[] | null
   examGradeWeights?: number[] | null
   enrolledStudentIDs?: number[]
+  enrolledStudentCount?: number
   teacherIDs?: number[]
 }
 
@@ -190,8 +191,9 @@ export const useCourseService = () => {
         semesterNumber: course.semesterNumber != null ? Number(course.semesterNumber) : null,
         continuousGradeWeights: ensureWeightList(course.continuousGradeWeights),
         examGradeWeights: ensureWeightList(course.examGradeWeights),
-        enrolledStudentIDs: [],
-        teacherIDs: []
+          enrolledStudentIDs: [],
+          enrolledStudentCount: Number(course.enrolledCount ?? 0),
+          teacherIDs: []
       }))
     } catch (err) {
       error.value = 'No se pudieron cargar los cursos'

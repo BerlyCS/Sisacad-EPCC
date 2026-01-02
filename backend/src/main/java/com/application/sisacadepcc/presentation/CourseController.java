@@ -37,9 +37,10 @@ public class CourseController {
 
     @GetMapping
     public ResponseEntity<List<CourseSummaryResponse>> getAllCourses() {
+        var enrollmentCounts = service.getEnrollmentCountsByCourse();
         var list = service.getAllCourses().stream()
-                .map(CourseSummaryResponse::from)
-                .toList();
+            .map(course -> CourseSummaryResponse.from(course, enrollmentCounts.getOrDefault(course.getCourseId(), 0L)))
+            .toList();
         return ResponseEntity.ok(list);
     }
 

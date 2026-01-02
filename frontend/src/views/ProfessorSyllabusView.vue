@@ -2,9 +2,8 @@
   <AdminLayout>
     <div class="space-y-6">
       <header class="space-y-2">
-        <p class="text-sm font-semibold text-blue-500 uppercase tracking-wide">Gestión de sílabos</p>
-        <h1 class="text-3xl font-bold text-gray-900">Planificación de cursos</h1>
-        <p class="text-gray-600">Selecciona uno de tus cursos para revisar el sílabo vigente, administrar los temas programados y subir una nueva versión oficial en PDF.</p>
+        <h1 class="text-3xl font-bold text-gray-900">Silabo y temario</h1>
+        <p class="text-gray-600">Selecciona uno de tus cursos para administrar el temario y el silabo.</p>
       </header>
 
       <ProfessorCourseList
@@ -21,8 +20,7 @@
       <section v-if="selectedCourse" class="space-y-6">
         <div class="rounded-2xl border border-blue-100 bg-blue-50 px-4 py-3 flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
           <div>
-            <p class="text-xs font-semibold text-blue-600 uppercase tracking-wide">Curso activo</p>
-            <p class="text-lg font-semibold text-gray-900">{{ selectedCourse.courseName }} ({{ selectedCourse.courseCode }})</p>
+            <p class="text-lg font-semibold text-gray-900">Curso: {{ selectedCourse.courseName }} ({{ selectedCourse.courseCode }})</p>
           </div>
           <div class="text-sm text-gray-600">
             <p>Última actualización: {{ lastUpdatedLabel }}</p>
@@ -45,13 +43,13 @@
                 Aún no se ha cargado un sílabo para este curso. Sube el PDF oficial y luego podrás gestionar los temas.
               </div>
               <div v-else class="rounded-xl border border-gray-200 bg-gray-50 p-4 space-y-2">
-                <p class="text-xs font-semibold text-gray-500 uppercase tracking-wide">Archivo vigente</p>
+                <p class="text-xs font-semibold text-gray-500 uppercase tracking-wide">Archivo actual</p>
                 <p class="text-lg font-semibold text-gray-900">{{ currentSyllabus.content?.name || 'syllabus.pdf' }}</p>
                 <p class="text-xs text-gray-600">{{ formatBytes(currentSyllabus.content?.sizeBytes) }} · Actualizado {{ lastUpdatedLabel }}</p>
               </div>
 
               <div class="space-y-3">
-                <label class="text-sm font-semibold text-gray-700" for="syllabus-file-input">Selecciona el nuevo PDF</label>
+                <label class="text-sm font-semibold text-gray-700" for="syllabus-file-input">Subir nuevo PDF</label>
                 <label
                   for="syllabus-file-input"
                   class="flex flex-col gap-2 rounded-2xl border-2 border-dashed border-gray-300 bg-gray-50 px-4 py-5 text-left hover:border-blue-400 hover:bg-white transition-colors cursor-pointer"
@@ -73,7 +71,6 @@
                   class="sr-only"
                   @change="handleFileChange"
                 >
-                <p class="text-xs text-gray-500">Incluye portada con información del curso y firma del coordinador académico.</p>
                 <p v-if="fileError" class="text-xs text-red-500">{{ fileError }}</p>
               </div>
 
@@ -113,9 +110,8 @@
 
           <article class="rounded-2xl border border-gray-200 bg-white p-5 space-y-5">
             <header class="space-y-1">
-              <p class="text-sm font-semibold text-gray-500 uppercase tracking-wide">Gestión de temas</p>
-              <h2 class="text-2xl font-bold text-gray-900">Planifica el cronograma</h2>
-              <p class="text-sm text-gray-500">Puedes registrar o limpiar el temario sin necesidad de volver a subir el archivo. Los temas son opcionales.</p>
+              <p class="text-sm font-semibold text-gray-500 uppercase tracking-wide">Gestionar temario</p>
+              <h2 class="text-2xl font-bold text-gray-900">Temario</h2>
             </header>
 
             <section class="space-y-2">
@@ -146,8 +142,7 @@
             <section class="space-y-3">
               <div class="flex items-center justify-between">
                 <div>
-                  <p class="text-sm font-semibold text-gray-700">Editor de temas</p>
-                  <p class="text-xs text-gray-500">Define el título, peso y fecha de cada sesión.</p>
+                  <p class="text-lg font-semibold text-gray-700">Editar Temas</p>
                 </div>
                 <button type="button" class="text-sm font-semibold text-blue-600" @click="addTopicRow">Añadir tema</button>
               </div>
@@ -163,9 +158,8 @@
                       @click="removeTopicRow(topic.id)"
                     >Eliminar</button>
                   </div>
-
+                  <p class="font-bold text-gray-700">Nombre</p>
                   <label class="block text-sm text-gray-600">
-                    Nombre
                     <input v-model="topic.name" type="text" class="mt-1 w-full rounded-lg border-gray-300 text-sm" placeholder="Introducción al curso">
                   </label>
 
@@ -209,7 +203,7 @@
       </section>
 
       <p v-else class="rounded-2xl border border-dashed border-gray-200 bg-white p-6 text-sm text-gray-500">
-        Selecciona un curso para comenzar a cargar el sílabo y planificar los temas.
+        Selecciona un curso.
       </p>
     </div>
   </AdminLayout>
@@ -423,7 +417,7 @@ const selectedFileDetails = computed(() => {
     ? size
     : (typeof size === 'string' ? Number(size) : null)
   if (typeof numericSize === 'number' && Number.isFinite(numericSize) && numericSize > 0) {
-    return `${formatBytes(numericSize)} · Archivo vigente`
+    return `${formatBytes(numericSize)} - PDF`
   }
   return 'Hasta 100 MB · Solo PDF'
 })

@@ -2,8 +2,7 @@
   <AdminLayout>
     <div class="space-y-6">
       <header class="space-y-2">
-        <p class="text-sm font-semibold text-blue-500 uppercase tracking-wide">Seguimiento de notas</p>
-        <h1 class="text-3xl font-bold text-gray-900">Panel de Calificaciones</h1>
+        <h1 class="text-3xl font-bold text-gray-900">Calificaciones</h1>
       </header>
 
       <ProfessorCourseList
@@ -28,8 +27,7 @@
           <div>
             <p class="text-xs font-semibold text-blue-600 uppercase tracking-wide">Curso activo</p>
             <p class="text-lg font-semibold text-gray-900">{{ selectedCourse.courseName }} ({{ selectedCourse.courseCode }})</p>
-            <p class="text-sm text-gray-600">Gestiona notas únicas para {{ rosterEntries.length }} estudiantes matriculados.</p>
-            <p class="text-xs text-gray-500">Las calificaciones calculadas se redondean hacia arriba para alinearse con el sistema institucional.</p>
+            <p class="text-sm text-gray-600">Gestiona notas para {{ rosterEntries.length }} estudiantes matriculados.</p>
           </div>
           <div class="flex gap-2">
             <button
@@ -38,7 +36,7 @@
               :class="{ 'bg-blue-50 border-blue-200 text-blue-700': isBulkMode }"
               @click="isBulkMode = !isBulkMode"
             >
-              {{ isBulkMode ? 'Modo Individual' : 'Modo Masivo' }}
+              {{ isBulkMode ? 'Vista Individual' : 'Vista en Tabla' }}
             </button>
             <button
               type="button"
@@ -117,6 +115,7 @@
         :stats="selectedCourseStats"
         :loading="statsLoading"
         :error="statsError"
+        :students="rosterEntries"
         @close="statsDrawerOpen = false"
       />
     </div>

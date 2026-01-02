@@ -4,7 +4,6 @@
       <div>
         <p class="text-sm font-semibold text-blue-500 uppercase tracking-wide">{{ heading }}</p>
         <h2 class="text-2xl font-bold text-gray-900">{{ subheading }}</h2>
-        <p class="text-gray-500">{{ description }}</p>
       </div>
       <input
         v-model="query"
@@ -36,7 +35,7 @@
         >
           <div class="flex items-center justify-between">
             <div>
-              <p class="text-sm text-gray-500 uppercase tracking-wide">{{ course.courseCode }}</p>
+              <p class="text-sm text-gray-500 uppercase tracking-wide">Código: {{ course.courseCode }}</p>
               <p class="text-lg font-semibold text-gray-900">{{ course.courseName }}</p>
             </div>
             <div class="text-right text-sm text-gray-500">
@@ -63,12 +62,10 @@ const props = withDefaults(defineProps<{
 }>(), {
   heading: 'Mis cursos',
   subheading: 'Selecciona un curso',
-  description: 'El panel mostrará estadísticas de calificaciones para el curso elegido.'
 })
 
 const heading = computed(() => props.heading)
 const subheading = computed(() => props.subheading)
-const description = computed(() => props.description)
 
 const emit = defineEmits<{
   (e: 'select', course: ProfessorCourseSummary): void

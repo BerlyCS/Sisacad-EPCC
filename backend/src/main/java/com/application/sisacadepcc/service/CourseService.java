@@ -21,6 +21,7 @@ import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -64,6 +65,23 @@ public class CourseService {
 
     public List<Course> getAllCourses() {
         return repository.findAll();
+    }
+
+    public Map<Long, Long> getEnrollmentCountsByCourse() {
+        Map<Long, Long> totals = new HashMap<>();
+        for (CourseGroup group : courseGroupRepository.findAll()) {
+            if (group == null) {
+                continue;
+            }
+            Long courseId = group.getCourseId();
+            Long groupId = group.getId();
+            if (courseId == null || groupId == null) {
+                continue;
+            }
+            long count = enrollmentRepository.countByCourseGroupId(groupId);
+            totals.merge(courseId, count, Long::sum);
+        }
+        return totals;
     }
 
     public Course createCourse(Course course) {
