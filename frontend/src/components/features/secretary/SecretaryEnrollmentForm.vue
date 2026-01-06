@@ -81,10 +81,10 @@
 
       <div v-if="selectedCourseId">
         <label class="block text-sm font-medium text-gray-700">Selecciona la letra del grupo</label>
-        <p class="text-xs text-gray-500">Se matriculará automáticamente en los bloques de teoría y práctica disponibles para la letra elegida (los laboratorios se gestionan aparte).</p>
+        <p class="text-xs text-gray-500">Solo matricula de teoría y práctica</p>
         <p v-if="courseGroupsLoading" class="mt-2 text-sm text-gray-500">Cargando grupos...</p>
         <p v-else-if="groupSelectionOptions.length === 0" class="mt-2 text-sm text-red-600">
-          No existen grupos de teoría o práctica configurados para este curso.
+          No existen existen grupos para este curso.
         </p>
         <div v-else class="mt-3 grid gap-3 md:grid-cols-2">
           <label

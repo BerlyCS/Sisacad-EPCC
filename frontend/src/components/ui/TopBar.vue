@@ -45,6 +45,9 @@
                 class="text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-all duration-200 px-3 py-2 rounded-md text-sm font-medium flex items-center space-x-2"
                 :class="{ 'bg-blue-100 text-blue-700': $route.path === item.to }"
               >
+                <template v-if="item.icon">
+                  <i :class="item.icon"></i>
+                </template>
                 <span>{{ item.name }}</span>
               </router-link>
             </template>
@@ -197,6 +200,9 @@
                 :class="{ 'bg-blue-100 text-blue-700': $route.path === item.to }"
                 @click="isMenuOpen = false"
               >
+                <template v-if="item.icon">
+                  <i :class="item.icon + ' mr-2'"></i>
+                </template>
                 {{ item.name }}
               </router-link>
             </template>
@@ -210,6 +216,9 @@
                 :class="{ 'bg-blue-100 text-blue-700': $route.path === item.to }"
                 @click="isMenuOpen = false"
               >
+                <template v-if="item.icon">
+                  <i :class="item.icon + ' mr-2'"></i>
+                </template>
                 {{ item.name }}
               </router-link>
             </template>
@@ -370,20 +379,24 @@ const authStore = useAuthStore()
 const { userRole, userCui } = storeToRefs(authStore)
 
 const adminNavigation = [
-  { name: 'Aulas', to: '/admin/classrooms' },
-  { name: 'Cursos', to: '/admin/courses' },
-  { name: 'Profesores', to: '/admin/professors' },
-  { name: 'Estudiantes', to: '/admin/students' },
-  { name: 'Secretarias', to: '/admin/secretaries' },
-  { name: 'Matricular', to: '/admin/student-enrollment' },
-  { name: 'Reservas', to: '/reservation-management' }
+  { name: 'Aulas', to: '/admin/classrooms', icon: 'fas fa-building' },
+  { name: 'Cursos', to: '/admin/courses', icon: 'fas fa-book' },
+  { name: 'Profesores', to: '/admin/professors', icon: 'fas fa-chalkboard-teacher' },
+  { name: 'Estudiantes', to: '/admin/students', icon: 'fas fa-user-graduate' },
+  { name: 'Secretarias', to: '/admin/secretaries', icon: 'fas fa-user' },
+  { name: 'Matricular', to: '/admin/student-enrollment', icon: 'fas fa-user-plus' },
+  { name: 'Reservas', to: '/reservation-management', icon: 'fas fa-calendar-check' }
 ]
 
 const secretaryNavigation = [
-  { name: 'Aulas', to: '/admin/classrooms' },
-  { name: 'Estudiantes', to: '/admin/students' },
-  { name: 'Gestionar cursos', to: '/admin/courses' },
-  { name: 'Matricular', to: '/admin/student-enrollment' }
+  { name: 'Gestionar Aulas', to: '/admin/classrooms', icon: 'fas fa-building' },
+  { name: 'Ver Estudiantes', to: '/admin/students', icon: 'fas fa-user-graduate' },
+  { name: 'Gestionar Cursos', to: '/admin/courses', icon: 'fas fa-book' },
+  { name: 'Matricular', to: '/admin/student-enrollment', icon: 'fas fa-user-plus' },
+  { name: 'Gestionar Profesores', to: '/admin/professors', icon: 'fas fa-chalkboard-teacher' },
+  { name: 'Gestionar Secretarias', to: '/admin/secretaries', icon: 'fas fa-user' },
+  { name: 'Reservar Aula', to: '/classrooms', icon: 'fas fa-calendar-alt' },
+  { name: 'Gestionar Reservas', to: '/reservation-management', icon: 'fas fa-calendar-check' }
 ]
 </script>
 

@@ -475,7 +475,7 @@
                       {{ professorFullName(professor) }}
                     </option>
                   </select>
-                  <p v-if="selectedGroup?.teacherId" class="text-xs text-gray-500">
+                  <p v-if="selectedGroup?.teacherId" class="text-xs text-red-600">
                     Quita el docente actual para poder asignar uno nuevo.
                   </p>
                   <p v-else-if="availableProfessors.length === 0" class="text-xs text-gray-500">

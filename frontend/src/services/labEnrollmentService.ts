@@ -50,25 +50,27 @@ const normalizeGroupLetter = (raw: unknown): string | null => {
 }
 
 const mapLabSection = (payload: any): LabSection => {
-  const courseId = toNumberOrNull(payload?.courseId ?? payload?.courseID) ?? 0
-  const courseCode = toNumberOrNull(payload?.courseCode) ?? courseId
-  const labCapacity = toNumberOrNull(payload?.labCapacity) ?? 20
+  const groupId = toNumberOrNull(payload?.id ?? payload?.groupId ?? payload?.courseGroupId) ?? 0
+  const theoryCourseId = toNumberOrNull(payload?.courseId ?? payload?.course?.courseId ?? payload?.course?.id)
+  const courseCode = toNumberOrNull(payload?.courseCode ?? payload?.course?.courseCode) ?? theoryCourseId ?? groupId
+  const labCapacity = toNumberOrNull(payload?.labCapacity ?? payload?.maxCapacity)
   const enrolledCount = Array.isArray(payload?.enrolledStudentIDs)
     ? payload.enrolledStudentIDs.length
-    : toNumberOrNull(payload?.enrolledCount) ?? 0
+    : toNumberOrNull(payload?.enrolledCount ?? payload?.currentEnrollments)
+
   const remainingSeats = labCapacity != null
-    ? Math.max(labCapacity - (Number.isFinite(enrolledCount) ? Number(enrolledCount) : 0), 0)
-    : null
+    ? Math.max(labCapacity - (Number.isFinite(enrolledCount ?? 0) ? Number(enrolledCount) : 0), 0)
+    : toNumberOrNull(payload?.remainingSeats ?? payload?.availableCapacity)
 
   return {
-    courseId,
+    courseId: groupId,
     courseCode,
-    name: payload?.name ?? 'Laboratorio',
-    groupLetter: normalizeGroupLetter(payload?.groupLetter),
+    name: payload?.name ?? payload?.course?.name ?? 'Laboratorio',
+    groupLetter: normalizeGroupLetter(payload?.groupLetter ?? payload?.letter),
     labCapacity,
     enrolledCount: Number(enrolledCount) || 0,
     remainingSeats,
-    labPrerequisiteCourseId: toNumberOrNull(payload?.labPrerequisiteCourseId),
+    labPrerequisiteCourseId: theoryCourseId,
     courseTypeLabel: payload?.courseTypeLabel ?? LAB_LABEL
   }
 }

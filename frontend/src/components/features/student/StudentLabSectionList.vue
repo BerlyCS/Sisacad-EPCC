@@ -5,13 +5,10 @@
       <h2 class="text-xl font-semibold text-gray-900">
         {{ course ? course.name : 'Selecciona un curso' }}
       </h2>
-      <p class="text-sm text-gray-500">
-        Solo podrás confirmar laboratorios compatibles en horario y con vacantes disponibles.
-      </p>
     </header>
 
     <div v-if="!course" class="rounded-xl border border-dashed border-gray-200 p-6 text-sm text-gray-500">
-      Elige primero un curso teórico para ver sus laboratorios asociados.
+      Elige primero un curso para ver los laboratorios.
     </div>
 
     <div v-else class="space-y-4">

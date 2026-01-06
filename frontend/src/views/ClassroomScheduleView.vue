@@ -10,7 +10,6 @@
           <div>
             <p class="eyebrow">Agenda semanal</p>
             <h1>{{ classroomName }}</h1>
-            <p class="subtitle">Disponible para estudiantes, profesores y secretaría.</p>
           </div>
         </div>
         <div class="week-controls">
@@ -71,12 +70,12 @@
             <p>Los cursos y las reservas confirmadas aparecen con colores diferentes.</p>
           </div>
           <div class="legend">
-            <span><span class="legend-dot course"></span> Curso programado</span>
+            <span><span class="legend-dot course"></span> Curso</span>
             <template v-if="showReservationOwnership">
               <span><span class="legend-dot reservation mine"></span> Mis reservas</span>
               <span><span class="legend-dot reservation others"></span> Otras reservas</span>
             </template>
-            <span v-else><span class="legend-dot reservation"></span> Reserva confirmada</span>
+            <span v-else><span class="legend-dot reservation"></span> Reservas</span>
           </div>
         </div>
 

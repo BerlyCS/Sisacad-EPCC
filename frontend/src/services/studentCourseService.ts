@@ -77,30 +77,64 @@ export const useStudentCourseService = () => {
       }
 
       const data: any[] = await response.json()
-      courses.value = Array.isArray(data)
-        ? data.map((course: any) => {
-            const courseId = toNumberOrNull(course.courseId ?? course.courseID) ?? 0
-            const courseType = normalizeCourseType(course.courseType)
-            const teacherIDs = ensureNumberArray(course.teacherIDs ?? [])
-            const enrolledStudentIDs = ensureNumberArray(course.enrolledStudentIDs ?? [])
-            const labCapacity = toNumberOrNull(course.labCapacity)
-            return {
-              courseId,
-              courseCode: toNumberOrNull(course.courseCode) ?? courseId,
-              name: course.name ?? 'Curso',
-              creditNumber: toNumberOrNull(course.creditNumber),
-              groupLetter: normalizeGroupLetter(course.groupLetter),
-              syllabusID: toNumberOrNull(course.syllabusID),
-              semesterNumber: toNumberOrNull(course.semesterNumber),
-              courseType,
-              labPrerequisiteCourseId: toNumberOrNull(course.labPrerequisiteCourseId),
-              labCapacity: labCapacity,
-              enrolledStudentIDs,
-              teacherIDs,
-              courseTypeLabel: COURSE_TYPE_LABEL[courseType]
-            } as Course
+
+      if (!Array.isArray(data)) {
+        courses.value = []
+        return
+      }
+
+      const flattened: Course[] = []
+
+      data.forEach((course: any) => {
+        const courseId = toNumberOrNull(course.courseId ?? course.courseID) ?? 0
+        const courseCode = toNumberOrNull(course.courseCode) ?? courseId
+        const creditNumber = toNumberOrNull(course.creditNumber)
+        const syllabusID = toNumberOrNull(course.syllabusID ?? course.syllabusId)
+        const semesterNumber = toNumberOrNull(course.semesterNumber)
+        const groups: any[] = Array.isArray(course.groups) ? course.groups : []
+
+        const theoryGroup = groups.find(g => normalizeCourseType(g.courseType) === 'THEORY')
+
+        flattened.push({
+          courseId,
+          courseCode,
+          name: course.name ?? 'Curso',
+          creditNumber,
+          groupLetter: normalizeGroupLetter(theoryGroup?.groupLetter ?? theoryGroup?.letter),
+          syllabusID,
+          semesterNumber,
+          courseType: 'THEORY',
+          labPrerequisiteCourseId: null,
+          labCapacity: null,
+          enrolledStudentIDs: [],
+          teacherIDs: ensureNumberArray(theoryGroup?.teacherIDs),
+          courseTypeLabel: COURSE_TYPE_LABEL.THEORY
+        })
+
+        groups
+          .filter(g => normalizeCourseType(g.courseType) === 'LAB')
+          .forEach(labGroup => {
+            const labGroupId = toNumberOrNull(labGroup.courseGroupId ?? labGroup.id ?? labGroup.courseId)
+            const labCapacity = toNumberOrNull(labGroup.labCapacity ?? labGroup.maxCapacity)
+            flattened.push({
+              courseId: labGroupId ?? 0,
+              courseCode: courseCode ?? labGroupId ?? courseId,
+              name: course.name ?? 'Laboratorio',
+              creditNumber,
+              groupLetter: normalizeGroupLetter(labGroup.groupLetter ?? labGroup.letter),
+              syllabusID,
+              semesterNumber,
+              courseType: 'LAB',
+              labPrerequisiteCourseId: courseId,
+              labCapacity,
+              enrolledStudentIDs: ensureNumberArray(labGroup.enrolledStudentIDs),
+              teacherIDs: ensureNumberArray(labGroup.teacherIDs),
+              courseTypeLabel: COURSE_TYPE_LABEL.LAB
+            })
           })
-        : []
+      })
+
+      courses.value = flattened
 
     } catch (err) {
       error.value = 'No se pudieron cargar los cursos'

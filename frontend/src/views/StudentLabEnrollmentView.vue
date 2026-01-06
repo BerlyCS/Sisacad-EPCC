@@ -20,6 +20,7 @@
         <StudentLabCourseList
           :courses="theoryCourses"
           :lab-assignments="labAssignmentsRecord"
+           :lab-availability="labAvailability"
           :selected-course-id="selectedTheoryCourseId"
           :loading="coursesLoading"
           :error="coursesError"
@@ -58,6 +59,7 @@ const {
   theoryCourses,
   pendingCourses,
   labAssignmentsMap,
+  labAvailability,
   selectedTheoryCourseId,
   selectedTheoryCourse,
   selectedLabAssignment,

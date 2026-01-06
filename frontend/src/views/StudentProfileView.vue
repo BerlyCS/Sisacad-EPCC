@@ -49,8 +49,7 @@
           <article class="rounded-xl border border-emerald-100 bg-white p-6 shadow-sm">
             <header class="flex items-center justify-between mb-4">
               <div>
-                <h3 class="text-lg font-semibold text-gray-900">Próxima sesión</h3>
-                <p class="text-sm text-gray-500">Actualizado automáticamente según el horario</p>
+                <h3 class="text-lg font-semibold text-gray-900">Próxima clase</h3>
               </div>
               <span class="inline-flex items-center rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-600">
                 {{ nextSessionInfo?.startsInLabel ?? 'Sin horario' }}
@@ -69,7 +68,7 @@
 
           <article class="rounded-xl border border-blue-100 bg-white p-6 shadow-sm">
             <header class="mb-4">
-              <h3 class="text-lg font-semibold text-gray-900">Cursos activos</h3>
+              <h3 class="text-lg font-semibold text-gray-900">Mis Cursos</h3>
               <p class="text-sm text-gray-500">Listado general del ciclo</p>
             </header>
             <div v-if="courses.length" class="overflow-x-auto">

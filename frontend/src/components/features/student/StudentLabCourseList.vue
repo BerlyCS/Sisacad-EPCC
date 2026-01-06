@@ -1,7 +1,6 @@
 <template>
   <section class="bg-white shadow rounded-2xl p-5 space-y-4 h-full">
     <header class="space-y-1">
-      <p class="text-xs font-semibold uppercase tracking-wide text-blue-500">Cursos teóricos</p>
       <div class="flex items-center justify-between gap-4">
         <h2 class="text-xl font-semibold text-gray-900">Selecciona el curso</h2>
         <span
@@ -11,7 +10,6 @@
           {{ pendingCount }} pendientes
         </span>
       </div>
-      <p class="text-sm text-gray-500">Solo puedes inscribirte en laboratorios asociados a cursos donde ya estés matriculado en teoría.</p>
     </header>
 
     <div v-if="loading" class="py-6 text-sm text-blue-600">Cargando cursos...</div>
@@ -58,6 +56,7 @@ import type { Course } from '@/services/studentCourseService'
 const props = defineProps<{
   courses: Course[]
   labAssignments: Record<number, Course | undefined>
+  labAvailability: Record<number, 'unknown' | 'available' | 'unavailable'>
   selectedCourseId: number | null
   loading?: boolean
   error?: string
@@ -66,12 +65,18 @@ const props = defineProps<{
 defineEmits<{ (e: 'select', value: number): void }>()
 
 const pendingCount = computed(() =>
-  props.courses.filter(course => !props.labAssignments[course.courseId]).length
+  props.courses.filter(course =>
+    props.labAvailability[course.courseId] !== 'unavailable' &&
+    !props.labAssignments[course.courseId]
+  ).length
 )
 
 const assignmentLabel = (courseId: number): string => {
   if (props.labAssignments[courseId]) {
     return 'Laboratorio asignado'
+  }
+  if (props.labAvailability[courseId] === 'unavailable') {
+    return 'No disponible'
   }
   return 'Pendiente'
 }
@@ -79,5 +84,7 @@ const assignmentLabel = (courseId: number): string => {
 const assignmentBadgeClass = (courseId: number) =>
   props.labAssignments[courseId]
     ? 'bg-emerald-50 text-emerald-700 border border-emerald-100'
-    : 'bg-amber-50 text-amber-700 border border-amber-100'
+    : props.labAvailability[courseId] === 'unavailable'
+      ? 'bg-gray-100 text-gray-600 border border-gray-200'
+      : 'bg-amber-50 text-amber-700 border border-amber-100'
 </script>

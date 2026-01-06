@@ -16,11 +16,13 @@ export const useStudentLabEnrollment = () => {
   const labSections = ref<LabSection[]>([])
   const labSectionsLoading = ref(false)
   const labSectionsError = ref('')
+  const labAvailability = ref<Record<number, 'unknown' | 'available' | 'unavailable'>>({})
   const validationResult = ref<EnrollmentValidationResult | null>(null)
   const enrollmentResult = ref<EnrollmentValidationResult | null>(null)
   const enrollmentLoading = ref(false)
   const infoMessage = ref('')
   const errorMessage = ref('')
+  const labAssignmentOverrides = ref<Record<number, Course>>({})
 
   const theoryCourses = computed(() => courses.value.filter(course => course.courseType === 'THEORY'))
 
@@ -29,6 +31,21 @@ export const useStudentLabEnrollment = () => {
     courses.value.forEach(course => {
       if (course.courseType === 'LAB' && course.labPrerequisiteCourseId) {
         mapping.set(course.labPrerequisiteCourseId, course)
+      }
+    })
+
+    Object.entries(labAssignmentOverrides.value).forEach(([theoryId, override]) => {
+      const key = Number(theoryId)
+      if (!Number.isFinite(key)) return
+
+      const existing = mapping.get(key)
+      if (!existing) {
+        mapping.set(key, override)
+        return
+      }
+
+      if (!existing.groupLetter && override.groupLetter) {
+        mapping.set(key, { ...existing, groupLetter: override.groupLetter })
       }
     })
     return mapping
@@ -46,7 +63,10 @@ export const useStudentLabEnrollment = () => {
   })
 
   const pendingCourses = computed(() =>
-    theoryCourses.value.filter(course => !labAssignmentsMap.value.has(course.courseId))
+    theoryCourses.value.filter(course =>
+      labAvailability.value[course.courseId] !== 'unavailable' &&
+      !labAssignmentsMap.value.has(course.courseId)
+    )
   )
 
   const resetFeedback = () => {
@@ -55,6 +75,11 @@ export const useStudentLabEnrollment = () => {
     enrollmentResult.value = null
     infoMessage.value = ''
     errorMessage.value = ''
+  }
+
+  const markAvailability = (courseId: number, status: 'unknown' | 'available' | 'unavailable') => {
+    if (!Number.isFinite(courseId)) return
+    labAvailability.value = { ...labAvailability.value, [courseId]: status }
   }
 
   const loadLabSections = async (courseId: number) => {
@@ -66,18 +91,23 @@ export const useStudentLabEnrollment = () => {
 
     labSectionsLoading.value = true
     resetFeedback()
+    markAvailability(courseId, 'unknown')
 
     try {
       const sections = await fetchLabSections(courseId)
       labSections.value = sections
       if (sections.length === 0) {
         labSectionsError.value = 'No se encontraron laboratorios disponibles para este curso'
+        markAvailability(courseId, 'unavailable')
+      } else {
+        markAvailability(courseId, 'available')
       }
     } catch (error) {
       labSections.value = []
       labSectionsError.value = error instanceof Error
         ? error.message
         : 'No se pudieron cargar los laboratorios'
+      markAvailability(courseId, 'unknown')
     } finally {
       labSectionsLoading.value = false
     }
@@ -142,6 +172,30 @@ export const useStudentLabEnrollment = () => {
 
       if (result.allowed) {
         infoMessage.value = 'Tu laboratorio fue registrado exitosamente.'
+
+        const selectedSection = labSections.value.find(section => section.courseId === labCourseId)
+        if (selectedSection && selectedSection.labPrerequisiteCourseId) {
+          const theoryId = selectedSection.labPrerequisiteCourseId
+          labAssignmentOverrides.value = {
+            ...labAssignmentOverrides.value,
+            [theoryId]: {
+              courseId: selectedSection.courseId,
+              courseCode: selectedSection.courseCode,
+              name: selectedSection.name,
+              creditNumber: null,
+              groupLetter: selectedSection.groupLetter,
+              syllabusID: null,
+              semesterNumber: null,
+              courseType: 'LAB',
+              labPrerequisiteCourseId: theoryId,
+              labCapacity: selectedSection.labCapacity,
+              enrolledStudentIDs: [],
+              teacherIDs: [],
+              courseTypeLabel: selectedSection.courseTypeLabel
+            }
+          }
+        }
+
         await fetchMyCourses()
         if (selectedTheoryCourseId.value) {
           await loadLabSections(selectedTheoryCourseId.value)
@@ -190,6 +244,7 @@ export const useStudentLabEnrollment = () => {
     theoryCourses,
     pendingCourses,
     labAssignmentsMap,
+    labAvailability,
     selectedTheoryCourseId,
     selectedTheoryCourse,
     selectedLabAssignment,

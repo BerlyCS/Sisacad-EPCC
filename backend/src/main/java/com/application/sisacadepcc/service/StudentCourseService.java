@@ -164,25 +164,36 @@ public class StudentCourseService {
 
     public EnrollmentValidationResult validateLabEnrollment(Long studentId, Long labCourseId) {
         if (labCourseId == null) {
-            return EnrollmentValidationResult.failure("INVALID_COURSE", "Debe proporcionar un curso válido", null, null);
+            return EnrollmentValidationResult.failure("INVALID_COURSE", "Debe proporcionar un laboratorio válido", null, null);
         }
 
-        Course course = courseRepository.findById(labCourseId)
-                .orElse(null);
-        if (course == null) {
-            return EnrollmentValidationResult.failure("COURSE_NOT_FOUND", "Curso no encontrado", labCourseId, null);
+        CourseGroup labGroup = courseGroupRepository.findById(labCourseId).orElse(null);
+        if (labGroup == null) {
+            return EnrollmentValidationResult.failure("COURSE_NOT_FOUND", "Laboratorio no encontrado", labCourseId, null);
         }
 
-        // Course type validation removed since courseType field removed
-        // if (!CourseType.LAB.equals(null)) {
-        //     return EnrollmentValidationResult.failure("NOT_A_LAB", "El curso seleccionado no es un laboratorio", labCourseId, null);
-        // }
+        if (labGroup.getType() != CourseType.LAB) {
+            return EnrollmentValidationResult.failure("NOT_A_LAB", "El grupo seleccionado no es de laboratorio", labCourseId, null);
+        }
 
-        if (studentId == null) {
+        Student student = resolveStudent(studentId);
+        if (student == null || student.getCui() == null || student.getCui().isBlank()) {
             return EnrollmentValidationResult.failure("INVALID_STUDENT", "No se pudo identificar al estudiante", labCourseId, null);
         }
 
-        return validateCourseEnrollment(studentId, course);
+        boolean alreadyEnrolled = enrollmentRepository.existsByStudentAndCourseGroup(student.getCui(), labCourseId);
+        if (alreadyEnrolled) {
+            return EnrollmentValidationResult.failure("ALREADY_ENROLLED", "Ya estás matriculado en este laboratorio", labCourseId, null);
+        }
+
+        long currentEnrollments = enrollmentRepository.countByCourseGroupId(labCourseId);
+        int capacity = labGroup.getMaxCapacity();
+        int remaining = Math.max(capacity - (int) currentEnrollments, 0);
+        if (remaining <= 0) {
+            return EnrollmentValidationResult.failure("NO_SEATS", "No hay vacantes disponibles", labCourseId, 0);
+        }
+
+        return EnrollmentValidationResult.success(labCourseId, remaining);
     }
 
     @Transactional
@@ -193,14 +204,28 @@ public class StudentCourseService {
         }
 
         try {
-            enrollStudentInCourse(studentId, labCourseId);
+            var studentEntity = studentJpaRepository.findById(studentId)
+                    .orElseThrow(() -> new IllegalArgumentException("Student entity not found"));
+            var courseGroupEntity = courseGroupJpaRepository.findById(labCourseId)
+                    .orElseThrow(() -> new IllegalArgumentException("Course group not found"));
+
+            long currentEnrollments = enrollmentRepository.countByCourseGroupId(labCourseId);
+            int capacity = courseGroupEntity.getMaxCapacity();
+            if (currentEnrollments >= capacity) {
+                return EnrollmentValidationResult.failure("NO_SEATS", "No hay vacantes disponibles", labCourseId, 0);
+            }
+
+            EnrollmentEntity enrollment = new EnrollmentEntity(studentEntity, courseGroupEntity);
+            enrollmentRepository.save(enrollment);
+
+            int remainingSeats = Math.max(capacity - (int) enrollmentRepository.countByCourseGroupId(labCourseId), 0);
+            courseGroupEntity.setAvailableCapacity(remainingSeats);
+            courseGroupJpaRepository.save(courseGroupEntity);
+
+            return EnrollmentValidationResult.success(labCourseId, remainingSeats);
         } catch (IllegalArgumentException | IllegalStateException ex) {
             return EnrollmentValidationResult.failure("ENROLLMENT_FAILED", ex.getMessage(), labCourseId, validation.remainingSeats());
         }
-
-        Course course = courseRepository.findById(labCourseId).orElse(null);
-        Integer remainingSeats = course != null ? computeRemainingSeats(course) : validation.remainingSeats();
-        return EnrollmentValidationResult.success(labCourseId, remainingSeats);
     }
 
     public List<?> getAllEnrollments() {
@@ -325,12 +350,18 @@ public class StudentCourseService {
     }
 
     private EnrollmentValidationResult validateCourseEnrollment(Long studentId, Course course) {
-        // Enrollment validation removed
+        if (studentId == null || course == null || course.getCourseId() == null) {
+            return EnrollmentValidationResult.failure("INVALID_INPUT", "Datos incompletos para validar", null, null);
+        }
         return EnrollmentValidationResult.success(course.getCourseId(), null);
     }
 
-    private Integer computeRemainingSeats(Course course) {
-        // Enrollment functionality removed
-        return null;
+    private Integer computeRemainingSeats(CourseGroup group) {
+        if (group == null || group.getId() == null) {
+            return null;
+        }
+        long currentEnrollments = enrollmentRepository.countByCourseGroupId(group.getId());
+        int capacity = group.getMaxCapacity();
+        return Math.max(capacity - (int) currentEnrollments, 0);
     }
 }
