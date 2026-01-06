@@ -8,12 +8,15 @@ import com.application.sisacadepcc.service.AuthorizationService;
 import com.application.sisacadepcc.service.CourseService;
 import com.application.sisacadepcc.service.ProfessorService;
 import com.application.sisacadepcc.service.UserRole;
+import com.application.sisacadepcc.service.dto.UserImportResult;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 import java.util.Map;
@@ -57,6 +60,20 @@ public class ProfessorController {
             LOGGER.error("Error registrando profesor", ex);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(Map.of("message", "No se pudo registrar el profesor"));
+        }
+    }
+
+    @PostMapping(value = "/import", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<UserImportResult<Professor>> importProfessors(@RequestPart("file") MultipartFile file,
+                                                                        Authentication authentication) {
+        if (!authorizationService.hasAnyRole(authentication, UserRole.ADMIN, UserRole.SECRETARY)) {
+            return ResponseEntity.status(403).build();
+        }
+
+        try {
+            return ResponseEntity.ok(service.importProfessors(file));
+        } catch (IllegalArgumentException ex) {
+            return ResponseEntity.badRequest().body(new UserImportResult<>(List.of(), List.of(ex.getMessage()), 0, 0));
         }
     }
 
