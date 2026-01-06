@@ -2,8 +2,8 @@ package com.application.sisacadepcc.presentation;
 
 import com.application.sisacadepcc.config.security.RequiresAdministratorAccess;
 import com.application.sisacadepcc.domain.model.Course;
-import com.application.sisacadepcc.presentation.dto.CourseSummaryResponse;
 import com.application.sisacadepcc.domain.model.CourseGroup;
+import com.application.sisacadepcc.presentation.dto.CourseSummaryResponse;
 import com.application.sisacadepcc.presentation.dto.CourseDetailsResponse;
 import com.application.sisacadepcc.presentation.dto.CourseGroupAssignmentResponse;
 import com.application.sisacadepcc.presentation.dto.CreateCourseGroupRequest;
@@ -12,9 +12,12 @@ import com.application.sisacadepcc.domain.repository.EnrollmentRepository;
 import com.application.sisacadepcc.service.AuthorizationService;
 import com.application.sisacadepcc.service.CourseService;
 import com.application.sisacadepcc.service.UserRole;
+import com.application.sisacadepcc.service.dto.CourseImportResult;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 import java.util.Map;
@@ -87,6 +90,20 @@ public class CourseController {
 
         Course created = service.createCourse(course);
         return ResponseEntity.ok(created);
+    }
+
+    @PostMapping(value = "/import", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<CourseImportResult> importCourses(@RequestPart("file") MultipartFile file,
+                                                            Authentication authentication) {
+        if (!authorizationService.hasAnyRole(authentication, UserRole.ADMIN, UserRole.SECRETARY)) {
+            return ResponseEntity.status(403).build();
+        }
+
+        try {
+            return ResponseEntity.ok(service.importCourses(file));
+        } catch (IllegalArgumentException ex) {
+            return ResponseEntity.badRequest().body(new CourseImportResult(List.of(), List.of(ex.getMessage()), 0, 0));
+        }
     }
 
     @PutMapping("/{id}")

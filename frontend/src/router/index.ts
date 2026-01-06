@@ -6,6 +6,9 @@ import CourseManagementView from '../views/CourseManagementView.vue'
 import ProfessorManagementView from '../views/ProfessorManagementView.vue'
 import StudentManagementView from '../views/StudentManagementView.vue'
 import SecretaryManagementView from '../views/SecretaryManagementView.vue'
+import CourseImportView from '../views/CourseImportView.vue'
+import UserImportView from '../views/UserImportView.vue'
+import ClassroomImportView from '../views/ClassroomImportView.vue'
 import NotFoundComponent from '@/components/ui/NotFoundComponent.vue'
 import { useAuthStore } from '../stores/auth'
 
@@ -29,9 +32,27 @@ const router = createRouter({
       meta: { requiresAuth: true, allowedRoles: ['ADMIN', 'SECRETARY'] }
     },
     {
+      path: '/admin/classrooms/import',
+      name: 'classroom-import',
+      component: ClassroomImportView,
+      meta: { requiresAuth: true, allowedRoles: ['ADMIN', 'SECRETARY'] }
+    },
+    {
       path: '/admin/courses',
       name: 'courses',
       component: CourseManagementView,
+    },
+    {
+      path: '/admin/courses/import',
+      name: 'course-import',
+      component: CourseImportView,
+      meta: { requiresAuth: true, allowedRoles: ['ADMIN', 'SECRETARY'] }
+    },
+    {
+      path: '/admin/users/import',
+      name: 'user-import',
+      component: UserImportView,
+      meta: { requiresAuth: true, allowedRoles: ['ADMIN', 'SECRETARY'] }
     },
     {
       path: '/admin/professors',

@@ -13,13 +13,26 @@ import com.application.sisacadepcc.domain.repository.EnrollmentRepository;
 import com.application.sisacadepcc.presentation.dto.CourseScheduleSlotRequest;
 import com.application.sisacadepcc.presentation.dto.CreateCourseGroupRequest;
 import com.application.sisacadepcc.presentation.dto.ProfessorScheduleEntry;
-import com.application.sisacadepcc.service.SyllabusService;
 import com.application.sisacadepcc.service.dto.CourseDetails;
+import com.application.sisacadepcc.service.dto.CourseImportResult;
+import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.CellType;
+import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.ss.usermodel.Sheet;
+import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.ss.usermodel.WorkbookFactory;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
@@ -87,6 +100,66 @@ public class CourseService {
     public Course createCourse(Course course) {
         validateCourseWeights(course);
         return repository.save(course);
+    }
+
+    public CourseImportResult importCourses(MultipartFile file) {
+        if (file == null || file.isEmpty()) {
+            throw new IllegalArgumentException("Debe proporcionar un archivo CSV o Excel con cursos");
+        }
+
+        String filename = file.getOriginalFilename() != null ? file.getOriginalFilename().toLowerCase(Locale.ROOT) : "";
+        List<CourseImportRow> rawRows;
+        try {
+            InputStream inputStream = file.getInputStream();
+            if (filename.endsWith(".csv")) {
+                rawRows = parseCsv(inputStream);
+            } else if (filename.endsWith(".xlsx") || filename.endsWith(".xls")) {
+                rawRows = parseExcel(inputStream);
+            } else {
+                throw new IllegalArgumentException("Formato no soportado. Use CSV o Excel (.xlsx)");
+            }
+        } catch (IOException ex) {
+            throw new IllegalArgumentException("No se pudo leer el archivo", ex);
+        }
+
+        List<Course> created = new ArrayList<>();
+        List<String> errors = new ArrayList<>();
+        int processed = 0;
+        int skipped = 0;
+
+        for (CourseImportRow row : rawRows) {
+            if (row == null || row.columns().isEmpty()) {
+                continue;
+            }
+
+            if (row.rowNumber() == 1 && isHeaderRow(row.columns())) {
+                continue;
+            }
+
+            processed++;
+            Course course = toCourse(row, errors);
+            if (course == null) {
+                skipped++;
+                continue;
+            }
+
+            Integer code = course.getCourseCode();
+            if (code != null && repository.findByCourseCode(code.longValue()).isPresent()) {
+                skipped++;
+                errors.add("Fila " + row.rowNumber() + ": el código de curso " + code + " ya existe, se omitió.");
+                continue;
+            }
+
+            try {
+                validateCourseWeights(course);
+                created.add(repository.save(course));
+            } catch (IllegalArgumentException ex) {
+                skipped++;
+                errors.add("Fila " + row.rowNumber() + ": " + ex.getMessage());
+            }
+        }
+
+        return new CourseImportResult(created, errors, processed, skipped);
     }
 
     public List<Course> getCoursesForProfessor(Long professorId) {
@@ -254,6 +327,154 @@ public class CourseService {
                     group.setTeacherId(null);
                     return courseGroupRepository.save(group);
                 });
+    }
+
+    private Course toCourse(CourseImportRow row, List<String> errors) {
+        List<String> columns = row.columns();
+        int line = row.rowNumber();
+
+        Integer courseCode = parseInteger(valueAt(columns, 0), "código", line, true, errors);
+        String name = valueAt(columns, 1);
+        if (name == null || name.isBlank()) {
+            errors.add("Fila " + line + ": el nombre del curso es obligatorio");
+            return null;
+        }
+
+        Integer credits = parseInteger(valueAt(columns, 2), "créditos", line, true, errors);
+        Integer semester = parseInteger(valueAt(columns, 3), "semestre", line, true, errors);
+        Integer theoryHours = parseInteger(valueAt(columns, 4), "horas teoría", line, false, errors);
+        Integer practiceHours = parseInteger(valueAt(columns, 5), "horas práctica", line, false, errors);
+        Integer labHours = parseInteger(valueAt(columns, 6), "horas laboratorio", line, false, errors);
+
+        Integer continuous1 = parseInteger(valueAt(columns, 7), "peso continuo 1", line, true, errors);
+        Integer continuous2 = parseInteger(valueAt(columns, 8), "peso continuo 2", line, true, errors);
+        Integer continuous3 = parseInteger(valueAt(columns, 9), "peso continuo 3", line, true, errors);
+        Integer exam1 = parseInteger(valueAt(columns, 10), "peso examen 1", line, true, errors);
+        Integer exam2 = parseInteger(valueAt(columns, 11), "peso examen 2", line, true, errors);
+        Integer exam3 = parseInteger(valueAt(columns, 12), "peso examen 3", line, true, errors);
+
+        if (courseCode == null || credits == null || semester == null
+                || continuous1 == null || continuous2 == null || continuous3 == null
+                || exam1 == null || exam2 == null || exam3 == null) {
+            return null;
+        }
+
+        Course course = new Course();
+        course.setCourseCode(courseCode);
+        course.setName(name.trim());
+        course.setCredits(credits);
+        course.setSemesterNumber(semester);
+        course.setTheoryHours(valueOrZero(theoryHours));
+        course.setPracticeHours(valueOrZero(practiceHours));
+        course.setLabHours(valueOrZero(labHours));
+        course.setContinuousGradeWeights(List.of(continuous1, continuous2, continuous3));
+        course.setExamGradeWeights(List.of(exam1, exam2, exam3));
+        return course;
+    }
+
+    private List<CourseImportRow> parseCsv(InputStream inputStream) throws IOException {
+        List<CourseImportRow> rows = new ArrayList<>();
+        try (BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream, StandardCharsets.UTF_8))) {
+            String line;
+            int lineNumber = 0;
+            while ((line = reader.readLine()) != null) {
+                lineNumber++;
+                if (line.isBlank()) {
+                    continue;
+                }
+                List<String> columns = Arrays.stream(line.split(","))
+                        .map(String::trim)
+                        .toList();
+                rows.add(new CourseImportRow(lineNumber, columns));
+            }
+        }
+        return rows;
+    }
+
+    private List<CourseImportRow> parseExcel(InputStream inputStream) throws IOException {
+        List<CourseImportRow> rows = new ArrayList<>();
+        try (Workbook workbook = WorkbookFactory.create(inputStream)) {
+            Sheet sheet = workbook.getNumberOfSheets() > 0 ? workbook.getSheetAt(0) : null;
+            if (sheet == null) {
+                return rows;
+            }
+
+            for (Row row : sheet) {
+                if (row == null) {
+                    continue;
+                }
+                int lastCell = Math.max(row.getLastCellNum(), 0);
+                List<String> columns = new ArrayList<>();
+                for (int i = 0; i < lastCell; i++) {
+                    Cell cell = row.getCell(i, Row.MissingCellPolicy.RETURN_BLANK_AS_NULL);
+                    columns.add(readCell(cell));
+                }
+                rows.add(new CourseImportRow(row.getRowNum() + 1, columns));
+            }
+        }
+        return rows;
+    }
+
+    private String readCell(Cell cell) {
+        if (cell == null) {
+            return "";
+        }
+        if (cell.getCellType() == CellType.STRING) {
+            return cell.getStringCellValue().trim();
+        }
+        if (cell.getCellType() == CellType.NUMERIC) {
+            double value = cell.getNumericCellValue();
+            if (value == Math.rint(value)) {
+                return String.valueOf((long) value);
+            }
+            return String.valueOf(value);
+        }
+        if (cell.getCellType() == CellType.BOOLEAN) {
+            return Boolean.toString(cell.getBooleanCellValue());
+        }
+        if (cell.getCellType() == CellType.FORMULA) {
+            return cell.getRichStringCellValue().getString().trim();
+        }
+        return "";
+    }
+
+    private boolean isHeaderRow(List<String> columns) {
+        String first = valueAt(columns, 0);
+        if (first == null) {
+            return false;
+        }
+        String normalized = first.toLowerCase(Locale.ROOT);
+        return normalized.contains("course") || normalized.contains("código") || normalized.contains("codigo") || normalized.contains("code");
+    }
+
+    private String valueAt(List<String> columns, int index) {
+        if (columns == null || index < 0 || index >= columns.size()) {
+            return null;
+        }
+        String value = columns.get(index);
+        return value != null ? value.trim() : null;
+    }
+
+    private Integer parseInteger(String raw, String fieldName, int rowNumber, boolean required, List<String> errors) {
+        if (raw == null || raw.isBlank()) {
+            if (required) {
+                errors.add("Fila " + rowNumber + ": falta el campo " + fieldName);
+            }
+            return null;
+        }
+        try {
+            return Integer.parseInt(raw.trim());
+        } catch (NumberFormatException ex) {
+            errors.add("Fila " + rowNumber + ": valor inválido en " + fieldName + " ('" + raw + "')");
+            return null;
+        }
+    }
+
+    private int valueOrZero(Integer number) {
+        return number != null ? number : 0;
+    }
+
+    private record CourseImportRow(int rowNumber, List<String> columns) {
     }
 
     private CourseDetails buildCourseDetails(CourseGroup group) {

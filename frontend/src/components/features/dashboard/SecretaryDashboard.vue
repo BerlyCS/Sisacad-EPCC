@@ -14,6 +14,10 @@
         <BookOpenIcon class="w-15 h-15 mx-auto mt-2 mb-4" />
         <h4 class="text-xl">Gestionar Cursos</h4>
       </PrincipalButton>
+      <PrincipalButton color="amber" to="/admin/courses/import">
+        <DocumentPlusIcon class="w-15 h-15 mx-auto mt-2 mb-4" />
+        <h4 class="text-xl">Importar Cursos</h4>
+      </PrincipalButton>
       <PrincipalButton color="green" to="/admin/student-enrollment">
         <UserIcon class="w-15 h-15 mx-auto mt-2 mb-4" />
         <h4 class="text-xl">Matricular Estudiantes</h4>
@@ -48,6 +52,7 @@ import {
   BriefcaseIcon,
   CalendarIcon,
   ClipboardDocumentListIcon,
+  DocumentPlusIcon,
   UserIcon
 } from '@heroicons/vue/16/solid'
 </script>

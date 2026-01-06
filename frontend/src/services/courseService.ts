@@ -79,6 +79,13 @@ export interface CourseSyllabusSummary {
   topics: CourseTopicSummary[]
 }
 
+export interface CourseImportResult {
+  createdCourses: Course[]
+  errors: string[]
+  processedRows: number
+  skippedRows: number
+}
+
 export interface CourseLabSummary {
   courseId: number
   courseCode: number | null
@@ -416,6 +423,59 @@ export const useCourseService = () => {
     }
   }
 
+  const normalizeCourseResponse = (course: any): Course => ({
+    courseId: Number(course.courseId ?? course.courseID),
+    courseCode: course.courseCode != null ? Number(course.courseCode) : null,
+    name: course.name ?? null,
+    credits: course.credits != null ? Number(course.credits) : null,
+    syllabusId: course.syllabusId != null ? Number(course.syllabusId) : null,
+    labHours: course.labHours != null ? Number(course.labHours) : null,
+    practiceHours: course.practiceHours != null ? Number(course.practiceHours) : null,
+    theoryHours: course.theoryHours != null ? Number(course.theoryHours) : null,
+    semesterNumber: course.semesterNumber != null ? Number(course.semesterNumber) : null,
+    continuousGradeWeights: ensureWeightList(course.continuousGradeWeights),
+    examGradeWeights: ensureWeightList(course.examGradeWeights),
+    enrolledStudentIDs: [],
+    enrolledStudentCount: Number(course.enrolledCount ?? 0),
+    teacherIDs: []
+  })
+
+  const importCourses = async (file: File): Promise<CourseImportResult> => {
+    if (!file) {
+      throw new Error('Debe seleccionar un archivo de cursos')
+    }
+
+    const formData = new FormData()
+    formData.append('file', file)
+
+    const response = await fetch(`${API_BASE_URL}/courses/import`, {
+      method: 'POST',
+      body: formData,
+      credentials: 'include'
+    })
+
+    if (!response.ok) {
+      const text = await response.text().catch(() => '')
+      throw new Error(text || 'No se pudo importar el archivo')
+    }
+
+    const payload: any = await response.json().catch(() => null)
+    if (!payload) {
+      throw new Error('Respuesta inválida del servidor')
+    }
+
+    return {
+      createdCourses: Array.isArray(payload.createdCourses)
+        ? payload.createdCourses.map(normalizeCourseResponse)
+        : [],
+      errors: Array.isArray(payload.errors)
+        ? payload.errors.map((value: unknown) => String(value))
+        : [],
+      processedRows: Number(payload.processedRows ?? 0),
+      skippedRows: Number(payload.skippedRows ?? 0)
+    }
+  }
+
   const createCourse = async (course: Omit<Course, 'courseId' | 'syllabusId'>): Promise<Course> => {
     const response = await fetch(`${API_BASE_URL}/courses`, {
       method: 'POST',
@@ -475,5 +535,7 @@ export const useCourseService = () => {
     courseTimeSlotsLoading,
     courseTimeSlotsError,
     fetchCourseTimeSlots
+    ,
+    importCourses
   }
 }

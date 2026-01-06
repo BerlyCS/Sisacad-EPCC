@@ -21,13 +21,13 @@
           </button>
 
           <!-- Navegación en pantallas grandes -->
-          <div class="hidden md:flex space-x-5">
+          <div class="hidden md:flex flex-wrap items-center gap-2 overflow-x-auto">
             <template v-if="userRole === 'ADMIN'">
               <router-link 
                 v-for="item in adminNavigation" 
                 :key="item.name"
                 :to="item.to"
-                class="text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-all duration-200 px-3 py-2 rounded-md text-sm font-medium flex items-center space-x-2"
+                class="whitespace-nowrap text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-all duration-200 px-3 py-2 rounded-md text-sm font-medium flex items-center space-x-2"
                 :class="{ 'bg-blue-100 text-blue-700': $route.path === item.to }"
               >
                 <template v-if="item.icon">
@@ -42,7 +42,7 @@
                 v-for="item in secretaryNavigation" 
                 :key="item.name"
                 :to="item.to"
-                class="text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-all duration-200 px-3 py-2 rounded-md text-sm font-medium flex items-center space-x-2"
+                class="whitespace-nowrap text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-all duration-200 px-3 py-2 rounded-md text-sm font-medium flex items-center space-x-2"
                 :class="{ 'bg-blue-100 text-blue-700': $route.path === item.to }"
               >
                 <template v-if="item.icon">
@@ -55,7 +55,7 @@
             <router-link 
               v-if="userRole === 'PROFESSOR' || userRole === 'ADMIN'"
               to="/classrooms" 
-              class="text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-all duration-200 px-3 py-2 rounded-md text-sm font-medium flex items-center space-x-2"
+              class="whitespace-nowrap text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-all duration-200 px-3 py-2 rounded-md text-sm font-medium flex items-center space-x-2"
               :class="{ 'bg-blue-100 text-blue-700': $route.path === '/classrooms' }"
             >
               <i class="fas fa-calendar-alt"></i>
@@ -65,7 +65,7 @@
             <router-link 
               v-if="userRole === 'PROFESSOR'"
               to="/professor/grades" 
-              class="text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-all duration-200 px-3 py-2 rounded-md text-sm font-medium flex items-center space-x-2"
+              class="whitespace-nowrap text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-all duration-200 px-3 py-2 rounded-md text-sm font-medium flex items-center space-x-2"
               :class="{ 'bg-blue-100 text-blue-700': $route.path === '/professor/grades' }"
             >
               <i class="fas fa-chart-bar"></i>
@@ -75,7 +75,7 @@
             <router-link 
               v-if="userRole === 'PROFESSOR'"
               to="/professor/schedule" 
-              class="text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-all duration-200 px-3 py-2 rounded-md text-sm font-medium flex items-center space-x-2"
+              class="whitespace-nowrap text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-all duration-200 px-3 py-2 rounded-md text-sm font-medium flex items-center space-x-2"
               :class="{ 'bg-blue-100 text-blue-700': $route.path === '/professor/schedule' }"
             >
               <i class="fas fa-calendar-week"></i>
@@ -85,7 +85,7 @@
             <router-link 
               v-if="userRole === 'PROFESSOR'"
               to="/professor/reservations" 
-              class="text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-all duration-200 px-3 py-2 rounded-md text-sm font-medium flex items-center space-x-2"
+              class="whitespace-nowrap text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-all duration-200 px-3 py-2 rounded-md text-sm font-medium flex items-center space-x-2"
               :class="{ 'bg-blue-100 text-blue-700': $route.path === '/professor/reservations' }"
             >
               <i class="fas fa-bookmark"></i>
@@ -95,7 +95,7 @@
             <router-link 
               v-if="userRole === 'PROFESSOR'"
               to="/professor/exams" 
-              class="text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-all duration-200 px-3 py-2 rounded-md text-sm font-medium flex items-center space-x-2"
+              class="whitespace-nowrap text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-all duration-200 px-3 py-2 rounded-md text-sm font-medium flex items-center space-x-2"
               :class="{ 'bg-blue-100 text-blue-700': $route.path === '/professor/exams' }"
             >
               <i class="fas fa-file-pdf"></i>
@@ -105,7 +105,7 @@
             <router-link 
               v-if="userRole === 'PROFESSOR'"
               to="/professor/attendance" 
-              class="text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-all duration-200 px-3 py-2 rounded-md text-sm font-medium flex items-center space-x-2"
+              class="whitespace-nowrap text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-all duration-200 px-3 py-2 rounded-md text-sm font-medium flex items-center space-x-2"
               :class="{ 'bg-blue-100 text-blue-700': $route.path === '/professor/attendance' }"
             >
               <i class="fas fa-clipboard-check"></i>
@@ -115,7 +115,7 @@
             <router-link 
               v-if="userRole === 'PROFESSOR'"
               to="/professor/syllabus" 
-              class="text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-all duration-200 px-3 py-2 rounded-md text-sm font-medium flex items-center space-x-2"
+              class="whitespace-nowrap text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-all duration-200 px-3 py-2 rounded-md text-sm font-medium flex items-center space-x-2"
               :class="{ 'bg-blue-100 text-blue-700': $route.path === '/professor/syllabus' }"
             >
               <i class="fas fa-file-upload"></i>
@@ -125,7 +125,7 @@
             <router-link
               v-if="userRole === 'STUDENT'"
               to="/student/profile"
-              class="text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-all duration-200 px-3 py-2 rounded-md text-sm font-medium flex items-center space-x-2"
+              class="whitespace-nowrap text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-all duration-200 px-3 py-2 rounded-md text-sm font-medium flex items-center space-x-2"
               :class="{ 'bg-blue-100 text-blue-700': $route.path === '/student/profile' }"
             >
               <i class="fas fa-user-graduate"></i>
@@ -135,7 +135,7 @@
             <router-link
               v-if="userRole === 'STUDENT'"
               to="/student/courses"
-              class="text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-all duration-200 px-3 py-2 rounded-md text-sm font-medium flex items-center space-x-2"
+              class="whitespace-nowrap text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-all duration-200 px-3 py-2 rounded-md text-sm font-medium flex items-center space-x-2"
               :class="{ 'bg-blue-100 text-blue-700': $route.path === '/student/courses' }"
             >
               <i class="fas fa-book"></i>
@@ -145,7 +145,7 @@
             <router-link
               v-if="userRole === 'STUDENT'"
               to="/student/schedule"
-              class="text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-all duration-200 px-3 py-2 rounded-md text-sm font-medium flex items-center space-x-2"
+              class="whitespace-nowrap text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-all duration-200 px-3 py-2 rounded-md text-sm font-medium flex items-center space-x-2"
               :class="{ 'bg-blue-100 text-blue-700': $route.path === '/student/schedule' }"
             >
               <i class="fas fa-calendar"></i>
@@ -155,7 +155,7 @@
             <router-link
               v-if="userRole === 'STUDENT'"
               to="/student/grades"
-              class="text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-all duration-200 px-3 py-2 rounded-md text-sm font-medium flex items-center space-x-2"
+              class="whitespace-nowrap text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-all duration-200 px-3 py-2 rounded-md text-sm font-medium flex items-center space-x-2"
               :class="{ 'bg-blue-100 text-blue-700': $route.path === '/student/grades' }"
             >
               <i class="fas fa-chart-line"></i>
@@ -165,7 +165,7 @@
             <router-link
               v-if="userRole === 'STUDENT'"
               to="/student/attendance"
-              class="text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-all duration-200 px-3 py-2 rounded-md text-sm font-medium flex items-center space-x-2"
+              class="whitespace-nowrap text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-all duration-200 px-3 py-2 rounded-md text-sm font-medium flex items-center space-x-2"
               :class="{ 'bg-blue-100 text-blue-700': $route.path === '/student/attendance' }"
             >
               <i class="fas fa-clipboard-check"></i>
@@ -175,7 +175,7 @@
             <router-link
               v-if="userRole === 'STUDENT'"
               to="/student/labs"
-              class="text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-all duration-200 px-3 py-2 rounded-md text-sm font-medium flex items-center space-x-2"
+              class="whitespace-nowrap text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-all duration-200 px-3 py-2 rounded-md text-sm font-medium flex items-center space-x-2"
               :class="{ 'bg-blue-100 text-blue-700': $route.path === '/student/labs' }"
             >
               <i class="fas fa-flask"></i>
@@ -187,7 +187,7 @@
 
         <!-- Menú desplegable (para móviles) -->
         <transition name="fade">
-          <div
+            <div
             v-show="isMenuOpen"
             class="md:hidden border-t border-gray-200 py-3 space-y-2"
           >
@@ -380,7 +380,10 @@ const { userRole, userCui } = storeToRefs(authStore)
 
 const adminNavigation = [
   { name: 'Aulas', to: '/admin/classrooms', icon: 'fas fa-building' },
+  { name: 'Importar Aulas', to: '/admin/classrooms/import', icon: 'fas fa-door-open' },
   { name: 'Cursos', to: '/admin/courses', icon: 'fas fa-book' },
+  { name: 'Importar Cursos', to: '/admin/courses/import', icon: 'fas fa-file-import' },
+  { name: 'Importar Usuarios', to: '/admin/users/import', icon: 'fas fa-users' },
   { name: 'Profesores', to: '/admin/professors', icon: 'fas fa-chalkboard-teacher' },
   { name: 'Estudiantes', to: '/admin/students', icon: 'fas fa-user-graduate' },
   { name: 'Secretarias', to: '/admin/secretaries', icon: 'fas fa-user' },
@@ -390,8 +393,11 @@ const adminNavigation = [
 
 const secretaryNavigation = [
   { name: 'Gestionar Aulas', to: '/admin/classrooms', icon: 'fas fa-building' },
+  { name: 'Importar Aulas', to: '/admin/classrooms/import', icon: 'fas fa-door-open' },
   { name: 'Ver Estudiantes', to: '/admin/students', icon: 'fas fa-user-graduate' },
   { name: 'Gestionar Cursos', to: '/admin/courses', icon: 'fas fa-book' },
+  { name: 'Importar Cursos', to: '/admin/courses/import', icon: 'fas fa-file-import' },
+  { name: 'Importar Usuarios', to: '/admin/users/import', icon: 'fas fa-users' },
   { name: 'Matricular', to: '/admin/student-enrollment', icon: 'fas fa-user-plus' },
   { name: 'Gestionar Profesores', to: '/admin/professors', icon: 'fas fa-chalkboard-teacher' },
   { name: 'Gestionar Secretarias', to: '/admin/secretaries', icon: 'fas fa-user' },
