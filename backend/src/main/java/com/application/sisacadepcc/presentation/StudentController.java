@@ -12,13 +12,16 @@ import com.application.sisacadepcc.service.StudentService;
 import com.application.sisacadepcc.service.StudentCourseService;
 import com.application.sisacadepcc.service.AuthorizationService;
 import com.application.sisacadepcc.service.UserRole;
+import com.application.sisacadepcc.service.dto.UserImportResult;
 import com.application.sisacadepcc.domain.repository.StudentRepository;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -162,6 +165,20 @@ public class StudentController {
             LOGGER.error("Error creando estudiante", ex);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(Map.of("message", "No se pudo crear el estudiante"));
+        }
+    }
+
+    @PostMapping(value = "/import", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<UserImportResult<Student>> importStudents(@RequestPart("file") MultipartFile file,
+                                                                    Authentication authentication) {
+        if (!authorizationService.hasAnyRole(authentication, UserRole.ADMIN, UserRole.SECRETARY)) {
+            return ResponseEntity.status(403).build();
+        }
+
+        try {
+            return ResponseEntity.ok(service.importStudents(file));
+        } catch (IllegalArgumentException ex) {
+            return ResponseEntity.badRequest().body(new UserImportResult<>(List.of(), List.of(ex.getMessage()), 0, 0));
         }
     }
 
