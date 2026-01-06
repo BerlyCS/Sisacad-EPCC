@@ -4,8 +4,11 @@ import com.application.sisacadepcc.config.security.RequiresAdministratorOrSecret
 import com.application.sisacadepcc.domain.model.Classroom;
 import com.application.sisacadepcc.domain.model.valueobject.Place;
 import com.application.sisacadepcc.service.ClassroomService;
+import com.application.sisacadepcc.service.dto.UserImportResult;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -32,6 +35,16 @@ public class ClassroomController {
         Classroom classroom = new Classroom(place);
         Classroom created = service.createClassroom(classroom);
         return ResponseEntity.ok(created);
+    }
+
+    @PostMapping(value = "/import", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @RequiresAdministratorOrSecretaryAccess
+    public ResponseEntity<UserImportResult<Classroom>> importClassrooms(@RequestPart("file") MultipartFile file) {
+        try {
+            return ResponseEntity.ok(service.importClassrooms(file));
+        } catch (IllegalArgumentException ex) {
+            return ResponseEntity.badRequest().body(new UserImportResult<>(List.of(), List.of(ex.getMessage()), 0, 0));
+        }
     }
 
     public static class CreateClassroomRequest {
