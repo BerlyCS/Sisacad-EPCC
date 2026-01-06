@@ -6,15 +6,24 @@
           <h2 class="text-xl font-semibold text-gray-800">Gestión de Profesores</h2>
           <p class="text-gray-600 mt-1">Administra el personal docente</p>
         </div>
-        <button
-          @click="openCreateProfessorModal"
-          class="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700"
-        >
-          <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
-          </svg>
-          Agregar Profesor
-        </button>
+        <div class="flex flex-wrap items-center gap-2">
+          <button
+            @click="openCreateProfessorModal"
+            class="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700"
+          >
+            <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+            </svg>
+            Agregar Profesor
+          </button>
+          <router-link
+            :to="{ path: '/admin/users/import', query: { target: 'professors' } }"
+            class="inline-flex items-center gap-2 rounded-lg border border-blue-200 px-4 py-2 text-sm font-semibold text-blue-600 hover:bg-blue-50"
+          >
+            <i class="fas fa-file-import"></i>
+            Importar profesores
+          </router-link>
+        </div>
       </div>
       
       <div class="p-6">

@@ -4,7 +4,6 @@
       <header class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
         <div class="flex flex-wrap items-start justify-between gap-4">
           <div class="max-w-3xl space-y-2">
-            <p class="text-xs font-semibold uppercase tracking-[0.3em] text-slate-500">Importación de personas</p>
             <h1 class="text-3xl font-semibold leading-tight">Carga estudiantes, profesores y secretarias</h1>
             <p class="text-sm text-slate-600">
               Usa un solo formulario para los tres tipos. Validamos correos institucionales, detectamos duplicados y te
@@ -39,9 +38,8 @@
           <div class="flex flex-wrap items-center justify-between gap-3">
             <div>
               <p class="text-sm font-semibold text-slate-800">Qué vas a importar</p>
-              <p class="text-sm text-slate-600">Selecciona el tipo y sube la plantilla correspondiente.</p>
+              <p class="text-sm text-slate-600">Selecciona el tipo y sube el archivo correspondiente.</p>
             </div>
-            <p class="text-xs uppercase tracking-[0.25em] text-slate-500">Un solo flujo</p>
           </div>
 
           <div class="flex flex-wrap gap-3">
@@ -178,7 +176,8 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed, ref, watch } from 'vue'
+import { useRoute } from 'vue-router'
 import AdminLayout from '@/components/ui/TopBar.vue'
 import { importUserData, type UserImportEntry, type UserImportResult, type UserImportTarget } from '@/services/userImportService'
 
@@ -224,7 +223,24 @@ const targetOptions = [
   }
 ]
 
-const selectedTarget = ref<UserImportTarget>('students')
+const resolveTargetFromQuery = (param?: string | string[]): UserImportTarget => {
+  const raw = Array.isArray(param) ? param[0] : param
+  const matched = targetOptions.find(option => option.value === raw)
+  return matched?.value ?? targetOptions[0].value
+}
+
+const route = useRoute()
+const selectedTarget = ref<UserImportTarget>(resolveTargetFromQuery(route.query.target))
+
+watch(
+  () => route.query.target,
+  (value) => {
+    const resolved = resolveTargetFromQuery(value)
+    if (resolved !== selectedTarget.value) {
+      selectedTarget.value = resolved
+    }
+  }
+)
 const fileInput = ref<HTMLInputElement | null>(null)
 const selectedFile = ref<File | null>(null)
 const importing = ref(false)

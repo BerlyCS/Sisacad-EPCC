@@ -4,7 +4,6 @@
       <header class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
         <div class="flex flex-wrap items-start justify-between gap-4">
           <div class="max-w-3xl space-y-2">
-            <p class="text-xs font-semibold uppercase tracking-[0.3em] text-slate-500">Importación de aulas</p>
             <h1 class="text-3xl font-semibold leading-tight">Registrar aulas desde CSV o Excel</h1>
             <p class="text-sm text-slate-600">
               Usa la plantilla base, corrige advertencias y vuelve a subir el mismo archivo. Validamos columnas y campos obligatorios.

@@ -7,7 +7,7 @@
           <h2 class="text-xl font-semibold text-gray-800">Gestión de Cursos</h2>
           <p class="text-gray-600 mt-1">Administra los cursos y asigna docentes responsables.</p>
         </div>
-        <div v-if="canAddCourses" class="flex gap-2">
+        <div v-if="canAddCourses" class="flex flex-wrap items-center gap-2">
           <button
             @click="openCreateCourseModal"
             class="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700"
@@ -17,6 +17,13 @@
             </svg>
             Agregar Curso
           </button>
+          <router-link
+            to="/admin/courses/import"
+            class="inline-flex items-center gap-2 rounded-lg border border-blue-200 px-4 py-2 text-sm font-semibold text-blue-600 hover:bg-blue-50"
+          >
+            <i class="fas fa-file-import"></i>
+            Importar cursos
+          </router-link>
         </div>
       </div>
 
@@ -849,8 +856,7 @@ const dayOptions = [
   { value: 'MARTES', label: 'Martes' },
   { value: 'MIERCOLES', label: 'Miércoles' },
   { value: 'JUEVES', label: 'Jueves' },
-  { value: 'VIERNES', label: 'Viernes' },
-  { value: 'SABADO', label: 'Sábado' }
+  { value: 'VIERNES', label: 'Viernes' }
 ]
 
 const schedulingAssetsLoaded = reactive({

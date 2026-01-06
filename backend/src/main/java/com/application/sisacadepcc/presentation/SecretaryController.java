@@ -1,6 +1,7 @@
 package com.application.sisacadepcc.presentation;
 
 import com.application.sisacadepcc.config.security.RequiresAdministratorAccess;
+import com.application.sisacadepcc.config.security.RequiresAdministratorOrSecretaryAccess;
 import com.application.sisacadepcc.domain.model.Secretary;
 import com.application.sisacadepcc.service.SecretaryService;
 import com.application.sisacadepcc.service.dto.UserImportResult;
@@ -28,7 +29,7 @@ public class SecretaryController {
     }
 
     @GetMapping
-    @RequiresAdministratorAccess
+    @RequiresAdministratorOrSecretaryAccess
     public ResponseEntity<List<Secretary>> getAllSecretaries() {
         return ResponseEntity.ok(service.getAllSecretaries());
     }

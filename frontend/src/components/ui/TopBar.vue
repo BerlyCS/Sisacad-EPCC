@@ -3,7 +3,7 @@
     <Header />
 
     <!-- Navigation -->
-    <nav class="bg-white shadow">
+      <nav class="bg-white shadow">
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         
         <!-- Barra superior -->
@@ -380,10 +380,7 @@ const { userRole, userCui } = storeToRefs(authStore)
 
 const adminNavigation = [
   { name: 'Aulas', to: '/admin/classrooms', icon: 'fas fa-building' },
-  { name: 'Importar Aulas', to: '/admin/classrooms/import', icon: 'fas fa-door-open' },
   { name: 'Cursos', to: '/admin/courses', icon: 'fas fa-book' },
-  { name: 'Importar Cursos', to: '/admin/courses/import', icon: 'fas fa-file-import' },
-  { name: 'Importar Usuarios', to: '/admin/users/import', icon: 'fas fa-users' },
   { name: 'Profesores', to: '/admin/professors', icon: 'fas fa-chalkboard-teacher' },
   { name: 'Estudiantes', to: '/admin/students', icon: 'fas fa-user-graduate' },
   { name: 'Secretarias', to: '/admin/secretaries', icon: 'fas fa-user' },
@@ -393,11 +390,8 @@ const adminNavigation = [
 
 const secretaryNavigation = [
   { name: 'Gestionar Aulas', to: '/admin/classrooms', icon: 'fas fa-building' },
-  { name: 'Importar Aulas', to: '/admin/classrooms/import', icon: 'fas fa-door-open' },
   { name: 'Ver Estudiantes', to: '/admin/students', icon: 'fas fa-user-graduate' },
   { name: 'Gestionar Cursos', to: '/admin/courses', icon: 'fas fa-book' },
-  { name: 'Importar Cursos', to: '/admin/courses/import', icon: 'fas fa-file-import' },
-  { name: 'Importar Usuarios', to: '/admin/users/import', icon: 'fas fa-users' },
   { name: 'Matricular', to: '/admin/student-enrollment', icon: 'fas fa-user-plus' },
   { name: 'Gestionar Profesores', to: '/admin/professors', icon: 'fas fa-chalkboard-teacher' },
   { name: 'Gestionar Secretarias', to: '/admin/secretaries', icon: 'fas fa-user' },

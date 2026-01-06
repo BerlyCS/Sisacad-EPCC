@@ -1,9 +1,18 @@
 <template>
   <AdminLayout>
     <div class="bg-white shadow rounded-lg">
-      <div class="px-6 py-4 border-b border-gray-200">
-        <h2 class="text-xl font-semibold text-gray-800">Gestión de Aulas</h2>
-        <p class="text-gray-600 mt-1">Administra las aulas disponibles en la institución</p>
+      <div class="px-6 py-4 border-b border-gray-200 flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <h2 class="text-xl font-semibold text-gray-800">Gestión de Aulas</h2>
+          <p class="text-gray-600 mt-1">Administra las aulas disponibles en la institución</p>
+        </div>
+        <router-link
+          to="/admin/classrooms/import"
+          class="inline-flex items-center gap-2 rounded-lg border border-blue-200 px-4 py-2 text-sm font-semibold text-blue-600 hover:bg-blue-50"
+        >
+          <i class="fas fa-file-import"></i>
+          Importar aulas
+        </router-link>
       </div>
       
       <div class="p-6">
