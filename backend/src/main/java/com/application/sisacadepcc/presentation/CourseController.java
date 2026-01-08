@@ -6,6 +6,7 @@ import com.application.sisacadepcc.domain.model.CourseGroup;
 import com.application.sisacadepcc.presentation.dto.CourseSummaryResponse;
 import com.application.sisacadepcc.presentation.dto.CourseDetailsResponse;
 import com.application.sisacadepcc.presentation.dto.CourseGroupAssignmentResponse;
+import com.application.sisacadepcc.presentation.dto.CourseStudentResponse;
 import com.application.sisacadepcc.presentation.dto.CreateCourseGroupRequest;
 import com.application.sisacadepcc.presentation.dto.UpdateCapacityRequest;
 import com.application.sisacadepcc.domain.repository.EnrollmentRepository;
@@ -52,6 +53,15 @@ public class CourseController {
         return ResponseEntity.ok(
                 service.getCourseGroups(courseId).stream()
                         .map(CourseGroupAssignmentResponse::from)
+                        .toList()
+        );
+    }
+
+    @GetMapping("/{courseId}/students")
+    public ResponseEntity<List<CourseStudentResponse>> getCourseStudents(@PathVariable Long courseId) {
+        return ResponseEntity.ok(
+                service.getStudentsByCourse(courseId).stream()
+                        .map(CourseStudentResponse::from)
                         .toList()
         );
     }

@@ -5,13 +5,17 @@ import com.application.sisacadepcc.domain.model.Student;
 import com.application.sisacadepcc.presentation.dto.EnrollStudentRequest;
 import com.application.sisacadepcc.presentation.dto.EnrollmentResponse;
 import com.application.sisacadepcc.service.AuthorizationService;
+import com.application.sisacadepcc.service.EnrollmentImportService;
 import com.application.sisacadepcc.service.StudentCourseService;
 import com.application.sisacadepcc.service.StudentService;
 import com.application.sisacadepcc.service.UserRole;
+import com.application.sisacadepcc.service.dto.UserImportResult;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -22,16 +26,19 @@ public class StudentCourseController {
     private final StudentCourseService studentCourseService;
     private final AuthorizationService authorizationService;
     private final StudentService studentService;
+    private final EnrollmentImportService enrollmentImportService;
 
     public StudentCourseController(StudentCourseService studentCourseService,
                                   AuthorizationService authorizationService,
-                                  StudentService studentService) {
+                                  StudentService studentService,
+                                  EnrollmentImportService enrollmentImportService) {
         this.studentCourseService = studentCourseService;
         this.authorizationService = authorizationService;
         this.studentService = studentService;
+        this.enrollmentImportService = enrollmentImportService;
     }
 
-    @GetMapping("/courses/{courseId}/students")
+    @GetMapping("/admin/courses/{courseId}/students")
     @RequiresAdministratorAccess
     public ResponseEntity<List<Student>> getStudentsByCourse(@PathVariable Long courseId) {
         List<Student> students = studentCourseService.getStudentsByCourse(courseId);
@@ -83,6 +90,26 @@ public class StudentCourseController {
         } catch (IllegalArgumentException | IllegalStateException ex) {
             return ResponseEntity.badRequest()
                     .body(EnrollmentResponse.failure(ex.getMessage(), studentId, null, targetGroups));
+        }
+    }
+
+    @PostMapping(value = "/secretary/enrollments/import", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<UserImportResult<String>> importEnrollments(
+            @RequestPart("file") MultipartFile file,
+            Authentication authentication) {
+
+        if (!authorizationService.hasAnyRole(authentication, UserRole.ADMIN, UserRole.SECRETARY)) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        }
+
+        try {
+            return ResponseEntity.ok(enrollmentImportService.importEnrollmentsWithGrades(file));
+        } catch (IllegalArgumentException ex) {
+            return ResponseEntity.badRequest()
+                    .body(new UserImportResult<>(List.of(), List.of(ex.getMessage()), 0, 0));
+        } catch (Exception ex) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(new UserImportResult<>(List.of(), List.of("No se pudo procesar el archivo"), 0, 0));
         }
     }
 

@@ -205,7 +205,7 @@ public class GradeController {
                     authorizationService.getAuthenticatedProfessor(authentication).orElse(null));
             return ResponseEntity.ok(response);
         } catch (IllegalArgumentException ex) {
-            return ResponseEntity.badRequest().body(null);
+            return ResponseEntity.badRequest().body(GradeSubmissionResponse.error(ex.getMessage()));
         } catch (AccessDeniedException ex) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         }

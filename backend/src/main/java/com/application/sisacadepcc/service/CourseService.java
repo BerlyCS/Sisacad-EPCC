@@ -13,8 +13,11 @@ import com.application.sisacadepcc.domain.repository.EnrollmentRepository;
 import com.application.sisacadepcc.presentation.dto.CourseScheduleSlotRequest;
 import com.application.sisacadepcc.presentation.dto.CreateCourseGroupRequest;
 import com.application.sisacadepcc.presentation.dto.ProfessorScheduleEntry;
+import com.application.sisacadepcc.infrastructure.repository.jpa.EnrollmentEntity;
+import com.application.sisacadepcc.infrastructure.repository.jpa.StudentEntity;
 import com.application.sisacadepcc.service.dto.CourseDetails;
 import com.application.sisacadepcc.service.dto.CourseImportResult;
+import com.application.sisacadepcc.service.dto.CourseStudentSummary;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.CellType;
 import org.apache.poi.ss.usermodel.Row;
@@ -284,6 +287,19 @@ public class CourseService {
                 .collect(Collectors.toList());
     }
 
+    public List<CourseStudentSummary> getStudentsByCourse(Long courseId) {
+        if (courseId == null) {
+            return List.of();
+        }
+
+        return courseGroupRepository.findByCourseId(courseId).stream()
+                .filter(group -> group != null && group.getId() != null)
+                .flatMap(group -> enrollmentRepository.findByCourseGroupId(group.getId()).stream()
+                        .map(enrollment -> mapToCourseStudentSummary(courseId, group, enrollment))
+                        .filter(java.util.Objects::nonNull))
+                .toList();
+    }
+
     public Optional<CourseGroup> updateGroupCapacity(Long groupId, Integer capacity) {
         if (groupId == null || capacity == null || capacity < 0) {
             return Optional.empty();
@@ -482,6 +498,24 @@ public class CourseService {
     }
 
     private record CourseImportRow(int rowNumber, List<String> columns) {
+    }
+
+    private CourseStudentSummary mapToCourseStudentSummary(Long courseId, CourseGroup group, EnrollmentEntity enrollment) {
+        if (enrollment == null || enrollment.getStudent() == null) {
+            return null;
+        }
+        StudentEntity student = enrollment.getStudent();
+        return new CourseStudentSummary(
+                student.getUserId(),
+                student.getCui(),
+                student.getFirstNames(),
+                student.getPaternalSurname(),
+                student.getMaternalSurname(),
+                student.getInstitutionalEmail(),
+                courseId,
+                group.getId(),
+                group.getLetter()
+        );
     }
 
     private CourseDetails buildCourseDetails(CourseGroup group) {

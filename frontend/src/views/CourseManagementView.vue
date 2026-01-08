@@ -51,7 +51,7 @@
                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Nombre</th>
                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Créditos</th>
                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase"># Estudiantes</th>
-                <th v-if="canAssignProfessors" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Acciones</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Acciones</th>
               </tr>
             </thead>
             <tbody class="bg-white divide-y divide-gray-200">
@@ -64,20 +64,28 @@
                 <td class="px-6 py-4 text-sm text-gray-700">
                   {{ course.enrolledStudentCount ?? 0 }}
                 </td>
-                <td v-if="canAssignProfessors" class="px-6 py-4 text-sm">
+                <td class="px-6 py-4 text-sm">
                   <div class="flex flex-wrap gap-2">
                     <button
-                      class="inline-flex items-center gap-2 rounded-lg border border-gray-200 px-4 py-2 text-sm font-semibold text-gray-700 hover:border-blue-400 hover:text-blue-600"
-                      @click="openAssignmentModal(course.courseId)"
+                      class="inline-flex items-center gap-2 rounded-lg border border-emerald-200 px-4 py-2 text-sm font-semibold text-emerald-700 bg-emerald-50 hover:border-emerald-300"
+                      @click="openRosterPanel(course)"
                     >
-                      Gestionar
+                      Ver estudiantes
                     </button>
-                    <button
-                      class="inline-flex items-center gap-2 rounded-lg border border-blue-200 px-4 py-2 text-sm font-semibold text-blue-700 bg-blue-50 hover:border-blue-400"
-                      @click="openGroupSettingsModal(course.courseId)"
-                    >
-                      Aperturar grupo
-                    </button>
+                    <template v-if="canAssignProfessors">
+                      <button
+                        class="inline-flex items-center gap-2 rounded-lg border border-gray-200 px-4 py-2 text-sm font-semibold text-gray-700 hover:border-blue-400 hover:text-blue-600"
+                        @click="openAssignmentModal(course.courseId)"
+                      >
+                        Gestionar
+                      </button>
+                      <button
+                        class="inline-flex items-center gap-2 rounded-lg border border-blue-200 px-4 py-2 text-sm font-semibold text-blue-700 bg-blue-50 hover:border-blue-400"
+                        @click="openGroupSettingsModal(course.courseId)"
+                      >
+                        Aperturar grupo
+                      </button>
+                    </template>
                   </div>
                 </td>
               </tr>
@@ -105,6 +113,58 @@
             <p class="text-3xl font-bold text-purple-600 mt-2">
               {{ courses.reduce((total, course) => total + (course.enrolledStudentCount ?? 0), 0) }}
             </p>
+          </div>
+        </div>
+        <!-- Removed inline roster panel; modal overlay defined after main card -->
+      </div>
+    </div>
+
+    <div
+      v-if="rosterCourse"
+      class="fixed inset-0 z-50 flex items-center justify-center px-4 py-6"
+      @keydown.esc.window="closeRosterPanel"
+    >
+      <div class="absolute inset-0 bg-black/40" @click="closeRosterPanel"></div>
+      <div class="relative z-10 w-full max-w-3xl overflow-hidden rounded-2xl bg-white shadow-2xl">
+        <div class="flex items-start justify-between border-b px-6 py-4">
+          <div>
+            <p class="text-xs font-semibold uppercase tracking-wide text-blue-500">Lista de alumnos</p>
+            <h3 class="text-lg font-semibold text-gray-900">Matriculados en {{ rosterCourse.name }}</h3>
+            <p class="text-sm text-gray-500">{{ courseStudents.length }} alumno(s)</p>
+          </div>
+          <button
+            type="button"
+            class="text-sm font-semibold text-gray-500 hover:text-gray-700"
+            @click="closeRosterPanel"
+          >
+            Cerrar
+          </button>
+        </div>
+        <div class="px-6 py-5 space-y-4">
+          <div v-if="courseStudentsLoading" class="text-sm text-gray-500">Cargando estudiantes...</div>
+          <div v-else-if="courseStudentsError" class="text-sm text-red-600">{{ courseStudentsError }}</div>
+          <div v-else-if="!courseStudents.length" class="text-sm text-gray-500">
+            No hay alumnos matriculados en este curso.
+          </div>
+          <div v-else class="overflow-x-auto">
+            <table class="min-w-full text-sm text-left">
+              <thead class="text-xs uppercase text-gray-500">
+                <tr>
+                  <th class="px-3 py-2">CUI</th>
+                  <th class="px-3 py-2">Nombre</th>
+                  <th class="px-3 py-2">Email</th>
+                  <th class="px-3 py-2">Grupo</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-gray-100">
+                <tr v-for="student in courseStudents" :key="student.studentId" class="bg-white">
+                  <td class="px-3 py-2 font-mono text-gray-700">{{ student.cui }}</td>
+                  <td class="px-3 py-2 text-gray-900">{{ student.fullName || 'Sin nombre' }}</td>
+                  <td class="px-3 py-2 text-gray-600">{{ student.email }}</td>
+                  <td class="px-3 py-2 text-gray-700">{{ student.groupLetter ?? '—' }}</td>
+                </tr>
+              </tbody>
+            </table>
           </div>
         </div>
       </div>
@@ -681,7 +741,7 @@ import { useProfessorService } from '@/services/professorService'
 import { useClassroomService } from '@/services/classroomService'
 import { useAuthStore } from '@/stores/auth'
 import type { Professor } from '@/services/professorService'
-import type { CourseType } from '../services/courseService'
+import type { Course, CourseType } from '../services/courseService'
 
 const authStore = useAuthStore()
 const { isAdmin, isSecretary } = storeToRefs(authStore)
@@ -702,7 +762,11 @@ const {
   courseTimeSlots,
   courseTimeSlotsLoading,
   courseTimeSlotsError,
-  fetchCourseTimeSlots
+  fetchCourseTimeSlots,
+  courseStudents,
+  courseStudentsLoading,
+  courseStudentsError,
+  fetchCourseStudents
 } = useCourseService()
 
 const {
@@ -728,6 +792,7 @@ const assignmentLoading = ref(false)
 const showCreateCourseModal = ref(false)
 const createCourseLoading = ref(false)
 const createCourseError = ref('')
+const rosterCourse = ref<Course | null>(null)
 const courseFormErrors = ref<string[]>([])
 const syllabusFileRef = ref<HTMLInputElement | null>(null)
 const selectedSyllabusFile = ref<File | null>(null)
@@ -1082,6 +1147,17 @@ const closeAssignmentModal = () => {
   assignmentError.value = ''
   assignmentActiveTab.value = 'professors'
   resetGroupSetup()
+}
+
+const openRosterPanel = async (course: Course) => {
+  rosterCourse.value = course
+  await fetchCourseStudents(course.courseId)
+}
+
+const closeRosterPanel = () => {
+  rosterCourse.value = null
+  courseStudents.value = []
+  courseStudentsError.value = ''
 }
 
 const openGroupSettingsModal = async (courseId: number) => {
