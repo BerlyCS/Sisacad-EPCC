@@ -141,12 +141,53 @@ public class ProfessorGradingService {
             Long studentId,
             GradeSubmissionRequest request,
             Professor professor) {
+
+        EnrollmentEntity enrollment = validateGradeSubmissionContext(courseId, groupId, studentId, professor);
+
+        List<Integer> sanitizedContinuous = sanitizeGrades(request.continuousGrades());
+        List<Integer> sanitizedExam = sanitizeGrades(request.examGrades());
+        String status = Optional.ofNullable(request.status()).orElse("SUBMITTED");
+
+        Grade grade = processGradeSave(courseId, studentId, professor, sanitizedContinuous, sanitizedExam, status);
+
+        BigDecimal finalGrade = gradeComputationService.computeFinalGrade(grade,
+                courseRepository.findById(courseId).orElseThrow());
+
+        // We need to fetch the course again or pass it down if we want to be purely
+        // optimal,
+        // but to strictly preserve logic structure without passing too many params, we
+        // can re-fetch or optimistically pass.
+        // Looking at original code: it fetched course early.
+        // Let's optimize slightly by reusing the course from validation if possible,
+        // but validation method return type is limited.
+        // To be safe and minimal: Re-fetching is cheap here (L1 cache) or we can
+        // refactor `validate` to return a context object.
+        // For minimal complexity, I'll keep the fetch in `computeFinalGrade` call or
+        // just use the one from validation if I change validation signature.
+        // ACTUALLY, to minimize impact, let's keep the course fetch inside the main
+        // method or pass it.
+        // The original logic fetched course, group, then enrollment.
+
+        // Let's refine the extraction to be safer.
+        // I will stick to the plan of extracting STRICTLY validation and execution.
+
+        return new GradeSubmissionResponse(
+                groupId,
+                courseId,
+                resolveCourseCode(courseRepository.findById(courseId).orElseThrow()), // Safe because validated
+                studentId,
+                sanitizedContinuous,
+                sanitizedExam,
+                finalGrade.doubleValue(),
+                status);
+    }
+
+    private EnrollmentEntity validateGradeSubmissionContext(Long courseId, Long groupId, Long studentId,
+            Professor professor) {
         if (professor == null) {
             throw new AccessDeniedException("Solo los profesores autorizados pueden registrar notas");
         }
 
-        // Enforce syllabus presence: professor cannot submit grades if no syllabus
-        // uploaded
         syllabusService.getByCourseId(courseId)
                 .orElseThrow(() -> new IllegalArgumentException(
                         "Syllabus not found for this course. Please upload a syllabus first."));
@@ -173,9 +214,11 @@ public class ProfessorGradingService {
         if (enrollment.getStudent() == null) {
             throw new IllegalArgumentException("No se pudo resolver la información del estudiante");
         }
+        return enrollment;
+    }
 
-        List<Integer> sanitizedContinuous = sanitizeGrades(request.continuousGrades());
-        List<Integer> sanitizedExam = sanitizeGrades(request.examGrades());
+    private Grade processGradeSave(Long courseId, Long studentId, Professor professor,
+            List<Integer> continuousGrades, List<Integer> examGrades, String status) {
 
         Grade persisted = gradeRepository.findByCourseAndStudent(courseId, studentId).orElse(null);
         Grade grade = new Grade(
@@ -183,14 +226,13 @@ public class ProfessorGradingService {
                 studentId,
                 courseId,
                 resolveProfessorId(professor),
-                sanitizedContinuous,
-                sanitizedExam);
+                continuousGrades,
+                examGrades);
 
         if (persisted != null) {
             grade.setVersion(persisted.getVersion());
         }
 
-        String status = Optional.ofNullable(request.status()).orElse("SUBMITTED");
         grade.setStatus(status);
 
         try {
@@ -204,16 +246,7 @@ public class ProfessorGradingService {
                 "Submitted grade for student " + studentId + " in course " + courseId + " with status " + status,
                 "UNKNOWN_IP");
 
-        BigDecimal finalGrade = gradeComputationService.computeFinalGrade(grade, course);
-        return new GradeSubmissionResponse(
-                groupId,
-                courseId,
-                resolveCourseCode(course),
-                studentId,
-                sanitizedContinuous,
-                sanitizedExam,
-                finalGrade.doubleValue(),
-                status);
+        return grade;
     }
 
     public List<GradeSubmissionResponse> saveGradesBulk(Long courseId, Long groupId,
