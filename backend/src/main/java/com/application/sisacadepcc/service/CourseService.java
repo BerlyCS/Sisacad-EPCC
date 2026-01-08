@@ -42,6 +42,8 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
+import java.util.HashSet;
 import java.util.stream.Collectors;
 
 @Service
@@ -53,6 +55,20 @@ public class CourseService {
     private final ClassroomRepository classroomRepository;
     private final SyllabusService syllabusService;
 
+    private static final int COL_COURSE_CODE = 0;
+    private static final int COL_NAME = 1;
+    private static final int COL_CREDITS = 2;
+    private static final int COL_SEMESTER = 3;
+    private static final int COL_THEORY_HOURS = 4;
+    private static final int COL_PRACTICE_HOURS = 5;
+    private static final int COL_LAB_HOURS = 6;
+    private static final int COL_CONT_1 = 7;
+    private static final int COL_CONT_2 = 8;
+    private static final int COL_CONT_3 = 9;
+    private static final int COL_EXAM_1 = 10;
+    private static final int COL_EXAM_2 = 11;
+    private static final int COL_EXAM_3 = 12;
+
     private static final DateTimeFormatter TIME_FORMATTER = DateTimeFormatter.ofPattern("HH:mm");
     private static final Map<String, Integer> DAY_ORDER = Map.of(
             "LUNES", 1,
@@ -63,14 +79,13 @@ public class CourseService {
             "VIERNES", 5,
             "SABADO", 6,
             "SÁBADO", 6,
-            "DOMINGO", 7
-    );
+            "DOMINGO", 7);
 
     public CourseService(CourseRepository repository,
-                         com.application.sisacadepcc.domain.repository.CourseGroupRepository courseGroupRepository,
-                         EnrollmentRepository enrollmentRepository,
-                         ClassroomRepository classroomRepository,
-                         SyllabusService syllabusService) {
+            com.application.sisacadepcc.domain.repository.CourseGroupRepository courseGroupRepository,
+            EnrollmentRepository enrollmentRepository,
+            ClassroomRepository classroomRepository,
+            SyllabusService syllabusService) {
         this.repository = repository;
         this.courseGroupRepository = courseGroupRepository;
         this.enrollmentRepository = enrollmentRepository;
@@ -129,6 +144,14 @@ public class CourseService {
         int processed = 0;
         int skipped = 0;
 
+        // Optimization: Fetch all existing course codes once to avoid N+1 selects in
+        // the loop
+        Set<Long> existingCodes = repository.findAll().stream()
+                .map(Course::getCourseCode)
+                .filter(Objects::nonNull)
+                .map(Integer::longValue)
+                .collect(Collectors.toSet());
+
         for (CourseImportRow row : rawRows) {
             if (row == null || row.columns().isEmpty()) {
                 continue;
@@ -146,7 +169,7 @@ public class CourseService {
             }
 
             Integer code = course.getCourseCode();
-            if (code != null && repository.findByCourseCode(code.longValue()).isPresent()) {
+            if (code != null && existingCodes.contains(code.longValue())) {
                 skipped++;
                 errors.add("Fila " + row.rowNumber() + ": el código de curso " + code + " ya existe, se omitió.");
                 continue;
@@ -154,7 +177,12 @@ public class CourseService {
 
             try {
                 validateCourseWeights(course);
-                created.add(repository.save(course));
+                course = repository.save(course);
+                created.add(course);
+                // Add to set to prevent duplicates within the same file being imported
+                if (code != null) {
+                    existingCodes.add(code.longValue());
+                }
             } catch (IllegalArgumentException ex) {
                 skipped++;
                 errors.add("Fila " + row.rowNumber() + ": " + ex.getMessage());
@@ -171,13 +199,13 @@ public class CourseService {
 
         // Collect courses from groups but ensure uniqueness by courseId
         return courseGroupRepository.findByTeacherId(professorId).stream()
-            .map(CourseGroup::getCourse)
-            .filter(Objects::nonNull)
-            .filter(course -> course.getCourseId() != null)
-            .collect(Collectors.collectingAndThen(
-                Collectors.toMap(course -> course.getCourseId(), course -> course, (a, b) -> a, java.util.LinkedHashMap::new),
-                map -> map.values().stream().toList()
-            ));
+                .map(CourseGroup::getCourse)
+                .filter(Objects::nonNull)
+                .filter(course -> course.getCourseId() != null)
+                .collect(Collectors.collectingAndThen(
+                        Collectors.toMap(course -> course.getCourseId(), course -> course, (a, b) -> a,
+                                java.util.LinkedHashMap::new),
+                        map -> map.values().stream().toList()));
     }
 
     public List<ProfessorScheduleEntry> getScheduleForProfessor(Long professorId) {
@@ -212,13 +240,13 @@ public class CourseService {
                         normalizeDay(schedule.getDayOfWeek()),
                         formatTime(schedule.getStartTime()),
                         formatTime(schedule.getEndTime()),
-                        resolveClassroomName(courseSchedule.getClassroomId())
-                ));
+                        resolveClassroomName(courseSchedule.getClassroomId())));
             }
         }
 
         entries.sort(Comparator
-                .comparing((ProfessorScheduleEntry entry) -> DAY_ORDER.getOrDefault(entry.getDayOfWeek(), Integer.MAX_VALUE))
+                .comparing((ProfessorScheduleEntry entry) -> DAY_ORDER.getOrDefault(entry.getDayOfWeek(),
+                        Integer.MAX_VALUE))
                 .thenComparing(ProfessorScheduleEntry::getStartTime, Comparator.nullsLast(String::compareTo))
                 .thenComparing(ProfessorScheduleEntry::getCourseName));
 
@@ -305,7 +333,7 @@ public class CourseService {
      */
     public java.util.List<Long> getAllGroupTeacherIds() {
         return courseGroupRepository.findAll().stream()
-            .map(CourseGroup::getTeacherId)
+                .map(CourseGroup::getTeacherId)
                 .filter(java.util.Objects::nonNull)
                 .distinct()
                 .toList();
@@ -342,25 +370,26 @@ public class CourseService {
         List<String> columns = row.columns();
         int line = row.rowNumber();
 
-        Integer courseCode = parseInteger(valueAt(columns, 0), "código", line, true, errors);
-        String name = valueAt(columns, 1);
+        Integer courseCode = parseInteger(valueAt(columns, COL_COURSE_CODE), "código", line, true, errors);
+        String name = valueAt(columns, COL_NAME);
         if (name == null || name.isBlank()) {
             errors.add("Fila " + line + ": el nombre del curso es obligatorio");
             return null;
         }
 
-        Integer credits = parseInteger(valueAt(columns, 2), "créditos", line, true, errors);
-        Integer semester = parseInteger(valueAt(columns, 3), "semestre", line, true, errors);
-        Integer theoryHours = parseInteger(valueAt(columns, 4), "horas teoría", line, false, errors);
-        Integer practiceHours = parseInteger(valueAt(columns, 5), "horas práctica", line, false, errors);
-        Integer labHours = parseInteger(valueAt(columns, 6), "horas laboratorio", line, false, errors);
+        Integer credits = parseInteger(valueAt(columns, COL_CREDITS), "créditos", line, true, errors);
+        Integer semester = parseInteger(valueAt(columns, COL_SEMESTER), "semestre", line, true, errors);
+        Integer theoryHours = parseInteger(valueAt(columns, COL_THEORY_HOURS), "horas teoría", line, false, errors);
+        Integer practiceHours = parseInteger(valueAt(columns, COL_PRACTICE_HOURS), "horas práctica", line, false,
+                errors);
+        Integer labHours = parseInteger(valueAt(columns, COL_LAB_HOURS), "horas laboratorio", line, false, errors);
 
-        Integer continuous1 = parseInteger(valueAt(columns, 7), "peso continuo 1", line, true, errors);
-        Integer continuous2 = parseInteger(valueAt(columns, 8), "peso continuo 2", line, true, errors);
-        Integer continuous3 = parseInteger(valueAt(columns, 9), "peso continuo 3", line, true, errors);
-        Integer exam1 = parseInteger(valueAt(columns, 10), "peso examen 1", line, true, errors);
-        Integer exam2 = parseInteger(valueAt(columns, 11), "peso examen 2", line, true, errors);
-        Integer exam3 = parseInteger(valueAt(columns, 12), "peso examen 3", line, true, errors);
+        Integer continuous1 = parseInteger(valueAt(columns, COL_CONT_1), "peso continuo 1", line, true, errors);
+        Integer continuous2 = parseInteger(valueAt(columns, COL_CONT_2), "peso continuo 2", line, true, errors);
+        Integer continuous3 = parseInteger(valueAt(columns, COL_CONT_3), "peso continuo 3", line, true, errors);
+        Integer exam1 = parseInteger(valueAt(columns, COL_EXAM_1), "peso examen 1", line, true, errors);
+        Integer exam2 = parseInteger(valueAt(columns, COL_EXAM_2), "peso examen 2", line, true, errors);
+        Integer exam3 = parseInteger(valueAt(columns, COL_EXAM_3), "peso examen 3", line, true, errors);
 
         if (courseCode == null || credits == null || semester == null
                 || continuous1 == null || continuous2 == null || continuous3 == null
@@ -453,7 +482,8 @@ public class CourseService {
             return false;
         }
         String normalized = first.toLowerCase(Locale.ROOT);
-        return normalized.contains("course") || normalized.contains("código") || normalized.contains("codigo") || normalized.contains("code");
+        return normalized.contains("course") || normalized.contains("código") || normalized.contains("codigo")
+                || normalized.contains("code");
     }
 
     private String valueAt(List<String> columns, int index) {
@@ -713,7 +743,9 @@ public class CourseService {
 
         int totalSum = continuousSum + examSum;
         if (totalSum != 100) {
-            throw new IllegalArgumentException("Los porcentajes de las evaluaciones continuas y exámenes deben sumar 100% en total. Actualmente suman " + totalSum + "%.");
+            throw new IllegalArgumentException(
+                    "Los porcentajes de las evaluaciones continuas y exámenes deben sumar 100% en total. Actualmente suman "
+                            + totalSum + "%.");
         }
     }
 
