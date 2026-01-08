@@ -223,13 +223,20 @@ public class CourseService {
         return entries;
     }
 
-    public Optional<CourseDetails> getCourseDetails(Long groupId) {
-        if (groupId == null) {
+    public Optional<CourseDetails> getCourseDetails(Long courseId) {
+        if (courseId == null) {
             return Optional.empty();
         }
 
-        return courseGroupRepository.findById(groupId)
-                .map(this::buildCourseDetails);
+        Optional<Course> courseOptional = repository.findById(courseId);
+        if (courseOptional.isEmpty()) {
+            return Optional.empty();
+        }
+
+        Course course = courseOptional.get();
+        CourseGroup representativeGroup = resolveRepresentativeGroup(courseId, course)
+                .orElseGet(() -> createPlaceholderGroup(course));
+        return Optional.of(buildCourseDetails(representativeGroup));
     }
 
     public List<CourseGroup> getCourseGroups(Long courseId) {
@@ -489,6 +496,31 @@ public class CourseService {
         }
 
         return new CourseDetails(group, List.of(), null, syllabus);
+    }
+
+    private Optional<CourseGroup> resolveRepresentativeGroup(Long courseId, Course course) {
+        if (courseId == null) {
+            return Optional.empty();
+        }
+        for (CourseGroup group : courseGroupRepository.findByCourseId(courseId)) {
+            if (group == null) {
+                continue;
+            }
+            if (group.getCourse() == null) {
+                group.setCourse(course);
+            }
+            return Optional.of(group);
+        }
+        return Optional.empty();
+    }
+
+    private CourseGroup createPlaceholderGroup(Course course) {
+        CourseGroup placeholder = new CourseGroup();
+        placeholder.setCourse(course);
+        placeholder.setCourseId(course.getCourseId());
+        placeholder.setLetter("");
+        placeholder.setType(CourseType.THEORY);
+        return placeholder;
     }
 
     private List<CourseSchedule> buildScheduleAssignments(List<CourseScheduleSlotRequest> slots, Long courseId) {

@@ -17,6 +17,7 @@ public record CourseDetailsResponse(
         Long courseCode,
         String name,
         Integer creditNumber,
+        Long groupId,
         String groupLetter,
         Integer semesterNumber,
         String courseType,
@@ -56,11 +57,14 @@ public record CourseDetailsResponse(
 
         List<Long> teacherIds = courseGroup.getTeacherId() != null ? List.of(courseGroup.getTeacherId()) : List.of();
 
+        Long groupId = courseGroup.getId();
+
         return new CourseDetailsResponse(
                 course.getCourseId(),
                 Long.valueOf(course.getCourseCode()),
                 course.getName(),
                 course.getCredits(),
+                groupId,
                 groupLetter,
                 course.getSemesterNumber(),
                 type != null ? type.name() : null,

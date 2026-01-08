@@ -421,8 +421,10 @@
                   class="rounded-xl border px-4 py-3 text-left transition"
                   :class="[
                     group.groupId === selectedGroupId
-                      ? 'border-blue-500 bg-blue-50'
-                      : 'border-gray-200 hover:border-blue-300'
+                      ? 'border-blue-500 bg-blue-50 text-blue-700'
+                      : group.teacherId
+                        ? 'border-green-500 bg-green-50 text-green-700 hover:border-green-600'
+                        : 'border-gray-200 hover:border-blue-300'
                   ]"
                   @click="selectedGroupId = group.groupId"
                 >
@@ -626,10 +628,10 @@
 
             <div class="rounded-2xl border border-gray-200 p-4 space-y-2">
               <p class="text-sm font-semibold text-gray-700">Resumen del plan</p>
-              <p class="text-sm text-gray-600">
-                Bloques planificados: <span class="font-semibold text-gray-900">{{ plannedBlocks }}</span> · Equivalente a
-                <span class="font-semibold text-gray-900">{{ plannedHoursDisplay }} h</span>
-              </p>
+                <p class="text-sm text-gray-600">
+                  Bloques planificados: <span class="font-semibold text-gray-900">{{ plannedBlocks }}</span> · Equivalente a
+                  <span class="font-semibold text-gray-900">{{ plannedHoursDisplay }}</span>
+                </p>
               <p v-if="remainingMinutes > 0" class="text-sm text-amber-600">
                 Faltan aproximadamente {{ remainingBlocks }} bloque(s) ({{ Math.ceil(remainingMinutes / 10) * 10 }} minutos) para completar las horas de {{ courseTypeLabels[groupForm.type] }}.
               </p>
@@ -1039,7 +1041,22 @@ const validScheduleSlots = computed(() =>
 
 const plannedBlocks = computed(() => validScheduleSlots.value.length)
 const plannedMinutes = computed(() => plannedBlocks.value * scheduleBlockMinutes)
-const plannedHoursDisplay = computed(() => (plannedMinutes.value / 60).toFixed(2))
+const formatMinutesAsDuration = (totalMinutes: number) => {
+  const minutes = Math.max(0, Math.round(totalMinutes))
+  const hours = Math.floor(minutes / 60)
+  const remainingMinutes = minutes % 60
+  if (hours === 0 && remainingMinutes === 0) {
+    return '0m'
+  }
+  if (hours === 0) {
+    return `${remainingMinutes}m`
+  }
+  if (remainingMinutes === 0) {
+    return `${hours}h`
+  }
+  return `${hours}h ${remainingMinutes}m`
+}
+const plannedHoursDisplay = computed(() => formatMinutesAsDuration(plannedMinutes.value))
 const remainingMinutes = computed(() => Math.max(activeTypeHours.value * 50 - plannedMinutes.value, 0))
 const remainingBlocks = computed(() => (remainingMinutes.value <= 0 ? 0 : Math.ceil(remainingMinutes.value / scheduleBlockMinutes)))
 

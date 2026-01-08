@@ -99,6 +99,7 @@ export interface CourseDetails {
   courseCode: number | null
   name: string
   creditNumber: number
+  groupId: number | null
   groupLetter: string
   semesterNumber: number | null
   courseType: CourseType
@@ -308,7 +309,8 @@ export const useCourseService = () => {
       syllabus,
       enrolledStudents: students,
       enrolledCount: data.enrolledCount != null ? Number(data.enrolledCount) : students.length,
-      teacherIds
+      teacherIds,
+      groupId: data.groupId != null ? Number(data.groupId) : null
     }
   }
 

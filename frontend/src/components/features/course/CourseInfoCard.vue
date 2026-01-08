@@ -86,7 +86,7 @@
 
       <p v-if="groupsLoading" class="text-sm text-blue-600">Cargando grupos...</p>
       <p v-else-if="groupsError" class="text-sm text-red-600">{{ groupsError }}</p>
-      <p v-else-if="!sortedGroups.length" class="text-sm text-gray-500">Aún no hay grupos configurados para este curso.</p>
+      <p v-else-if="!sortedGroups.length" class="text-sm text-gray-500">No se encontró el grupo asignado para este curso.</p>
 
       <div v-else class="grid gap-4 sm:grid-cols-2">
         <article
@@ -241,8 +241,17 @@ const COURSE_TYPE_LABELS: Record<CourseType, string> = {
   LAB: 'Laboratorio'
 }
 
-const sortedGroups = computed(() => {
+const filteredGroups = computed(() => {
   const groups = props.groups ?? []
+  const targetId = props.details.groupId
+  if (targetId == null) {
+    return groups
+  }
+  return groups.filter(group => group.groupId === targetId)
+})
+
+const sortedGroups = computed(() => {
+  const groups = filteredGroups.value
   return [...groups].sort((a, b) => {
     const typeOrder = (COURSE_TYPE_ORDER[a.type] ?? 99) - (COURSE_TYPE_ORDER[b.type] ?? 99)
     if (typeOrder !== 0) {
