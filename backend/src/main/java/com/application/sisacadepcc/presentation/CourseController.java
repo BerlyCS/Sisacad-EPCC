@@ -75,8 +75,9 @@ public class CourseController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<CourseDetailsResponse> getCourseDetails(@PathVariable Long id) {
-        return service.getCourseDetails(id)
+    public ResponseEntity<CourseDetailsResponse> getCourseDetails(@PathVariable Long id, Authentication authentication) {
+        String studentCui = authorizationService.getAuthenticatedStudentCui(authentication).orElse(null);
+        return service.getCourseDetails(id, studentCui)
                 .map(CourseDetailsResponse::from)
                 .map(ResponseEntity::ok)
                 .orElseGet(() -> ResponseEntity.notFound().build());

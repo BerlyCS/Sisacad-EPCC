@@ -56,7 +56,9 @@ export interface CourseStudentSummary {
   paternalSurname: string
   maternalSurname: string
   institutionalEmail: string
+  fullName: string
   enrollmentYear: number | null
+  groupLetter?: string
 }
 
 export interface CourseTopicSummary {
@@ -122,6 +124,30 @@ const resolveCourseTypeLabel = (type?: CourseType | string | null): string => {
   return COURSE_TYPE_LABEL[normalized as CourseType] ?? COURSE_TYPE_LABEL.THEORY
 }
 
+const buildStudentFullName = (...parts: Array<string | undefined | null>): string =>
+  parts
+    .map(part => (typeof part === 'string' ? part.trim() : ''))
+    .filter(part => part.length > 0)
+    .join(' ')
+    .trim()
+
+const createCourseStudentSummary = (payload: any): CourseStudentSummary => {
+  const firstNames = payload.firstNames ?? ''
+  const paternalSurname = payload.paternalSurname ?? ''
+  const maternalSurname = payload.maternalSurname ?? ''
+  return {
+    userId: Number(payload.studentId ?? payload.userId ?? 0),
+    cui: payload.cui ?? '',
+    firstNames,
+    paternalSurname,
+    maternalSurname,
+    institutionalEmail: payload.institutionalEmail ?? '',
+    fullName: buildStudentFullName(firstNames, paternalSurname, maternalSurname),
+    enrollmentYear: payload.enrollmentYear != null ? Number(payload.enrollmentYear) : null,
+    groupLetter: payload.groupLetter ?? payload.group ?? ''
+  }
+}
+
 const ensureWeightList = (value: unknown): number[] => {
   const normalized = [0, 0, 0]
   if (Array.isArray(value)) {
@@ -167,6 +193,10 @@ export const useCourseService = () => {
   const courseTimeSlots = ref<CourseTimeSlot[]>([])
   const courseTimeSlotsLoading = ref(false)
   const courseTimeSlotsError = ref('')
+
+  const courseStudents = ref<CourseStudentSummary[]>([])
+  const courseStudentsLoading = ref(false)
+  const courseStudentsError = ref('')
 
   const fetchCourses = async () => {
     loading.value = true
@@ -239,19 +269,39 @@ export const useCourseService = () => {
     }
   }
 
+  const fetchCourseStudents = async (courseId: number | null | undefined) => {
+    if (!courseId) {
+      courseStudents.value = []
+      return
+    }
+
+    courseStudentsLoading.value = true
+    courseStudentsError.value = ''
+    try {
+      const response = await fetch(`${API_BASE_URL}/courses/${courseId}/students/management`, {
+        credentials: 'include'
+      })
+
+      if (!response.ok) {
+        throw new Error('Error al cargar los estudiantes del curso')
+      }
+
+      const data: any[] = await response.json()
+      courseStudents.value = Array.isArray(data) ? data.map(createCourseStudentSummary) : []
+    } catch (err) {
+      courseStudentsError.value = err instanceof Error ? err.message : 'No se pudieron cargar los estudiantes'
+      console.error('Error fetching course students:', err)
+      courseStudents.value = []
+    } finally {
+      courseStudentsLoading.value = false
+    }
+  }
+
   const mapCourseDetailsResponse = (data: any): CourseDetails => {
     const courseType = (typeof data.courseType === 'string' ? data.courseType.toUpperCase() : 'THEORY') as CourseType
 
     const students: CourseStudentSummary[] = Array.isArray(data.enrolledStudents)
-      ? data.enrolledStudents.map((student: any) => ({
-          userId: student.userId ?? 0,
-          cui: student.cui ?? '',
-          firstNames: student.firstNames ?? '',
-          paternalSurname: student.paternalSurname ?? '',
-          maternalSurname: student.maternalSurname ?? '',
-          institutionalEmail: student.institutionalEmail ?? '',
-          enrollmentYear: student.enrollmentYear != null ? Number(student.enrollmentYear) : null
-        }))
+      ? data.enrolledStudents.map(createCourseStudentSummary)
       : []
 
     const labCourse: CourseLabSummary | null = data.labCourse
@@ -536,8 +586,11 @@ export const useCourseService = () => {
     courseTimeSlots,
     courseTimeSlotsLoading,
     courseTimeSlotsError,
-    fetchCourseTimeSlots
-    ,
-    importCourses
+    fetchCourseTimeSlots,
+    importCourses,
+    courseStudents,
+    courseStudentsLoading,
+    courseStudentsError,
+    fetchCourseStudents
   }
 }

@@ -15,6 +15,8 @@ import com.application.sisacadepcc.presentation.dto.CreateCourseGroupRequest;
 import com.application.sisacadepcc.presentation.dto.ProfessorScheduleEntry;
 import com.application.sisacadepcc.service.dto.CourseDetails;
 import com.application.sisacadepcc.service.dto.CourseImportResult;
+import com.application.sisacadepcc.infrastructure.repository.jpa.CourseGroupEntity;
+import com.application.sisacadepcc.infrastructure.repository.jpa.EnrollmentEntity;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.CellType;
 import org.apache.poi.ss.usermodel.Row;
@@ -223,7 +225,7 @@ public class CourseService {
         return entries;
     }
 
-    public Optional<CourseDetails> getCourseDetails(Long courseId) {
+    public Optional<CourseDetails> getCourseDetails(Long courseId, String studentCui) {
         if (courseId == null) {
             return Optional.empty();
         }
@@ -234,7 +236,7 @@ public class CourseService {
         }
 
         Course course = courseOptional.get();
-        CourseGroup representativeGroup = resolveRepresentativeGroup(courseId, course)
+        CourseGroup representativeGroup = resolveRepresentativeGroup(courseId, course, studentCui)
                 .orElseGet(() -> createPlaceholderGroup(course));
         return Optional.of(buildCourseDetails(representativeGroup));
     }
@@ -496,6 +498,41 @@ public class CourseService {
         }
 
         return new CourseDetails(group, List.of(), null, syllabus);
+    }
+
+    private Optional<CourseGroup> resolveRepresentativeGroup(Long courseId, Course course, String studentCui) {
+        if (studentCui != null && !studentCui.isBlank()) {
+            Optional<CourseGroup> studentGroup = resolveRepresentativeGroupByStudent(courseId, studentCui);
+            if (studentGroup.isPresent()) {
+                CourseGroup group = studentGroup.get();
+                if (group.getCourse() == null) {
+                    group.setCourse(course);
+                }
+                return Optional.of(group);
+            }
+        }
+        return resolveRepresentativeGroup(courseId, course);
+    }
+
+    private Optional<CourseGroup> resolveRepresentativeGroupByStudent(Long courseId, String studentCui) {
+        if (courseId == null || studentCui == null || studentCui.isBlank()) {
+            return Optional.empty();
+        }
+        for (EnrollmentEntity enrollment : enrollmentRepository.findByStudentCui(studentCui)) {
+            if (enrollment == null || enrollment.getCourseGroup() == null) {
+                continue;
+            }
+            CourseGroupEntity groupEntity = enrollment.getCourseGroup();
+            if (!Objects.equals(groupEntity.getCourseId(), courseId)) {
+                continue;
+            }
+            Long groupId = groupEntity.getId();
+            if (groupId == null) {
+                continue;
+            }
+            return courseGroupRepository.findById(groupId);
+        }
+        return Optional.empty();
     }
 
     private Optional<CourseGroup> resolveRepresentativeGroup(Long courseId, Course course) {

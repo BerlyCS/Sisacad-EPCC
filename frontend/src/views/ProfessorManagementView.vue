@@ -21,7 +21,7 @@
             class="inline-flex items-center gap-2 rounded-lg border border-blue-200 px-4 py-2 text-sm font-semibold text-blue-600 hover:bg-blue-50"
           >
             <i class="fas fa-file-import"></i>
-            Importar profesores
+            Importar Profesores
           </router-link>
         </div>
       </div>

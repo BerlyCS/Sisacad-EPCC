@@ -12,6 +12,7 @@ import com.application.sisacadepcc.infrastructure.repository.jpa.EnrollmentEntit
 import com.application.sisacadepcc.infrastructure.repository.jpa.StudentEntity;
 import com.application.sisacadepcc.infrastructure.repository.jpa.StudentJpaRepository;
 import com.application.sisacadepcc.infrastructure.repository.jpa.CourseGroupJpaRepository;
+import com.application.sisacadepcc.presentation.dto.CourseStudentResponse;
 import com.application.sisacadepcc.presentation.dto.StudentScheduleEntry;
 import com.application.sisacadepcc.service.dto.EnrollmentValidationResult;
 import org.springframework.stereotype.Service;
@@ -48,9 +49,39 @@ public class StudentCourseService {
         this.courseGroupJpaRepository = courseGroupJpaRepository;
     }
 
-    public List<Student> getStudentsByCourse(Long courseId) {
-        // Enrollment functionality removed
-        return List.of();
+    public List<CourseStudentResponse> getStudentsByCourse(Long courseId) {
+        if (courseId == null) {
+            return List.of();
+        }
+
+        List<CourseGroup> groups = courseGroupRepository.findByCourseId(courseId);
+        if (groups.isEmpty()) {
+            return List.of();
+        }
+
+        Map<String, CourseStudentResponse> studentByIdentifier = new LinkedHashMap<>();
+        for (CourseGroup group : groups) {
+            if (group == null || group.getId() == null) {
+                continue;
+            }
+            List<EnrollmentEntity> enrollments = enrollmentRepository.findByCourseGroupId(group.getId());
+            for (EnrollmentEntity enrollment : enrollments) {
+                CourseStudentResponse response = CourseStudentResponse.from(enrollment);
+                if (response == null) {
+                    continue;
+                }
+                String identifier = response.cui() != null && !response.cui().isBlank()
+                        ? response.cui()
+                        : response.studentId() != null ? String.valueOf(response.studentId()) : null;
+                if (identifier != null) {
+                    studentByIdentifier.putIfAbsent(identifier, response);
+                }
+            }
+        }
+
+        List<CourseStudentResponse> students = new ArrayList<>(studentByIdentifier.values());
+        students.sort(Comparator.comparing(CourseStudentResponse::fullName, Comparator.nullsLast(String::compareToIgnoreCase)));
+        return students;
     }
 
     public List<Course> getCoursesByStudent(Long studentId) {

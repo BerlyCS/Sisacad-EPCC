@@ -1,9 +1,9 @@
 package com.application.sisacadepcc.presentation;
 
 import com.application.sisacadepcc.config.security.RequiresAdministratorAccess;
-import com.application.sisacadepcc.domain.model.Student;
 import com.application.sisacadepcc.presentation.dto.EnrollStudentRequest;
 import com.application.sisacadepcc.presentation.dto.EnrollmentResponse;
+import com.application.sisacadepcc.presentation.dto.CourseStudentResponse;
 import com.application.sisacadepcc.service.AuthorizationService;
 import com.application.sisacadepcc.service.StudentCourseService;
 import com.application.sisacadepcc.service.StudentService;
@@ -31,10 +31,10 @@ public class StudentCourseController {
         this.studentService = studentService;
     }
 
-    @GetMapping("/courses/{courseId}/students")
+    @GetMapping("/courses/{courseId}/students/management")
     @RequiresAdministratorAccess
-    public ResponseEntity<List<Student>> getStudentsByCourse(@PathVariable Long courseId) {
-        List<Student> students = studentCourseService.getStudentsByCourse(courseId);
+    public ResponseEntity<List<CourseStudentResponse>> getStudentsByCourse(@PathVariable Long courseId) {
+        List<CourseStudentResponse> students = studentCourseService.getStudentsByCourse(courseId);
         return ResponseEntity.ok(students);
     }
 

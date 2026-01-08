@@ -146,25 +146,29 @@
           <div v-else-if="!courseStudents.length" class="text-sm text-gray-500">
             No hay alumnos matriculados en este curso.
           </div>
-          <div v-else class="overflow-x-auto">
-            <table class="min-w-full text-sm text-left">
-              <thead class="text-xs uppercase text-gray-500">
-                <tr>
-                  <th class="px-3 py-2">CUI</th>
-                  <th class="px-3 py-2">Nombre</th>
-                  <th class="px-3 py-2">Email</th>
-                  <th class="px-3 py-2">Grupo</th>
-                </tr>
-              </thead>
-              <tbody class="divide-y divide-gray-100">
-                <tr v-for="student in courseStudents" :key="student.studentId" class="bg-white">
-                  <td class="px-3 py-2 font-mono text-gray-700">{{ student.cui }}</td>
-                  <td class="px-3 py-2 text-gray-900">{{ student.fullName || 'Sin nombre' }}</td>
-                  <td class="px-3 py-2 text-gray-600">{{ student.email }}</td>
-                  <td class="px-3 py-2 text-gray-700">{{ student.groupLetter ?? '—' }}</td>
-                </tr>
-              </tbody>
-            </table>
+          <div v-else class="max-h-[60vh] overflow-hidden rounded-xl border border-gray-100">
+            <div class="max-h-[56vh] overflow-y-auto">
+              <div class="min-w-full overflow-x-auto">
+                <table class="min-w-full text-sm text-left">
+                  <thead class="text-xs uppercase text-gray-500">
+                    <tr>
+                      <th class="px-3 py-2">CUI</th>
+                      <th class="px-3 py-2">Nombre</th>
+                      <th class="px-3 py-2">Email</th>
+                      <th class="px-3 py-2">Grupo</th>
+                    </tr>
+                  </thead>
+                  <tbody class="divide-y divide-gray-100">
+                    <tr v-for="student in courseStudents" :key="student.userId" class="bg-white">
+                      <td class="px-3 py-2 font-mono text-gray-700">{{ student.cui }}</td>
+                      <td class="px-3 py-2 text-gray-900">{{ student.fullName || 'Sin nombre' }}</td>
+                      <td class="px-3 py-2 text-gray-600">{{ student.institutionalEmail }}</td>
+                      <td class="px-3 py-2 text-gray-700">{{ student.groupLetter ?? '—' }}</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
           </div>
         </div>
       </div>

@@ -128,7 +128,7 @@
             {{ professorAttendanceSubmitting ? 'Registrando...' : 'Registrar mi asistencia' }}
           </button>
           <p v-if="!withinProfessorTolerance" class="text-sm text-amber-600">
-            Solo puedes registrar tu asistencia dentro de los primeros 15 minutos del bloque elegido.
+            Solo puedes registrar tu asistencia dentro de los primeros 15 minutos de la hora de clase.
           </p>
           <p v-else-if="!canRegisterAttendance && !syllabusLoading" class="text-sm text-amber-700">
             Debes subir el sílabo del curso para habilitar el registro de asistencia.
