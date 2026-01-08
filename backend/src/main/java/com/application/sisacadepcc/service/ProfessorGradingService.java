@@ -205,15 +205,15 @@ public class ProfessorGradingService {
                 "UNKNOWN_IP");
 
         BigDecimal finalGrade = gradeComputationService.computeFinalGrade(grade, course);
-        return GradeSubmissionResponse.success(
-            groupId,
-            courseId,
-            resolveCourseCode(course),
+        return new GradeSubmissionResponse(
+                groupId,
+                courseId,
+                resolveCourseCode(course),
                 studentId,
-            sanitizedContinuous,
-            sanitizedExam,
-            finalGrade.doubleValue(),
-            status);
+                sanitizedContinuous,
+                sanitizedExam,
+                finalGrade.doubleValue(),
+                status);
     }
 
     public List<GradeSubmissionResponse> saveGradesBulk(Long courseId, Long groupId,

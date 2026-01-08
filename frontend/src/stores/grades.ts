@@ -250,12 +250,28 @@ export const useGradeStore = defineStore('grades', () => {
     try {
       const fetchedGroups = await gradeService.fetchCourseGroups(courseId)
       const role = resolveUserRole()
-      const filteredGroups = role === 'PROFESSOR'
-        ? fetchedGroups.filter(group => group.courseType === 'THEORY' && group.canGrade)
+
+      const eligibleGroups = role === 'PROFESSOR'
+        ? fetchedGroups.filter(group => group.courseType === 'THEORY' || group.courseType === 'PRACTICE')
         : fetchedGroups
 
+      const dedupedByLetter: Record<string, CourseGroupSummary> = {}
+      for (const group of eligibleGroups) {
+        const letterKey = (group.groupLetter || '').toUpperCase() || '-'
+        const existing = dedupedByLetter[letterKey]
+        if (!existing) {
+          dedupedByLetter[letterKey] = group
+          continue
+        }
+        const preferCurrent = group.canGrade && !existing.canGrade
+        dedupedByLetter[letterKey] = preferCurrent ? group : existing
+      }
+
+      const filteredGroups = Object.values(dedupedByLetter)
+        .sort((a, b) => a.groupLetter.localeCompare(b.groupLetter))
+
       if (role === 'PROFESSOR' && fetchedGroups.length && !filteredGroups.length) {
-        courseGroupsError.value = 'Este curso no tiene grupos teóricos asignados para tus calificaciones.'
+        courseGroupsError.value = 'Este curso no tiene grupos disponibles para tu rol.'
       }
 
       courseGroups.value = filteredGroups

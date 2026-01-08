@@ -9,7 +9,6 @@ import SecretaryManagementView from '../views/SecretaryManagementView.vue'
 import CourseImportView from '../views/CourseImportView.vue'
 import UserImportView from '../views/UserImportView.vue'
 import ClassroomImportView from '../views/ClassroomImportView.vue'
-import EnrollmentImportView from '../views/EnrollmentImportView.vue'
 import NotFoundComponent from '@/components/ui/NotFoundComponent.vue'
 import { useAuthStore } from '../stores/auth'
 
@@ -47,12 +46,6 @@ const router = createRouter({
       path: '/admin/courses/import',
       name: 'course-import',
       component: CourseImportView,
-      meta: { requiresAuth: true, allowedRoles: ['ADMIN', 'SECRETARY'] }
-    },
-    {
-      path: '/admin/enrollments/import',
-      name: 'enrollment-import',
-      component: EnrollmentImportView,
       meta: { requiresAuth: true, allowedRoles: ['ADMIN', 'SECRETARY'] }
     },
     {

@@ -49,15 +49,6 @@ export interface CourseGroupSummary {
   scheduleSlots?: CourseScheduleSlotSummary[]
 }
 
-export interface CourseStudent {
-  studentId: number
-  cui: string
-  fullName: string
-  email: string
-  groupId: number | null
-  groupLetter: string | null
-}
-
 export interface CourseStudentSummary {
   userId: number
   cui: string
@@ -176,9 +167,6 @@ export const useCourseService = () => {
   const courseTimeSlots = ref<CourseTimeSlot[]>([])
   const courseTimeSlotsLoading = ref(false)
   const courseTimeSlotsError = ref('')
-  const courseStudents = ref<CourseStudent[]>([])
-  const courseStudentsLoading = ref(false)
-  const courseStudentsError = ref('')
 
   const fetchCourses = async () => {
     loading.value = true
@@ -358,55 +346,6 @@ export const useCourseService = () => {
       console.error('Error fetching course details:', err)
     } finally {
       courseDetailsLoading.value = false
-    }
-  }
-
-  const normalizeString = (value: unknown) => (typeof value === 'string' ? value.trim() : '')
-  const toNumberOrNull = (value: unknown) => {
-    if (value == null) {
-      return null
-    }
-    const parsed = Number(value)
-    return Number.isFinite(parsed) ? parsed : null
-  }
-
-  const mapCourseStudentResponse = (raw: any): CourseStudent => {
-    const groupLetterNormalized = normalizeString(raw.groupLetter ?? '')
-    return {
-      studentId: toNumberOrNull(raw.studentId ?? raw.studentID) ?? 0,
-      cui: normalizeString(raw.cui ?? ''),
-      fullName: normalizeString(raw.fullName ?? ''),
-      email: normalizeString(raw.email ?? raw.institutionalEmail ?? ''),
-      groupId: toNumberOrNull(raw.groupId) ?? null,
-      groupLetter: groupLetterNormalized || null
-    }
-  }
-
-  const fetchCourseStudents = async (courseId: number | null | undefined) => {
-    if (!courseId) {
-      courseStudents.value = []
-      return
-    }
-
-    courseStudentsLoading.value = true
-    courseStudentsError.value = ''
-    try {
-      const response = await fetch(`${API_BASE_URL}/courses/${courseId}/students`, {
-        credentials: 'include'
-      })
-
-      if (!response.ok) {
-        throw new Error('No se pudo cargar la lista de estudiantes')
-      }
-
-      const data = await response.json()
-      courseStudents.value = Array.isArray(data) ? data.map(mapCourseStudentResponse) : []
-    } catch (err) {
-      courseStudentsError.value = err instanceof Error ? err.message : 'No se pudo cargar los estudiantes'
-      courseStudents.value = []
-      console.error('Error fetching course students:', err)
-    } finally {
-      courseStudentsLoading.value = false
     }
   }
 
@@ -597,11 +536,8 @@ export const useCourseService = () => {
     courseTimeSlots,
     courseTimeSlotsLoading,
     courseTimeSlotsError,
-    fetchCourseTimeSlots,
-    courseStudents,
-    courseStudentsLoading,
-    courseStudentsError,
-    fetchCourseStudents,
+    fetchCourseTimeSlots
+    ,
     importCourses
   }
 }
