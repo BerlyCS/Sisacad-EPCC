@@ -100,7 +100,7 @@ const isDisabledSection = (section: LabSection): boolean => {
   if (props.enrollmentLoading) {
     return true
   }
-  if (props.assignedLab && props.assignedLab.courseId === section.courseId) {
+  if (props.assignedLab) {
     return true
   }
   if (section.remainingSeats !== null && section.remainingSeats <= 0) {
