@@ -7,6 +7,7 @@ import com.application.sisacadepcc.presentation.dto.CourseStudentResponse;
 import com.application.sisacadepcc.service.AuthorizationService;
 import com.application.sisacadepcc.service.StudentCourseService;
 import com.application.sisacadepcc.service.StudentService;
+import com.application.sisacadepcc.domain.model.Student;
 import com.application.sisacadepcc.service.UserRole;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -24,8 +25,8 @@ public class StudentCourseController {
     private final StudentService studentService;
 
     public StudentCourseController(StudentCourseService studentCourseService,
-                                  AuthorizationService authorizationService,
-                                  StudentService studentService) {
+            AuthorizationService authorizationService,
+            StudentService studentService) {
         this.studentCourseService = studentCourseService;
         this.authorizationService = authorizationService;
         this.studentService = studentService;
@@ -62,7 +63,9 @@ public class StudentCourseController {
 
         if (request == null || !request.hasStudentIdentifier()) {
             return ResponseEntity.badRequest()
-                    .body(EnrollmentResponse.failure("Debe proporcionar el identificador del estudiante y los grupos objetivo", null, null, List.of()));
+                    .body(EnrollmentResponse.failure(
+                            "Debe proporcionar el identificador del estudiante y los grupos objetivo", null, null,
+                            List.of()));
         }
 
         List<Long> targetGroups = request.sanitizedCourseGroupIds();
@@ -74,7 +77,8 @@ public class StudentCourseController {
         Long studentId = resolveStudentId(request);
         if (studentId == null) {
             return ResponseEntity.badRequest()
-                    .body(EnrollmentResponse.failure("No se encontró al estudiante solicitado", null, null, targetGroups));
+                    .body(EnrollmentResponse.failure("No se encontró al estudiante solicitado", null, null,
+                            targetGroups));
         }
 
         try {
