@@ -58,9 +58,13 @@ const mapLabSection = (payload: any): LabSection => {
     ? payload.enrolledStudentIDs.length
     : toNumberOrNull(payload?.enrolledCount ?? payload?.currentEnrollments)
 
-  const remainingSeats = labCapacity != null
-    ? Math.max(labCapacity - (Number.isFinite(enrolledCount ?? 0) ? Number(enrolledCount) : 0), 0)
-    : toNumberOrNull(payload?.remainingSeats ?? payload?.availableCapacity)
+  const directRemaining = toNumberOrNull(payload?.remainingSeats ?? payload?.availableCapacity)
+
+  const remainingSeats = directRemaining != null
+    ? directRemaining
+    : (labCapacity != null
+        ? Math.max(labCapacity - (Number.isFinite(enrolledCount ?? 0) ? Number(enrolledCount) : 0), 0)
+        : null)
 
   return {
     courseId: groupId,
