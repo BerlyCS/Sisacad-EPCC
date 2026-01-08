@@ -63,6 +63,15 @@
         </section>
       </transition>
 
+      <div v-if="success" class="success">
+        <i class="fas fa-check-circle" />
+        {{ success }}
+      </div>
+      <div v-if="error" class="error">
+        <i class="fas fa-exclamation-triangle" />
+        {{ error }}
+      </div>
+      
       <section class="card schedule-card">
         <div class="schedule-card__header">
           <div>
@@ -172,14 +181,6 @@
         </div>
       </transition>
 
-      <div v-if="success" class="success">
-        <i class="fas fa-check-circle" />
-        {{ success }}
-      </div>
-      <div v-if="error" class="error">
-        <i class="fas fa-exclamation-triangle" />
-        {{ error }}
-      </div>
     </div>
   </AdminLayout>
 </template>
